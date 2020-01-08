@@ -32,8 +32,9 @@ func WithFields(ctx context.Context, fields MultipleFields) context.Context {
 
 // Logger is a way to access the API of the logger inside the context
 func Logger(ctx context.Context, fields ...Fields) loggers.Logger {
+	logger := getCopiedLogger(ctx)
 	if len(fields) == 0 {
-		return getCopiedLogger(ctx)
+		return logger
 	}
-	return getCopiedLogger(ctx).PutFields(fromFields(fields))
+	return logger.PutFields(fromFields(fields))
 }
