@@ -19,8 +19,8 @@ func main() {
     // this is a logger based on the logrus standard logger
     logger := loggers.NewStandardLogger()
 
-    // WithLogger returns a new context
-    ctx = log.WithLogger(ctx, logger)
+    // With returns a new context
+    ctx = log.With(ctx, logger)
 }
 ```
 
@@ -35,13 +35,12 @@ import (
 
 func stuffToLog(ctx context.Context) {
     // logging requires the context variable so it must be given to any function that requires it
-    log.Logger(ctx).Debug("Debug")
-    log.Logger(ctx).Print("Print")
-    log.Logger(ctx).Trace("Trace")
-    log.Logger(ctx).Warn("Warn")
-    log.Logger(ctx).Error("Error")
-    log.Logger(ctx).Fatal("Fatal")
-    log.Logger(ctx).Panic("Panic")
+    log.From(ctx).Debug("Debug")
+    log.From(ctx).Trace("Trace")
+    log.From(ctx).Warn("Warn")
+    log.From(ctx).Error("Error")
+    log.From(ctx).Fatal("Fatal")
+    log.From(ctx).Panic("Panic")
 
     // Expected to log
     // (time in RFC3339Nano Format) (Level) (Message)
@@ -64,7 +63,7 @@ import (
 // With fields, it is expected to log
 // (time in RFC3339Nano Format) (Fields) (Level) (Message)
 //
-// Fields will be logged ALPHABETICALLY. If the same key field is added to the context logger,
+// Fields will be logged alphabetically (using the StandardLogger). If the same key field is added to the context logger,
 // it will replace the existing value that corresponds to that key.
 //
 // Example:
@@ -75,16 +74,15 @@ import (
 
 func logWithField(ctx context.Context) {
     // context-level field adds fields to the context and creates a new context
-    ctx = log.WithField(ctx, "random", "stuff")
     ctx = log.WithFields(ctx, map[string]interface{}{
         "just": "stuff",
-        "stuff": 1
+        "stuff": 1,
     })
 
     // or
     ctx = log.WithFields(ctx, MultipleFields{
         "just": "stuff",
-        "stuff": 1
+        "stuff": 1,
     })
 
     // Any log at this point will have fields and to any function that uses the same context
@@ -96,7 +94,7 @@ func logWithField(ctx context.Context) {
 func contextLevelField(ctx context.Context) {
     // This is expected to log something like
     // 2019-12-12T08:23:59.210878+11:00 just=stuff random=stuff stuff=1 WARN Warn
-    log.Logger(ctx).Warn("Warn")
+    log.From(ctx).Warn("Warn")
 }
 
 func logLevelField(ctx context.Context) {
@@ -109,27 +107,27 @@ func logLevelField(ctx context.Context) {
 
 
     // You can add multiple fields at once through FromMap API or just use MultipleFields struct
-    log.Logger(ctx,
-        FromMap(map[string]interface{}{
+    log.From(ctx,
+        log.FromMap(map[string]interface{}{
             "more": "random stuff",
-            "very": "random"
-        }
+            "very": "random",
+        },
     )).Warn("Warn")
 
     // or
 
-    log.Logger(
+    log.From(
         ctx,
-        MultipleFields{
+        log.MultipleFields{
             "more": "random stuff",
-            "very": "random"
-        }
+            "very": "random",
+        },
     ).Warn("Warn")
 
     // You can also add single field through the API NewField
-    log.Logger(ctx,
-        NewField("more", "random stuff"),
-        NewField("very", "random"),
+    log.From(ctx,
+        log.NewField("more", "random stuff"),
+        log.NewField("very", "random"),
     ).Warn("Warn")
 
     // As long as context logger is not modified, it will log again only the context level fields
@@ -137,3 +135,5 @@ func logLevelField(ctx context.Context) {
 }
 
 ```
+
+Code snippets can be run in the [example file](examples/example.go)

@@ -23,7 +23,7 @@ func TestGetCopiedLogger(t *testing.T) {
 		tt.Parallel()
 
 		ctx := context.Background()
-		ctx = WithLogger(ctx, loggers.NewStandardLogger())
+		ctx = With(ctx, loggers.NewStandardLogger())
 
 		logger := getCopiedLogger(ctx)
 		require.NotNil(t, logger)

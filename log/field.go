@@ -31,7 +31,7 @@ func FromMap(m map[string]interface{}) Fields {
 }
 
 func (mf MultipleFields) GetKeyValues() []frozen.KeyValue {
-	keyVals := make([]frozen.KeyValue, len(mf))
+	keyVals := []frozen.KeyValue{}
 	for k, v := range mf {
 		keyVals = append(keyVals, frozen.KV(k, v))
 	}

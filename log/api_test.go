@@ -16,31 +16,10 @@ func TestWithLogger(t *testing.T) {
 	t.Parallel()
 
 	logger := loggers.NewMockLogger()
-	logger.On("Copy").Return(logger).Once()
-	WithLogger(context.Background(), logger)
+	setMockCopyAssertion(logger)
+	With(context.Background(), logger)
 
 	require.True(t, logger.AssertExpectations(t))
-}
-
-func TestWithField(t *testing.T) {
-	cases := testutil.GenerateSingleFieldCases()
-	for _, c := range cases {
-		c := c
-		t.Run("TestWithField"+" "+c.Name, func(tt *testing.T) {
-			tt.Parallel()
-
-			logger := loggers.NewMockLogger()
-			// this is done so that the mock logger is of the same reference, for testing purposes
-			// in real use, it will return a different logger
-			logger.On("Copy").Return(logger)
-			logger.On("PutField", c.Key, c.Val).Return(logger)
-			ctx := context.WithValue(context.Background(), loggerKey, logger)
-			WithField(ctx, c.Key, c.Val)
-			logger = ctx.Value(loggerKey).(*loggers.MockLogger)
-
-			assert.True(tt, logger.AssertExpectations(tt))
-		})
-	}
 }
 
 func TestWithFields(t *testing.T) {
@@ -120,15 +99,13 @@ func TestLogger(t *testing.T) {
 			setLogSpecificFieldAssertion(logger, fromFields(ts.fields))
 
 			ctx := context.WithValue(context.Background(), loggerKey, logger)
-			Logger(ctx, ts.fields...)
+			From(ctx, ts.fields...)
 			assert.True(tt, logger.AssertExpectations(tt))
 		})
 	}
 }
 
 func setLogSpecificFieldAssertion(logger *loggers.MockLogger, fields frozen.Map) {
-	// set to return the same logger for testing purposes, in real case it will return
-	// a copied logger
 	logger.On("Copy").Return(logger)
 	if fields.Count() != 0 {
 		logger.On(
@@ -140,4 +117,11 @@ func setLogSpecificFieldAssertion(logger *loggers.MockLogger, fields frozen.Map)
 			),
 		).Return(logger)
 	}
+}
+
+func setMockCopyAssertion(logger *loggers.MockLogger) {
+	// set to return the same logger for testing purposes, in real case it will return
+	// a copied logger. Tests that use these usually are not checked for their return value
+	// as the return value is mocked
+	logger.On("Copy").Return(logger)
 }
