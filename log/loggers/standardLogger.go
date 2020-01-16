@@ -3,20 +3,19 @@ package loggers
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
-	"github.com/marcelocantos/frozen"
+	"github.com/anz-bank/pkg/log"
+	"github.com/arr-ai/frozen"
 	"github.com/sirupsen/logrus"
 )
 
 const keyFields = "_fields"
 
 type standardLogger struct {
-	fields       frozen.Map
-	sortedFields []string
-	internal     *logrus.Logger
+	internal *logrus.Logger
+	fields   frozen.Map
 }
 
 type standardFormat struct{}
@@ -45,14 +44,8 @@ func (sf *standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 // NewStandardLogger returns a logger with logrus standard logger as the internal logger
-func NewStandardLogger() Logger {
-	logger := setupStandardLogger()
-
-	return &standardLogger{
-		fields:       frozen.NewMap(),
-		sortedFields: []string{},
-		internal:     logger,
-	}
+func NewStandardLogger() log.Logger {
+	return &standardLogger{internal: setupStandardLogger()}
 }
 
 func (sl *standardLogger) Debug(args ...interface{}) {
@@ -63,82 +56,21 @@ func (sl *standardLogger) Debugf(format string, args ...interface{}) {
 	sl.setInfo().Debugf(format, args...)
 }
 
-func (sl *standardLogger) Error(args ...interface{}) {
-	sl.setInfo().Error(args...)
+func (sl *standardLogger) Info(args ...interface{}) {
+	sl.setInfo().Info(args...)
 }
 
-func (sl *standardLogger) Errorf(format string, args ...interface{}) {
-	sl.setInfo().Errorf(format, args...)
+func (sl *standardLogger) Infof(format string, args ...interface{}) {
+	sl.setInfo().Infof(format, args...)
 }
 
-func (sl *standardLogger) Exit(code int) {
-	sl.internal.Exit(code)
-}
-
-func (sl *standardLogger) Fatal(args ...interface{}) {
-	sl.setInfo().Fatal(args...)
-}
-
-func (sl *standardLogger) Fatalf(format string, args ...interface{}) {
-	sl.setInfo().Fatalf(format, args...)
-}
-
-func (sl *standardLogger) Panic(args ...interface{}) {
-	sl.setInfo().Panic(args...)
-}
-
-func (sl *standardLogger) Panicf(format string, args ...interface{}) {
-	sl.setInfo().Panicf(format, args...)
-}
-
-func (sl *standardLogger) Trace(args ...interface{}) {
-	sl.setInfo().Trace(args...)
-}
-
-func (sl *standardLogger) Tracef(format string, args ...interface{}) {
-	sl.setInfo().Tracef(format, args...)
-}
-
-func (sl *standardLogger) Warn(args ...interface{}) {
-	sl.setInfo().Warn(args...)
-}
-
-func (sl *standardLogger) Warnf(format string, args ...interface{}) {
-	sl.setInfo().Warnf(format, args...)
-}
-
-func (sl *standardLogger) PutField(key string, val interface{}) Logger {
-	if !sl.fields.Has(key) {
-		sl.insertFieldsKey(key)
-	}
-	sl.fields = sl.fields.With(key, val)
+func (sl *standardLogger) PutFields(fields frozen.Map) log.Logger {
+	sl.fields = fields
 	return sl
 }
 
-func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
-	if fields.Count() == 0 {
-		panic("fields can not be empty")
-	}
-
-	keys := make([]string, fields.Count())
-	index := 0
-	for i := fields.Keys().Range(); i.Next(); {
-		if !sl.fields.Has(i.Value()) {
-			keys[index] = i.Value().(string)
-			index++
-		}
-		sl.fields = sl.fields.With(i.Value(), fields.MustGet(i.Value()))
-	}
-	if index > 0 {
-		sl.insertFieldsKey(keys[:index]...)
-	}
-	return sl
-}
-
-func (sl *standardLogger) insertFieldsKey(fields ...string) {
-	newFields := append(sl.sortedFields, fields...)
-	sort.Strings(newFields)
-	sl.sortedFields = newFields
+func (sl *standardLogger) Copy() log.Logger {
+	return &standardLogger{setupStandardLogger(), sl.fields}
 }
 
 func (sl *standardLogger) setInfo() *logrus.Entry {
@@ -154,24 +86,13 @@ func (sl *standardLogger) getFormattedField() string {
 	}
 
 	fields := strings.Builder{}
-	fields.WriteString(fmt.Sprintf("%s=%v", sl.sortedFields[0], sl.fields.MustGet(sl.sortedFields[0])))
-	if sl.fields.Count() > 1 {
-		for _, field := range sl.sortedFields[1:] {
-			fields.WriteString(fmt.Sprintf(" %s=%v", field, sl.fields.MustGet(field)))
-		}
+	i := sl.fields.Range()
+	i.Next()
+	fields.WriteString(fmt.Sprintf("%v=%v", i.Key(), i.Value()))
+	for i.Next() {
+		fields.WriteString(fmt.Sprintf(" %v=%v", i.Key(), i.Value()))
 	}
 	return fields.String()
-}
-
-func (sl *standardLogger) Copy() Logger {
-	sortedFields := make([]string, sl.fields.Count())
-	copy(sortedFields, sl.sortedFields)
-
-	return &standardLogger{
-		fields:       frozen.NewMapFromKeys(sl.fields.Keys(), sl.fields.MustGet),
-		internal:     setupStandardLogger(),
-		sortedFields: sortedFields,
-	}
 }
 
 func setupStandardLogger() *logrus.Logger {
@@ -179,7 +100,7 @@ func setupStandardLogger() *logrus.Logger {
 	logger.SetFormatter(&standardFormat{})
 
 	// makes sure that it always logs every level
-	logger.SetLevel(logrus.TraceLevel)
+	logger.SetLevel(logrus.DebugLevel)
 
 	// explicitly set it to os.Stderr
 	logger.SetOutput(os.Stderr)

@@ -4,31 +4,78 @@ import (
 	"context"
 	"testing"
 
-	"github.com/anz-bank/pkg/log/loggers"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/alecthomas/assert"
+	"github.com/arr-ai/frozen"
 )
 
-func TestGetCopiedLogger(t *testing.T) {
-	t.Parallel()
+type key1 struct{}
+type key2 struct{}
+type key3 struct{}
 
-	t.Run("Context has no logger", func(tt *testing.T) {
-		tt.Parallel()
+func getUnresolvedFieldsCases() []fieldsTest {
+	return []fieldsTest{
+		{
+			name: "regular unresolved fields",
+			unresolveds: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("c", ctxRef{key1{}}),
+				frozen.KV("d", suppress{}),
+				frozen.KV("e", func(context.Context) interface{} { return "f" }),
+			),
+			contextFields: frozen.NewMap(
+				frozen.KV(key1{}, "g"),
+			),
+			expected: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("c", "g"),
+				frozen.KV("e", "f"),
+			),
+		},
+		{
+			name: "key does not exist in context",
+			unresolveds: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("c", ctxRef{key1{}}),
+				frozen.KV("d", suppress{}),
+				frozen.KV("e", func(context.Context) interface{} { return "f" }),
+			),
+			expected: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("e", "f"),
+			),
+		},
+		{
+			name: "nothing to resolve",
+			unresolveds: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("c", 3),
+			),
+			expected: frozen.NewMap(
+				frozen.KV("a", 1),
+				frozen.KV("b", 2),
+				frozen.KV("c", 3),
+			),
+		},
+	}
+}
 
-		require.Panics(tt, func() {
-			getCopiedLogger(context.Background())
+func TestResolveFields(t *testing.T) {
+	for _, c := range getUnresolvedFieldsCases() {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			for i := c.contextFields.Range(); i.Next(); {
+				ctx = context.WithValue(ctx, i.Key(), i.Value())
+			}
+
+			assert.True(t, c.expected.Equal(Fields{c.unresolveds}.resolveFields(ctx)))
 		})
-	})
-	t.Run("Context has a logger", func(tt *testing.T) {
-		tt.Parallel()
-
-		ctx := context.Background()
-		ctx = With(ctx, loggers.NewStandardLogger())
-
-		logger := getCopiedLogger(ctx)
-		require.NotNil(t, logger)
-
-		fromContext := ctx.Value(loggerKey).(loggers.Logger)
-		assert.True(t, logger != fromContext)
-	})
+	}
 }
