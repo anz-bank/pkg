@@ -9,53 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/marcelocantos/frozen"
+	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/require"
 )
 
-type SingleField struct {
-	Name, Key string
-	Val       interface{}
-}
-
 type MultipleFields struct {
-	Name   string
-	Fields frozen.Map
-}
-
-func GenerateSingleFieldCases() []SingleField {
-	return []SingleField{
-		{
-			Name: "String Value",
-			Key:  "random",
-			Val:  "Value",
-		},
-		{
-			Name: "Number Value",
-			Key:  "int",
-			Val:  3,
-		},
-		{
-			Name: "Byte Value",
-			Key:  "byte",
-			Val:  'q',
-		},
-		{
-			Name: "Empty Key",
-			Key:  "",
-			Val:  "Empty",
-		},
-		{
-			Name: "Empty Value",
-			Key:  "Empty",
-			Val:  "",
-		},
-		{
-			Name: "Nil Value",
-			Key:  "nil",
-			Val:  nil,
-		},
-	}
+	Name                 string
+	Fields, GlobalFields frozen.Map
 }
 
 func GenerateMultipleFieldsCases() []MultipleFields {
@@ -89,10 +49,10 @@ func RedirectOutput(t *testing.T, print func()) string {
 	print()
 
 	outC := make(chan string)
-	go func(tt *testing.T) {
+	go func(t *testing.T) {
 		var buf bytes.Buffer
 		_, err := io.Copy(&buf, r)
-		require.NoError(tt, err)
+		require.NoError(t, err)
 		outC <- buf.String()
 	}(t)
 
@@ -127,21 +87,10 @@ func OutputFormattedFields(fields frozen.Map) string {
 	return output.String()
 }
 
-func GetSortedKeys(fields frozen.Map) []string {
-	keys := make([]string, fields.Count())
-	index := 0
+func ConvertToGoMap(fields frozen.Map) map[interface{}]interface{} {
+	goMap := make(map[interface{}]interface{})
 	for i := fields.Range(); i.Next(); {
-		keys[index] = i.Key().(string)
-		index++
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func ConvertToGoMap(fields frozen.Map) map[string]interface{} {
-	goMap := make(map[string]interface{})
-	for i := fields.Range(); i.Next(); {
-		goMap[i.Key().(string)] = i.Value()
+		goMap[i.Key()] = i.Value()
 	}
 	return goMap
 }
