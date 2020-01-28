@@ -1,7 +1,7 @@
 package log
 
 import (
-	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -40,8 +40,16 @@ func TestDebug(t *testing.T) {
 		NewStandardLogger().Debug(testMessage)
 	})
 
+	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debug(testMessage)
+	})
+
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
 		getStandardLoggerWithFields().Debug(testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
+		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debug(testMessage)
 	})
 }
 
@@ -50,8 +58,16 @@ func TestDebugf(t *testing.T) {
 		NewStandardLogger().Debugf(simpleFormat, testMessage)
 	})
 
+	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debugf(simpleFormat, testMessage)
+	})
+
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
 		getStandardLoggerWithFields().Debugf(simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
+		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debugf(simpleFormat, testMessage)
 	})
 }
 
@@ -60,8 +76,16 @@ func TestInfo(t *testing.T) {
 		NewStandardLogger().Info(testMessage)
 	})
 
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Info(testMessage)
+	})
+
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
 		getStandardLoggerWithFields().Info(testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
+		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Info(testMessage)
 	})
 }
 
@@ -70,8 +94,16 @@ func TestInfof(t *testing.T) {
 		NewStandardLogger().Infof(simpleFormat, testMessage)
 	})
 
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Infof(simpleFormat, testMessage)
+	})
+
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
 		getStandardLoggerWithFields().Infof(simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
+		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Infof(simpleFormat, testMessage)
 	})
 }
 
@@ -81,6 +113,20 @@ func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, 
 
 	// uses Contains to avoid checking timestamps and fields
 	assert.Contains(t, actualOutput, expectedOutput)
+}
+
+func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
+	out := make(map[string]interface{})
+	require.NoError(t, json.Unmarshal([]byte(redirectOutput(t, logFunc)), &out))
+	assert.Equal(t, out["message"], testMessage)
+	assert.Equal(t, out["level"], strings.ToUpper(level.String()))
+	if fields.Count() != 0 {
+		// type correction because json unmarshall reads numbers as float64
+		assert.Equal(t,
+			convertToGoMap(fields.With("byte", float64('1')).With("int", float64(123))),
+			out["fields"].(map[string]interface{}),
+		)
+	}
 }
 
 func TestNewStandardLogger(t *testing.T) {
@@ -131,10 +177,6 @@ func TestPutFields(t *testing.T) {
 				assert.True(t, c.Fields.Equal(logger.fields))
 			})
 	}
-}
-
-func TestJsonFormat(t *testing.T) {
-	WithLogger(NewStandardLogger()).WithConfigs(JSONFormatter{}).From(context.Background()).Info("Hello there")
 }
 
 func getNewStandardLogger() *standardLogger {

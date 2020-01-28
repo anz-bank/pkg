@@ -87,10 +87,10 @@ func outputFormattedFields(fields frozen.Map) string {
 	return output.String()
 }
 
-func convertToGoMap(fields frozen.Map) map[interface{}]interface{} {
-	goMap := make(map[interface{}]interface{})
+func convertToGoMap(fields frozen.Map) map[string]interface{} {
+	goMap := make(map[string]interface{})
 	for i := fields.Range(); i.Next(); {
-		goMap[i.Key()] = i.Value()
+		goMap[i.Key().(string)] = i.Value()
 	}
 	return goMap
 }
