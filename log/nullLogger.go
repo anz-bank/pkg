@@ -1,9 +1,8 @@
-package loggers
+package log
 
 import (
 	"bytes"
 
-	"github.com/anz-bank/pkg/log"
 	"github.com/arr-ai/frozen"
 )
 
@@ -11,7 +10,8 @@ type nullLogger struct {
 	internal *standardLogger
 }
 
-func NewNullLogger() log.Logger {
+// Create a null logger that outputs to a buffer, for benchmarking
+func NewNullLogger() Logger {
 	return &nullLogger{internal: setUpLogger()}
 }
 
@@ -31,15 +31,19 @@ func (n *nullLogger) Infof(format string, args ...interface{}) {
 	n.internal.Infof(format, args...)
 }
 
-func (n *nullLogger) PutFields(fields frozen.Map) log.Logger {
+func (n *nullLogger) PutFields(fields frozen.Map) Logger {
 	n.internal.fields = fields
 	return n
 }
 
-func (n *nullLogger) Copy() log.Logger {
+func (n *nullLogger) Copy() Logger {
 	return &nullLogger{
 		setUpLogger().PutFields(n.internal.fields).(*standardLogger),
 	}
+}
+
+func (n *nullLogger) SetConfig(configs frozen.Map) Logger {
+	return n.internal.SetConfig(configs)
 }
 
 func setUpLogger() *standardLogger {

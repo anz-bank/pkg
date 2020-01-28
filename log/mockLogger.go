@@ -37,3 +37,7 @@ func (m *mockLogger) PutFields(fields frozen.Map) Logger {
 func (m *mockLogger) Copy() Logger {
 	return m.Called().Get(0).(Logger)
 }
+
+func (m *mockLogger) SetConfig(configs frozen.Map) Logger {
+	return m.Called(configs).Get(0).(Logger)
+}

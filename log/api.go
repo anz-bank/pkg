@@ -11,7 +11,7 @@ type Fields struct{ m frozen.Map }
 
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
-	f := getFields(ctx)
+	f := getFields(ctx).setConfigToLogger()
 	return f.getCopiedLogger().(internalLoggerOps).PutFields(f.resolveFields(ctx))
 }
 
@@ -23,6 +23,11 @@ func Suppress(keys ...string) Fields {
 // With creates a field with a single key value pair.
 func With(key string, val interface{}) Fields {
 	return Fields{}.With(key, val)
+}
+
+// WithConfigs adds extra configuration for the logger.
+func WithConfigs(configs ...config) Fields {
+	return Fields{}.WithConfigs(configs...)
 }
 
 // WithCtxRef creates a field with a key that refers to the provided context key,
@@ -63,7 +68,7 @@ func (f Fields) From(ctx context.Context) Logger {
 // in case overlapping gets higher from left to right, and puts the merged fields
 // in the context.
 func (f Fields) Onto(ctx context.Context) context.Context {
-	return context.WithValue(ctx, fieldsContextKey{}, getFields(ctx).Chain(f).m)
+	return context.WithValue(ctx, fieldsContextKey{}, getFields(ctx).Chain(f).setConfigToLogger().m)
 }
 
 // Suppress ensures that the keys will not be logger.
@@ -81,6 +86,11 @@ func (f Fields) Suppress(keys ...string) Fields {
 // With adds to the fields a single key value pair.
 func (f Fields) With(key string, val interface{}) Fields {
 	return f.with(key, val)
+}
+
+// WithConfigs adds extra configuration for the logger.
+func (f Fields) WithConfigs(configs ...config) Fields {
+	return f.Chain(Fields{}.with(configKey{}, createConfigMap(configs...)))
 }
 
 // WithCtxRef adds key and the context key to the fields.

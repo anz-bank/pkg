@@ -15,6 +15,8 @@ type Logger interface {
 }
 
 type internalLoggerOps interface {
+	// SetConfig sets configurations for the logger
+	SetConfig(configs frozen.Map) Logger
 	// PutFields returns the Logger with the new fields added
 	PutFields(fields frozen.Map) Logger
 	// Copy returns a logger whose data is copied from the caller

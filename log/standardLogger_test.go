@@ -1,6 +1,7 @@
-package loggers
+package log
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -36,46 +37,46 @@ func TestCopyStandardLogger(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	testLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
 		NewStandardLogger().Debug(testMessage)
 	})
 
-	testLogOutput(t, logrus.DebugLevel, testField, func() {
+	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
 		getStandardLoggerWithFields().Debug(testMessage)
 	})
 }
 
 func TestDebugf(t *testing.T) {
-	testLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
 		NewStandardLogger().Debugf(simpleFormat, testMessage)
 	})
 
-	testLogOutput(t, logrus.DebugLevel, testField, func() {
+	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
 		getStandardLoggerWithFields().Debugf(simpleFormat, testMessage)
 	})
 }
 
 func TestInfo(t *testing.T) {
-	testLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
 		NewStandardLogger().Info(testMessage)
 	})
 
-	testLogOutput(t, logrus.InfoLevel, testField, func() {
+	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
 		getStandardLoggerWithFields().Info(testMessage)
 	})
 }
 
 func TestInfof(t *testing.T) {
-	testLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
 		NewStandardLogger().Infof(simpleFormat, testMessage)
 	})
 
-	testLogOutput(t, logrus.InfoLevel, testField, func() {
+	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
 		getStandardLoggerWithFields().Infof(simpleFormat, testMessage)
 	})
 }
 
-func testLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
+func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
 	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
 	actualOutput := testutil.RedirectOutput(t, logFunc)
 
@@ -95,7 +96,7 @@ func TestNewStandardLogger(t *testing.T) {
 func TestGetFormattedFieldEmptyFields(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, getNewStandardLogger().getFormattedField(), "")
+	require.Equal(t, "", getFormattedField(getNewStandardLogger().fields))
 }
 
 func TestGetFormattedFieldWithFields(t *testing.T) {
@@ -110,7 +111,7 @@ func TestGetFormattedFieldWithFields(t *testing.T) {
 	).(*standardLogger)
 	// fields are in a random order
 	expectedFields := []string{"byteVal=107", "numberVal=1", "stringVal=this is a sentence"}
-	actualFields := logger.getFormattedField()
+	actualFields := getFormattedField(logger.fields)
 	for _, e := range expectedFields {
 		assert.Contains(t, actualFields, e)
 	}
@@ -131,6 +132,10 @@ func TestPutFields(t *testing.T) {
 				assert.True(t, c.Fields.Equal(logger.fields))
 			})
 	}
+}
+
+func TestJsonFormat(t *testing.T) {
+	WithLogger(NewStandardLogger()).WithConfigs(JSONFormatter{}).From(context.Background()).Info("Hello there")
 }
 
 func getNewStandardLogger() *standardLogger {

@@ -48,10 +48,28 @@ func (f Fields) with(key, val interface{}) Fields {
 	return Fields{f.m.With(key, val)}
 }
 
+func (f Fields) setConfigToLogger() Fields {
+	var config interface{}
+	var exists bool
+	if config, exists = f.m.Get(configKey{}); !exists {
+		return f
+	}
+	logger := f.getCopiedLogger().(internalLoggerOps).SetConfig(config.(frozen.Map))
+	return Fields{f.WithLogger(logger).m.Without(frozen.NewSet(configKey{}))}
+}
+
 func getFields(ctx context.Context) Fields {
 	fields, exists := ctx.Value(fieldsContextKey{}).(frozen.Map)
 	if !exists {
 		return Fields{}
 	}
 	return Fields{fields}
+}
+
+func createConfigMap(configs ...config) frozen.Map {
+	var mb frozen.MapBuilder
+	for _, c := range configs {
+		mb.Put(c.getConfigType(), c.getConfig())
+	}
+	return mb.Finish()
 }

@@ -79,3 +79,7 @@ func TestResolveFields(t *testing.T) {
 		})
 	}
 }
+
+func TestSetConfigToLogger(t *testing.T) {
+
+}

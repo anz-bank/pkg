@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/anz-bank/pkg/log"
-	"github.com/anz-bank/pkg/log/loggers"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,7 +31,7 @@ func BenchmarkLog1000Fields(b *testing.B) {
 }
 
 func BenchmarkWith(b *testing.B) {
-	logger := loggers.NewNullLogger()
+	logger := log.NewNullLogger()
 	ctx := log.With("key", "val").With("abc", 123).WithLogger(logger).Onto(context.Background())
 
 	for i := 0; i < b.N; i++ {
@@ -55,7 +54,7 @@ func BenchmarkLogrus(b *testing.B) {
 }
 
 func BenchmarkLog(b *testing.B) {
-	logger := loggers.NewNullLogger()
+	logger := log.NewNullLogger()
 	ctx := log.With("x-user-id", "12344").
 		With("x-trace-id", "acbdd").
 		WithLogger(logger).
@@ -72,6 +71,6 @@ func runBenchmark(b *testing.B, l int) {
 		for j := 0; j < l; j++ {
 			f = f.With(strconv.Itoa(j), j)
 		}
-		f.WithLogger(loggers.NewNullLogger()).From(context.Background()).Info("test")
+		f.WithLogger(log.NewNullLogger()).From(context.Background()).Info("test")
 	}
 }
