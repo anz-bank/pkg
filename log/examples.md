@@ -152,4 +152,41 @@ func loggingDemo(ctx context.Context) {
 
 ```
 
+### Logging in different formats
+
+There is the JSON format, you can set it by adding `WithConfig(log.JSONFormatter{})`. It will log in the following format:
+```json
+{
+	"fields": {
+		"key1": "value1", // value can be any data types
+		"key2": "value2",
+	},
+	"level": "log level", // string, either INFO or DEBUG
+	"message": "log message", // string,
+	"timestamp": "log time", // timestamp in RFC3339Nano format
+}
+```
+
+## Configuring logger
+
+Logger can be configured using the `WithConfig` API and giving it the correct configuration struct.
+
+```go
+func configLogDemo(ctx context.Context) {
+	// Adding configuration can be done by adding the correct struct. Configurations are once again
+	// treated as fields, which means it will replace old configurations when a configuration
+	// of the same type is added. For example, if before you added StandardFormatter, calling WithConfig
+	// with JSONFormatter will replace StandardFormatter. Just like Fields, it will also be stored
+	// in the context.
+	ctx = log.WithConfigs(log.JSONFormatter{}).Onto(ctx)
+
+	// You can also have a log-specific configs by not saving it to the context.
+	log.WithConfigs(log.StandardFormatter{}, log.JSONFormatter{}, ).
+		WithLogger(log.NewStandardLogger()).
+		With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
+		From(ctx).
+		Info("json formatted log")
+}
+```
+
 Code snippets can be run in the [example file](examples/example.go)

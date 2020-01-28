@@ -12,8 +12,8 @@ type contextKey2 struct{}
 
 func main() {
 	ctx := context.Background()
-	// fieldsDemo(ctx)
-	// loggingDemo(ctx)
+	fieldsDemo(ctx)
+	loggingDemo(ctx)
 	configLogDemo(ctx)
 }
 
@@ -118,7 +118,7 @@ func loggingDemo(ctx context.Context) {
 	// the format counterpart, Debugf and Infof.
 	// Logging will log in the following format:
 	// (time in RFC3339Nano Format) (Fields) (Level) (Message)
-	// Fields themselves are logged as a space separated list of key=value
+	// Fields themselves are logged as a space separated list of key=value.
 	log.From(ctx).Debug("This does not have any fields")
 
 	ctx = log.With("this", "one").With("have", "fields").Onto(ctx)
@@ -134,7 +134,17 @@ func loggingDemo(ctx context.Context) {
 }
 
 func configLogDemo(ctx context.Context) {
-	// ctx = log.WithLogger(logger).WithConfigs(log.JSONFormatter{}).Onto(ctx)
-	log.WithLogger(log.NewStandardLogger()).WithConfigs(log.JSONFormatter{}).From(context.Background()).Info("Hello there")
-	log.With("test", "test").With("hello", "world").WithLogger(log.NewStandardLogger()).WithConfigs(log.JSONFormatter{}).From(context.Background()).Info("Hello there")
+	// Adding configuration can be done by adding the correct struct. Configurations are once again
+	// treated as fields, which means it will replace old configurations when a configuration
+	// of the same type is added. For example, if before you added StandardFormatter, calling WithConfig
+	// with JSONFormatter will replace StandardFormatter. Just like Fields, it will also be stored
+	// in the context.
+	ctx = log.WithConfigs(log.JSONFormatter{}).Onto(ctx)
+
+	// You can also have a log-specific configs by not saving it to the context.
+	log.WithConfigs(log.StandardFormatter{}, log.JSONFormatter{}).
+		WithLogger(log.NewStandardLogger()).
+		With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
+		From(ctx).
+		Info("json formatted log")
 }
