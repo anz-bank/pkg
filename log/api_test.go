@@ -8,6 +8,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type fieldsTest struct {
@@ -39,15 +40,51 @@ func TestChain(t *testing.T) {
 	assert.True(t, expected.Equal(init.Chain(fields1, fields2, fields3).m))
 }
 
-// func TestChainWithConfig(t *testing.T) {
-// 	t.Parallel()
-// 	init := Fields{generateSimpleField(5)
-// }
-
-func TestWithConfig(t *testing.T) {
+func TestChainWithConfigs(t *testing.T) {
 	t.Parallel()
 
+	fields1 := Fields{generateSimpleField(5)}.WithConfigs(StandardFormatter{})
+	fields2 := Fields{generateSimpleField(6)}.WithConfigs(JSONFormatter{})
+	expected := Fields{generateSimpleField(6)}.WithConfigs(JSONFormatter{})
 
+	assert.True(t, expected.m.Equal(fields1.Chain(fields2).m))
+}
+
+func TestWithConfigs(t *testing.T) {
+	t.Parallel()
+
+	expectedConfig := frozen.Map{}.
+		With(StandardFormatter{}.getConfigType(), StandardFormatter{}.getConfig())
+	f := WithConfigs(JSONFormatter{}, StandardFormatter{})
+	config, exists := f.m.Get(configKey{})
+	require.True(t, exists)
+	assert.True(t, expectedConfig.Equal(config))
+}
+
+func TestWithConfigExistingConfigs(t *testing.T) {
+	t.Parallel()
+
+	// added random value because there's not many config example currently
+	expectedConfig := frozen.Map{}.
+		With(JSONFormatter{}.getConfigType(), JSONFormatter{}.getConfig()).
+		With("doesn't", "matter")
+
+	// manually adding the config
+	f1 := Fields{
+		frozen.Map{}.With(configKey{},
+			frozen.Map{}.
+				With(
+					StandardFormatter{}.getConfigType(),
+					StandardFormatter{}.getConfig(),
+				).
+				With("doesn't", "matter"),
+		),
+	}
+
+	f := f1.WithConfigs(StandardFormatter{}, JSONFormatter{})
+	config, exists := f.m.Get(configKey{})
+	require.True(t, exists)
+	assert.True(t, expectedConfig.Equal(config))
 }
 
 func TestFrom(t *testing.T) {
@@ -66,6 +103,25 @@ func TestFrom(t *testing.T) {
 			logger.AssertExpectations(t)
 		})
 	}
+}
+
+func TestFromWithConfigs(t *testing.T) {
+	t.Parallel()
+
+	//TODO: add more config
+	config := frozen.Map{}.With(formatter, JSONFormatter{})
+	fields := Fields{
+		frozen.Map{}.
+			With("test1", 1).
+			With("test2", 2),
+	}
+	logger := newMockLogger()
+	setMockCopyAssertion(logger)
+	setLogMockAssertion(logger, fields.m)
+	logger.On("SetConfig", mock.MatchedBy(func(arg frozen.Map) bool { return arg.Equal(config) })).Return(logger)
+
+	From(Fields{frozen.Map{}.With(configKey{}, config)}.Chain(fields).WithLogger(logger).Onto(context.Background()))
+	logger.AssertExpectations(t)
 }
 
 func TestOnto(t *testing.T) {
@@ -187,11 +243,11 @@ func getLoggerFromContext(t *testing.T, ctx context.Context) *mockLogger {
 	return m.MustGet(loggerKey{}).(*mockLogger)
 }
 
-func setMockCopyAssertion(logger *mockLogger) {
+func setMockCopyAssertion(logger *mockLogger) *mock.Call {
 	// set to return the same logger for testing purposes, in real case it will return
 	// a copied logger. Tests that use these usually are not checked for their return value
 	// as the return value is mocked
-	logger.On("Copy").Return(logger)
+	return logger.On("Copy").Return(logger)
 }
 
 func runFieldsMethod(t *testing.T, empty, nonEmpty func(*testing.T)) {

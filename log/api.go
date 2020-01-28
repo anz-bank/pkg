@@ -75,7 +75,7 @@ func (f Fields) From(ctx context.Context) Logger {
 // in case overlapping gets higher from left to right, and puts the merged fields
 // in the context.
 func (f Fields) Onto(ctx context.Context) context.Context {
-	return context.WithValue(ctx, fieldsContextKey{}, getFields(ctx).Chain(f).setConfigToLogger().m)
+	return context.WithValue(ctx, fieldsContextKey{}, getFields(ctx).Chain(f).m)
 }
 
 // Suppress ensures that the keys will not be logger.

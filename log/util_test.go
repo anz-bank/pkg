@@ -6,6 +6,7 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/arr-ai/frozen"
+	"github.com/stretchr/testify/mock"
 )
 
 type key1 struct{}
@@ -81,5 +82,19 @@ func TestResolveFields(t *testing.T) {
 }
 
 func TestSetConfigToLogger(t *testing.T) {
+	t.Parallel()
 
+	config := frozen.Map{}.With(formatter, standardFormat{})
+	logger := newMockLogger()
+	setMockCopyAssertion(logger).Twice()
+	logger.On("SetConfig", mock.MatchedBy(
+		func(arg frozen.Map) bool {
+			return arg.Equal(config)
+		},
+	)).Return(logger)
+	Fields{frozen.Map{}.With(configKey{}, config).
+		With(loggerKey{}, logger)}.
+		setConfigToLogger()
+
+	logger.AssertExpectations(t)
 }
