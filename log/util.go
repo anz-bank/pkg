@@ -23,6 +23,7 @@ func (f Fields) resolveFields(ctx context.Context) frozen.Map {
 	fields := f.m
 	var toSuppress frozen.SetBuilder
 	toSuppress.Add(loggerKey{})
+	toSuppress.Add(configKey{})
 	for i := fields.Range(); i.Next(); {
 		switch k := i.Value().(type) {
 		case ctxRef:
@@ -49,13 +50,16 @@ func (f Fields) with(key, val interface{}) Fields {
 }
 
 func (f Fields) setConfigToLogger() Fields {
-	var config interface{}
 	var exists bool
+	if _, exists := f.m.Get(loggerKey{}); !exists {
+		return f
+	}
+	var config interface{}
 	if config, exists = f.m.Get(configKey{}); !exists {
 		return f
 	}
 	logger := f.getCopiedLogger().(internalLoggerOps).SetConfig(config.(frozen.Map))
-	return Fields{f.WithLogger(logger).m.Without(frozen.NewSet(configKey{}))}
+	return f.WithLogger(logger)
 }
 
 func getFields(ctx context.Context) Fields {

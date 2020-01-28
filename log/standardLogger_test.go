@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anz-bank/pkg/log/testutil"
 	"github.com/arr-ai/frozen"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +17,7 @@ const (
 )
 
 // to test fields output for all log
-var testField = testutil.GenerateMultipleFieldsCases()[0].Fields
+var testField = generateMultipleFieldsCases()[0].Fields
 
 func TestCopyStandardLogger(t *testing.T) {
 	t.Parallel()
@@ -78,7 +77,7 @@ func TestInfof(t *testing.T) {
 
 func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
 	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
-	actualOutput := testutil.RedirectOutput(t, logFunc)
+	actualOutput := redirectOutput(t, logFunc)
 
 	// uses Contains to avoid checking timestamps and fields
 	assert.Contains(t, actualOutput, expectedOutput)
@@ -120,7 +119,7 @@ func TestGetFormattedFieldWithFields(t *testing.T) {
 func TestPutFields(t *testing.T) {
 	t.Parallel()
 
-	cases := testutil.GenerateMultipleFieldsCases()
+	cases := generateMultipleFieldsCases()
 	for _, c := range cases {
 		c := c
 		t.Run(c.Name,

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	"github.com/anz-bank/pkg/log/testutil"
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/mock"
 )
@@ -40,6 +39,17 @@ func TestChain(t *testing.T) {
 	assert.True(t, expected.Equal(init.Chain(fields1, fields2, fields3).m))
 }
 
+// func TestChainWithConfig(t *testing.T) {
+// 	t.Parallel()
+// 	init := Fields{generateSimpleField(5)
+// }
+
+func TestWithConfig(t *testing.T) {
+	t.Parallel()
+
+
+}
+
 func TestFrom(t *testing.T) {
 	for _, c := range getUnresolvedFieldsCases() {
 		c := c
@@ -59,7 +69,7 @@ func TestFrom(t *testing.T) {
 }
 
 func TestOnto(t *testing.T) {
-	cases := testutil.GenerateMultipleFieldsCases()
+	cases := generateMultipleFieldsCases()
 	for _, c := range cases {
 		c := c
 		t.Run(c.Name, func(t *testing.T) {

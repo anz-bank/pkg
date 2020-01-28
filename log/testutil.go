@@ -1,4 +1,4 @@
-package testutil
+package log
 
 import (
 	"bytes"
@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MultipleFields struct {
+type multipleFields struct {
 	Name                 string
 	Fields, GlobalFields frozen.Map
 }
 
-func GenerateMultipleFieldsCases() []MultipleFields {
-	return []MultipleFields{
+func generateMultipleFieldsCases() []multipleFields {
+	return []multipleFields{
 		{
 			Name: "Multiple types of Values",
 			Fields: frozen.NewMap(
@@ -40,7 +40,7 @@ func GenerateMultipleFieldsCases() []MultipleFields {
 }
 
 // Adapted from https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
-func RedirectOutput(t *testing.T, print func()) string {
+func redirectOutput(t *testing.T, print func()) string {
 	old := os.Stderr
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
@@ -61,7 +61,7 @@ func RedirectOutput(t *testing.T, print func()) string {
 	return <-outC
 }
 
-func OutputFormattedFields(fields frozen.Map) string {
+func outputFormattedFields(fields frozen.Map) string {
 	if fields.Count() == 0 {
 		return ""
 	}
@@ -87,7 +87,7 @@ func OutputFormattedFields(fields frozen.Map) string {
 	return output.String()
 }
 
-func ConvertToGoMap(fields frozen.Map) map[interface{}]interface{} {
+func convertToGoMap(fields frozen.Map) map[interface{}]interface{} {
 	goMap := make(map[interface{}]interface{})
 	for i := fields.Range(); i.Next(); {
 		goMap[i.Key()] = i.Value()

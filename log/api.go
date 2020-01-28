@@ -52,7 +52,14 @@ func WithLogger(logger Logger) Fields {
 func (f Fields) Chain(fieldses ...Fields) Fields {
 	merged := f.m
 	for _, fields := range fieldses {
-		merged = merged.Update(fields.m)
+		if merged.Has(configKey{}) && fields.m.Has(configKey{}) {
+			config1 := merged.MustGet(configKey{}).(frozen.Map)
+			config2 := fields.m.MustGet(configKey{}).(frozen.Map)
+			merged = merged.With(configKey{}, config1.Update(config2)).
+				Update(fields.m.Without(frozen.NewSet(configKey{})))
+		} else {
+			merged = merged.Update(fields.m)
+		}
 	}
 	return Fields{merged}
 }
@@ -90,7 +97,10 @@ func (f Fields) With(key string, val interface{}) Fields {
 
 // WithConfigs adds extra configuration for the logger.
 func (f Fields) WithConfigs(configs ...config) Fields {
-	return f.Chain(Fields{}.with(configKey{}, createConfigMap(configs...)))
+	if config, exists := f.m.Get(configKey{}); exists {
+		return f.with(configKey{}, config.(frozen.Map).Update(createConfigMap(configs...)))
+	}
+	return f.with(configKey{}, createConfigMap(configs...))
 }
 
 // WithCtxRef adds key and the context key to the fields.
