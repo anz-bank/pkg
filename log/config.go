@@ -15,11 +15,15 @@ type jsonFormat struct{}
 func NewStandardFormat() Config             { return standardFormat{} }
 func (standardFormat) TypeKey() interface{} { return Formatter }
 func (sf standardFormat) Apply(logger Logger) error {
-	return logger.(formattable).SetFormatter(sf)
+	return applyFormatter(sf, logger)
 }
 
 func NewJSONFormat() Config             { return jsonFormat{} }
 func (jsonFormat) TypeKey() interface{} { return Formatter }
 func (jf jsonFormat) Apply(logger Logger) error {
-	return logger.(formattable).SetFormatter(jf)
+	return applyFormatter(jf, logger)
+}
+
+func applyFormatter(formatter Config, logger Logger) error {
+	return logger.(formattable).SetFormatter(formatter)
 }

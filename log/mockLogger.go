@@ -39,6 +39,5 @@ func (m *mockLogger) Copy() Logger {
 }
 
 func (m *mockLogger) SetFormatter(formatter Config) error {
-	res := m.Called(formatter)
-	return res.Error(0)
+	return m.Called(formatter).Error(0)
 }
