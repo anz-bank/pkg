@@ -11,11 +11,14 @@ type loggerKey struct{}
 type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
 
-// type fieldsCollector struct{
-// 	fields frozen.Map
-// }
+type fieldsCollector struct{
+	fields frozen.Map
+}
 
-// func (f *fieldsCollector) PutFields
+func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
+	f.fields = fields
+	return NewNullLogger()
+}
 
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})

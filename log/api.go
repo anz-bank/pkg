@@ -110,12 +110,14 @@ func (f Fields) WithLogger(logger Logger) Fields {
 	return f.with(loggerKey{}, logger.(copyable).Copy())
 }
 
-// // String returns a string that represent the current fields
-// func (f Fields) String(ctx context.Context) string {
-// 	return f.resolveFields(ctx).String()
-// }
+// String returns a string that represent the current fields
+func (f Fields) String(ctx context.Context) string {
+	fields := &fieldsCollector{}
+	f.configureLogger(ctx, fields)
+	return fields.fields.String()
+}
 
-// // MergedString returns a string that represents the current fields merged by fields in context
-// func (f Fields) MergedString(ctx context.Context) string {
-// 	return getFields(ctx).Chain(f).String(ctx)
-// }
+// MergedString returns a string that represents the current fields merged by fields in context
+func (f Fields) MergedString(ctx context.Context) string {
+	return getFields(ctx).Chain(f).String(ctx)
+}
