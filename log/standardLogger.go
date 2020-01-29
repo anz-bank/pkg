@@ -98,25 +98,14 @@ func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
 	return sl
 }
 
-func (sl *standardLogger) SetConfig(configs frozen.Map) Logger {
-	for i := configs.Range(); i.Next(); {
-		switch i.Key().(int) {
-		case formatter:
-			sl.setFormatter(i.Value().(int))
-		default:
-			panic("unknown configuration")
-		}
-	}
-	return sl
-}
-
-func (sl *standardLogger) setFormatter(formatterType int) {
+func (sl *standardLogger) SetFormatter(formatterType configKey) Logger {
 	switch formatterType {
 	case jsonFormatter:
 		sl.internal.SetFormatter(&jsonFormat{})
 	default:
 		sl.internal.SetFormatter(&standardFormat{})
 	}
+	return sl
 }
 
 func (sl *standardLogger) Copy() Logger {
@@ -125,7 +114,6 @@ func (sl *standardLogger) Copy() Logger {
 
 func (sl *standardLogger) setInfo() *logrus.Entry {
 	// TODO: set linker here
-
 	return sl.internal.WithFields(logrus.Fields{
 		keyFields: sl.fields,
 	})

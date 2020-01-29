@@ -41,7 +41,7 @@ func TestDebug(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debug(testMessage)
+		getNewStandardLogger().SetFormatter(jsonFormatter).Debug(testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
@@ -49,7 +49,7 @@ func TestDebug(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
-		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debug(testMessage)
+		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Debug(testMessage)
 	})
 }
 
@@ -59,7 +59,7 @@ func TestDebugf(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debugf(simpleFormat, testMessage)
+		getNewStandardLogger().SetFormatter(jsonFormatter).Debugf(simpleFormat, testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
@@ -67,7 +67,7 @@ func TestDebugf(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
-		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Debugf(simpleFormat, testMessage)
+		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Debugf(simpleFormat, testMessage)
 	})
 }
 
@@ -77,7 +77,7 @@ func TestInfo(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Info(testMessage)
+		getNewStandardLogger().SetFormatter(jsonFormatter).Info(testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
@@ -85,7 +85,7 @@ func TestInfo(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
-		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Info(testMessage)
+		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Info(testMessage)
 	})
 }
 
@@ -95,7 +95,7 @@ func TestInfof(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Infof(simpleFormat, testMessage)
+		getNewStandardLogger().SetFormatter(jsonFormatter).Infof(simpleFormat, testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
@@ -103,7 +103,7 @@ func TestInfof(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
-		getStandardLoggerWithFields().SetConfig(frozen.Map{}.With(formatter, jsonFormatter)).Infof(simpleFormat, testMessage)
+		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Infof(simpleFormat, testMessage)
 	})
 }
 

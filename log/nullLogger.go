@@ -42,8 +42,8 @@ func (n *nullLogger) Copy() Logger {
 	}
 }
 
-func (n *nullLogger) SetConfig(configs frozen.Map) Logger {
-	return n.internal.SetConfig(configs)
+func (n *nullLogger) SetFormatter(formatterType configKey) Logger {
+	return n.internal.SetFormatter(formatterType)
 }
 
 func setUpLogger() *standardLogger {

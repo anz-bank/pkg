@@ -155,7 +155,7 @@ func loggingDemo(ctx context.Context) {
 ### Logging in different formats
 
 There is the JSON format, you can set it by adding `WithConfig(log.JSONFormatter{})`. It will log in the following format:
-```json
+```js
 {
 	"fields": {
 		"key1": "value1", // value can be any data types
@@ -181,7 +181,7 @@ func configLogDemo(ctx context.Context) {
 	ctx = log.WithConfigs(log.JSONFormatter{}).Onto(ctx)
 
 	// You can also have a log-specific configs by not saving it to the context.
-	log.WithConfigs(log.StandardFormatter{}, log.JSONFormatter{}, ).
+	log.WithConfigs(log.StandardFormatter{}, log.JSONFormatter{}).
 		WithLogger(log.NewStandardLogger()).
 		With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
 		From(ctx).

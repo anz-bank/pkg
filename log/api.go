@@ -11,8 +11,8 @@ type Fields struct{ m frozen.Map }
 
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
-	f := getFields(ctx).setConfigToLogger()
-	return f.getCopiedLogger().(internalLoggerOps).PutFields(f.resolveFields(ctx))
+	f := getFields(ctx)
+	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
 }
 
 // Suppress will ensure that suppressed keys are not logged.
@@ -52,14 +52,7 @@ func WithLogger(logger Logger) Fields {
 func (f Fields) Chain(fieldses ...Fields) Fields {
 	merged := f.m
 	for _, fields := range fieldses {
-		if merged.Has(configKey{}) && fields.m.Has(configKey{}) {
-			config1 := merged.MustGet(configKey{}).(frozen.Map)
-			config2 := fields.m.MustGet(configKey{}).(frozen.Map)
-			merged = merged.With(configKey{}, config1.Update(config2)).
-				Update(fields.m.Without(frozen.NewSet(configKey{})))
-		} else {
-			merged = merged.Update(fields.m)
-		}
+		merged = merged.Update(fields.m)
 	}
 	return Fields{merged}
 }
@@ -97,10 +90,9 @@ func (f Fields) With(key string, val interface{}) Fields {
 
 // WithConfigs adds extra configuration for the logger.
 func (f Fields) WithConfigs(configs ...config) Fields {
-	if config, exists := f.m.Get(configKey{}); exists {
-		return f.with(configKey{}, config.(frozen.Map).Update(createConfigMap(configs...)))
-	}
-	return f.with(configKey{}, createConfigMap(configs...))
+	return f.Chain(Fields{
+		createConfigMap(configs...),
+	})
 }
 
 // WithCtxRef adds key and the context key to the fields.
@@ -115,15 +107,15 @@ func (f Fields) WithFunc(key string, val func(context.Context) interface{}) Fiel
 
 // WithLogger adds logger which will be used for the log operation.
 func (f Fields) WithLogger(logger Logger) Fields {
-	return f.with(loggerKey{}, logger.(internalLoggerOps).Copy())
+	return f.with(loggerKey{}, logger.(copyable).Copy())
 }
 
-// String returns a string that represent the current fields
-func (f Fields) String(ctx context.Context) string {
-	return f.resolveFields(ctx).String()
-}
+// // String returns a string that represent the current fields
+// func (f Fields) String(ctx context.Context) string {
+// 	return f.resolveFields(ctx).String()
+// }
 
-// MergedString returns a string that represents the current fields merged by fields in context
-func (f Fields) MergedString(ctx context.Context) string {
-	return getFields(ctx).Chain(f).String(ctx)
-}
+// // MergedString returns a string that represents the current fields merged by fields in context
+// func (f Fields) MergedString(ctx context.Context) string {
+// 	return getFields(ctx).Chain(f).String(ctx)
+// }

@@ -4,9 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	"github.com/arr-ai/frozen"
-	"github.com/stretchr/testify/mock"
 )
 
 type key1 struct{}
@@ -65,36 +63,40 @@ func getUnresolvedFieldsCases() []fieldsTest {
 	}
 }
 
-func TestResolveFields(t *testing.T) {
+func TestConfigureLogger(t *testing.T) {
 	for _, c := range getUnresolvedFieldsCases() {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
+			logger := newMockLogger()
+			setPutFieldsAssertion(logger, c.expected)
 			ctx := context.Background()
 			for i := c.contextFields.Range(); i.Next(); {
 				ctx = context.WithValue(ctx, i.Key(), i.Value())
 			}
-
-			assert.True(t, c.expected.Equal(Fields{c.unresolveds}.resolveFields(ctx)))
+			Fields{c.unresolveds}.configureLogger(ctx, Logger(logger).(fieldSetter))
+			logger.AssertExpectations(t)
 		})
 	}
 }
 
-func TestSetConfigToLogger(t *testing.T) {
+func TestConfigureLoggerWithConfigs(t *testing.T) {
 	t.Parallel()
 
-	config := frozen.Map{}.With(formatter, standardFormat{})
-	logger := newMockLogger()
-	setMockCopyAssertion(logger).Twice()
-	logger.On("SetConfig", mock.MatchedBy(
-		func(arg frozen.Map) bool {
-			return arg.Equal(config)
-		},
-	)).Return(logger)
-	Fields{frozen.Map{}.With(configKey{}, config).
-		With(loggerKey{}, logger)}.
-		setConfigToLogger()
+	//TODO: add more configs
+	testCase := getUnresolvedFieldsCases()[0]
+	unresolveds := Fields{testCase.unresolveds}.WithConfigs(JSONFormatter{})
+	expected := testCase.expected
 
-	logger.AssertExpectations(t)
+	logger := newMockLogger()
+	setPutFieldsAssertion(logger, expected)
+	logger.On("SetFormatter", JSONFormatter{}.getConfig()).Return(logger)
+
+	ctx := context.Background()
+	for i := testCase.contextFields.Range(); i.Next(); {
+		ctx = context.WithValue(ctx, i.Key(), i.Value())
+	}
+
+	unresolveds.configureLogger(ctx, Logger(logger).(fieldSetter))
 }

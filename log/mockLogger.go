@@ -38,6 +38,6 @@ func (m *mockLogger) Copy() Logger {
 	return m.Called().Get(0).(Logger)
 }
 
-func (m *mockLogger) SetConfig(configs frozen.Map) Logger {
-	return m.Called(configs).Get(0).(Logger)
+func (m *mockLogger) SetFormatter(formatterType configKey) Logger {
+	return m.Called(formatterType).Get(0).(Logger)
 }
