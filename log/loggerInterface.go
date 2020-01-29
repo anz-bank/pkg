@@ -25,5 +25,6 @@ type fieldSetter interface {
 }
 
 type formattable interface {
-	SetFormatter(formatterType configKey) Logger
+	// SetFormatter sets the formatter for the logger
+	SetFormatter(formatter Config) error
 }

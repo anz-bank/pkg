@@ -26,7 +26,7 @@ func With(key string, val interface{}) Fields {
 }
 
 // WithConfigs adds extra configuration for the logger.
-func WithConfigs(configs ...config) Fields {
+func WithConfigs(configs ...Config) Fields {
 	return Fields{}.WithConfigs(configs...)
 }
 
@@ -89,7 +89,7 @@ func (f Fields) With(key string, val interface{}) Fields {
 }
 
 // WithConfigs adds extra configuration for the logger.
-func (f Fields) WithConfigs(configs ...config) Fields {
+func (f Fields) WithConfigs(configs ...Config) Fields {
 	return f.Chain(Fields{
 		createConfigMap(configs...),
 	})

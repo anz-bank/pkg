@@ -41,7 +41,9 @@ func TestDebug(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetFormatter(jsonFormatter).Debug(testMessage)
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debug(testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
@@ -49,7 +51,9 @@ func TestDebug(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
-		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Debug(testMessage)
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debug(testMessage)
 	})
 }
 
@@ -59,7 +63,9 @@ func TestDebugf(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetFormatter(jsonFormatter).Debugf(simpleFormat, testMessage)
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debugf(simpleFormat, testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.DebugLevel, testField, func() {
@@ -67,7 +73,9 @@ func TestDebugf(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, testField, func() {
-		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Debugf(simpleFormat, testMessage)
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debugf(simpleFormat, testMessage)
 	})
 }
 
@@ -77,7 +85,9 @@ func TestInfo(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetFormatter(jsonFormatter).Info(testMessage)
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Info(testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
@@ -85,7 +95,9 @@ func TestInfo(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
-		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Info(testMessage)
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Info(testMessage)
 	})
 }
 
@@ -95,7 +107,9 @@ func TestInfof(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		getNewStandardLogger().SetFormatter(jsonFormatter).Infof(simpleFormat, testMessage)
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Infof(simpleFormat, testMessage)
 	})
 
 	testStandardLogOutput(t, logrus.InfoLevel, testField, func() {
@@ -103,7 +117,9 @@ func TestInfof(t *testing.T) {
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, testField, func() {
-		getStandardLoggerWithFields().SetFormatter(jsonFormatter).Infof(simpleFormat, testMessage)
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Infof(simpleFormat, testMessage)
 	})
 }
 

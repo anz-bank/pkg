@@ -2,11 +2,8 @@ package log
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/arr-ai/frozen"
@@ -59,32 +56,6 @@ func redirectOutput(t *testing.T, print func()) string {
 	w.Close()
 	os.Stderr = old
 	return <-outC
-}
-
-func outputFormattedFields(fields frozen.Map) string {
-	if fields.Count() == 0 {
-		return ""
-	}
-
-	keys := make([]string, fields.Count())
-	index := 0
-	for k := fields.Range(); k.Next(); {
-		keys[index] = k.Key().(string)
-		index++
-	}
-
-	sort.Strings(keys)
-
-	output := strings.Builder{}
-	output.WriteString(fmt.Sprintf("%s=%v", keys[0], fields.MustGet(keys[0])))
-
-	if fields.Count() > 1 {
-		for _, keyField := range keys[1:] {
-			output.WriteString(fmt.Sprintf(" %s=%v", keyField, fields.MustGet(keyField)))
-		}
-	}
-
-	return output.String()
 }
 
 func convertToGoMap(fields frozen.Map) map[string]interface{} {

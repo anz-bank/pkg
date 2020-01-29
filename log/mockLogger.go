@@ -38,6 +38,7 @@ func (m *mockLogger) Copy() Logger {
 	return m.Called().Get(0).(Logger)
 }
 
-func (m *mockLogger) SetFormatter(formatterType configKey) Logger {
-	return m.Called(formatterType).Get(0).(Logger)
+func (m *mockLogger) SetFormatter(formatter Config) error {
+	res := m.Called(formatter)
+	return res.Error(0)
 }

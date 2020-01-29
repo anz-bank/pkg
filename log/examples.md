@@ -170,7 +170,6 @@ There is the JSON format, you can set it by adding `WithConfig(log.JSONFormatter
 ## Configuring logger
 
 Logger can be configured using the `WithConfig` API and giving it the correct configuration struct.
-
 ```go
 func configLogDemo(ctx context.Context) {
 	// Adding configuration can be done by adding the correct struct. Configurations are once again
@@ -178,14 +177,14 @@ func configLogDemo(ctx context.Context) {
 	// of the same type is added. For example, if before you added StandardFormatter, calling WithConfig
 	// with JSONFormatter will replace StandardFormatter. Just like Fields, it will also be stored
 	// in the context.
-	ctx = log.WithConfigs(log.JSONFormatter{}).Onto(ctx)
-
-	// You can also have a log-specific configs by not saving it to the context.
-	log.WithConfigs(log.StandardFormatter{}, log.JSONFormatter{}).
-		WithLogger(log.NewStandardLogger()).
-		With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
-		From(ctx).
-		Info("json formatted log")
+	ctx = log.WithConfigs(log.NewJSONFormat()).Onto(ctx)
+    
+    // You can also have a log-specific configs by not saving it to the context.
+    log.WithConfigs(log.NewStandardFormat(), log.NewStandardFormat()).
+        WithLogger(log.NewStandardLogger()).
+        With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
+        From(ctx).
+        Info("json formatted log")
 }
 ```
 

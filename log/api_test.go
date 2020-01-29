@@ -43,8 +43,8 @@ func TestWithConfigsSameConfigType(t *testing.T) {
 	t.Parallel()
 
 	expectedConfig := frozen.Map{}.
-		With(StandardFormatter{}.getConfigType(), StandardFormatter{}.getConfig())
-	f := WithConfigs(JSONFormatter{}, StandardFormatter{})
+		With(standardFormat{}.TypeKey(), standardFormat{})
+	f := WithConfigs(NewJSONFormat(), NewStandardFormat())
 	assert.True(t, expectedConfig.Equal(f.m))
 }
 

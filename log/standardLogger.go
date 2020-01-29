@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,10 +19,7 @@ type standardLogger struct {
 	fields   frozen.Map
 }
 
-type standardFormat struct{}
-type jsonFormat struct{}
-
-func (sf *standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
+func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	message := strings.Builder{}
 	message.WriteString(entry.Time.Format(time.RFC3339Nano))
 	message.WriteByte(' ')
@@ -44,7 +42,7 @@ func (sf *standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(message.String()), nil
 }
 
-func (jf *jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
+func (jf jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	jsonFile := make(map[string]interface{})
 	jsonFile["timestamp"] = entry.Time.Format(time.RFC3339Nano)
 	jsonFile["message"] = entry.Message
@@ -98,14 +96,13 @@ func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
 	return sl
 }
 
-func (sl *standardLogger) SetFormatter(formatterType configKey) Logger {
-	switch formatterType {
-	case jsonFormatter:
-		sl.internal.SetFormatter(&jsonFormat{})
-	default:
-		sl.internal.SetFormatter(&standardFormat{})
+func (sl *standardLogger) SetFormatter(formatter Config) error {
+	logrusFormatter, isLogrusFormatter := formatter.(logrus.Formatter)
+	if !isLogrusFormatter {
+		return errors.New("formatter is not logrus formatter type")
 	}
-	return sl
+	sl.internal.SetFormatter(logrusFormatter)
+	return nil
 }
 
 func (sl *standardLogger) Copy() Logger {

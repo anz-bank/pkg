@@ -11,7 +11,7 @@ type loggerKey struct{}
 type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
 
-type fieldsCollector struct{
+type fieldsCollector struct {
 	fields frozen.Map
 }
 
@@ -48,21 +48,16 @@ func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger 
 			}
 		case suppress:
 			toSuppress.Add(i.Key())
-		case configKey:
+		case Config:
 			toSuppress.Add(i.Key())
-			setConfigToLogger(&logger, i.Key().(configKey), k)
+			err := k.Apply(logger.(Logger))
+			if err != nil {
+				//TODO: should decide whether it should panic or not
+				panic(err)
+			}
 		}
 	}
 	return logger.PutFields(fields.Without(toSuppress.Finish()))
-}
-
-func setConfigToLogger(logger *fieldSetter, configType, configSpec configKey) {
-	switch configType {
-	case formatter:
-		(*logger).(formattable).SetFormatter(configSpec)
-	default:
-		panic("unknown configuration")
-	}
 }
 
 func (f Fields) with(key, val interface{}) Fields {
@@ -77,10 +72,10 @@ func getFields(ctx context.Context) Fields {
 	return Fields{fields}
 }
 
-func createConfigMap(configs ...config) frozen.Map {
+func createConfigMap(configs ...Config) frozen.Map {
 	var mb frozen.MapBuilder
 	for _, c := range configs {
-		mb.Put(c.getConfigType(), c.getConfig())
+		mb.Put(c.TypeKey(), c)
 	}
 	return mb.Finish()
 }

@@ -86,12 +86,12 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 
 	//TODO: add more configs
 	testCase := getUnresolvedFieldsCases()[0]
-	unresolveds := Fields{testCase.unresolveds}.WithConfigs(JSONFormatter{})
+	unresolveds := Fields{testCase.unresolveds}.WithConfigs(NewJSONFormat())
 	expected := testCase.expected
 
 	logger := newMockLogger()
 	setPutFieldsAssertion(logger, expected)
-	logger.On("SetFormatter", JSONFormatter{}.getConfig()).Return(logger)
+	logger.On("SetFormatter", NewJSONFormat()).Return(nil)
 
 	ctx := context.Background()
 	for i := testCase.contextFields.Range(); i.Next(); {
@@ -99,4 +99,5 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 	}
 
 	unresolveds.configureLogger(ctx, Logger(logger).(fieldSetter))
+	logger.AssertExpectations(t)
 }

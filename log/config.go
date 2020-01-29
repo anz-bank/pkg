@@ -1,26 +1,25 @@
 package log
 
-type configKey int
+type typeKey int
 
-const (
-	formatter configKey = iota
-	standardFormatter
-	jsonFormatter
-)
+const Formatter typeKey = iota
 
-type config interface {
-	getConfig() configKey
-	getConfigType() configKey
+type Config interface {
+	TypeKey() interface{}
+	Apply(logger Logger) error
 }
 
-// StandardFormatter sets the logger to log with a standard format
-type StandardFormatter struct{}
+type standardFormat struct{}
+type jsonFormat struct{}
 
-// JSONFormatter sets the logger to log with a JSON format
-type JSONFormatter struct{}
+func NewStandardFormat() Config             { return standardFormat{} }
+func (standardFormat) TypeKey() interface{} { return Formatter }
+func (sf standardFormat) Apply(logger Logger) error {
+	return logger.(formattable).SetFormatter(sf)
+}
 
-func (StandardFormatter) getConfigType() configKey { return formatter }
-func (StandardFormatter) getConfig() configKey     { return standardFormatter }
-
-func (JSONFormatter) getConfigType() configKey { return formatter }
-func (JSONFormatter) getConfig() configKey     { return jsonFormatter }
+func NewJSONFormat() Config             { return jsonFormat{} }
+func (jsonFormat) TypeKey() interface{} { return Formatter }
+func (jf jsonFormat) Apply(logger Logger) error {
+	return logger.(formattable).SetFormatter(jf)
+}

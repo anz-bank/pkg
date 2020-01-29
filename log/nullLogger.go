@@ -42,8 +42,8 @@ func (n *nullLogger) Copy() Logger {
 	}
 }
 
-func (n *nullLogger) SetFormatter(formatterType configKey) Logger {
-	return n.internal.SetFormatter(formatterType)
+func (n *nullLogger) SetFormatter(formatter Config) error {
+	return n.internal.SetFormatter(formatter)
 }
 
 func setUpLogger() *standardLogger {
