@@ -14,9 +14,17 @@ type Logger interface {
 	Infof(format string, args ...interface{})
 }
 
-type internalLoggerOps interface {
-	// PutFields returns the Logger with the new fields added
-	PutFields(fields frozen.Map) Logger
+type copyable interface {
 	// Copy returns a logger whose data is copied from the caller
 	Copy() Logger
+}
+
+type fieldSetter interface {
+	// PutFields returns the Logger with the new fields added
+	PutFields(fields frozen.Map) Logger
+}
+
+type formattable interface {
+	// SetFormatter sets the formatter for the logger
+	SetFormatter(formatter Config) error
 }

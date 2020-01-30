@@ -11,15 +11,24 @@ type loggerKey struct{}
 type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
 
+type fieldsCollector struct {
+	fields frozen.Map
+}
+
+func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
+	f.fields = fields
+	return NewNullLogger()
+}
+
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})
 	if !exists {
 		panic("Logger has not been added")
 	}
-	return logger.(internalLoggerOps).Copy()
+	return logger.(copyable).Copy()
 }
 
-func (f Fields) resolveFields(ctx context.Context) frozen.Map {
+func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger {
 	fields := f.m
 	var toSuppress frozen.SetBuilder
 	toSuppress.Add(loggerKey{})
@@ -39,9 +48,16 @@ func (f Fields) resolveFields(ctx context.Context) frozen.Map {
 			}
 		case suppress:
 			toSuppress.Add(i.Key())
+		case Config:
+			toSuppress.Add(i.Key())
+			err := k.Apply(logger.(Logger))
+			if err != nil {
+				//TODO: should decide whether it should panic or not
+				panic(err)
+			}
 		}
 	}
-	return fields.Without(toSuppress.Finish())
+	return logger.PutFields(fields.Without(toSuppress.Finish()))
 }
 
 func (f Fields) with(key, val interface{}) Fields {
@@ -54,4 +70,12 @@ func getFields(ctx context.Context) Fields {
 		return Fields{}
 	}
 	return Fields{fields}
+}
+
+func createConfigMap(configs ...Config) frozen.Map {
+	var mb frozen.MapBuilder
+	for _, c := range configs {
+		mb.Put(c.TypeKey(), c)
+	}
+	return mb.Finish()
 }

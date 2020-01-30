@@ -1,25 +1,22 @@
-package testutil
+package log
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/require"
 )
 
-type MultipleFields struct {
+type multipleFields struct {
 	Name                 string
 	Fields, GlobalFields frozen.Map
 }
 
-func GenerateMultipleFieldsCases() []MultipleFields {
-	return []MultipleFields{
+func generateMultipleFieldsCases() []multipleFields {
+	return []multipleFields{
 		{
 			Name: "Multiple types of Values",
 			Fields: frozen.NewMap(
@@ -40,7 +37,7 @@ func GenerateMultipleFieldsCases() []MultipleFields {
 }
 
 // Adapted from https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
-func RedirectOutput(t *testing.T, print func()) string {
+func redirectOutput(t *testing.T, print func()) string {
 	old := os.Stderr
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
@@ -61,36 +58,10 @@ func RedirectOutput(t *testing.T, print func()) string {
 	return <-outC
 }
 
-func OutputFormattedFields(fields frozen.Map) string {
-	if fields.Count() == 0 {
-		return ""
-	}
-
-	keys := make([]string, fields.Count())
-	index := 0
-	for k := fields.Range(); k.Next(); {
-		keys[index] = k.Key().(string)
-		index++
-	}
-
-	sort.Strings(keys)
-
-	output := strings.Builder{}
-	output.WriteString(fmt.Sprintf("%s=%v", keys[0], fields.MustGet(keys[0])))
-
-	if fields.Count() > 1 {
-		for _, keyField := range keys[1:] {
-			output.WriteString(fmt.Sprintf(" %s=%v", keyField, fields.MustGet(keyField)))
-		}
-	}
-
-	return output.String()
-}
-
-func ConvertToGoMap(fields frozen.Map) map[interface{}]interface{} {
-	goMap := make(map[interface{}]interface{})
+func convertToGoMap(fields frozen.Map) map[string]interface{} {
+	goMap := make(map[string]interface{})
 	for i := fields.Range(); i.Next(); {
-		goMap[i.Key()] = i.Value()
+		goMap[i.Key().(string)] = i.Value()
 	}
 	return goMap
 }

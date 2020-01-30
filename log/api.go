@@ -12,7 +12,7 @@ type Fields struct{ m frozen.Map }
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
 	f := getFields(ctx)
-	return f.getCopiedLogger().(internalLoggerOps).PutFields(f.resolveFields(ctx))
+	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
 }
 
 // Suppress will ensure that suppressed keys are not logged.
@@ -23,6 +23,11 @@ func Suppress(keys ...string) Fields {
 // With creates a field with a single key value pair.
 func With(key string, val interface{}) Fields {
 	return Fields{}.With(key, val)
+}
+
+// WithConfigs adds extra configuration for the logger.
+func WithConfigs(configs ...Config) Fields {
+	return Fields{}.WithConfigs(configs...)
 }
 
 // WithCtxRef creates a field with a key that refers to the provided context key,
@@ -83,6 +88,13 @@ func (f Fields) With(key string, val interface{}) Fields {
 	return f.with(key, val)
 }
 
+// WithConfigs adds extra configuration for the logger.
+func (f Fields) WithConfigs(configs ...Config) Fields {
+	return f.Chain(Fields{
+		createConfigMap(configs...),
+	})
+}
+
 // WithCtxRef adds key and the context key to the fields.
 func (f Fields) WithCtxRef(key string, ctxKey interface{}) Fields {
 	return f.with(key, ctxRef{ctxKey})
@@ -95,12 +107,14 @@ func (f Fields) WithFunc(key string, val func(context.Context) interface{}) Fiel
 
 // WithLogger adds logger which will be used for the log operation.
 func (f Fields) WithLogger(logger Logger) Fields {
-	return f.with(loggerKey{}, logger.(internalLoggerOps).Copy())
+	return f.with(loggerKey{}, logger.(copyable).Copy())
 }
 
 // String returns a string that represent the current fields
 func (f Fields) String(ctx context.Context) string {
-	return f.resolveFields(ctx).String()
+	fields := &fieldsCollector{}
+	f.configureLogger(ctx, fields)
+	return fields.fields.String()
 }
 
 // MergedString returns a string that represents the current fields merged by fields in context

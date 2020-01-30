@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	"github.com/anz-bank/pkg/log/testutil"
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/mock"
 )
@@ -40,6 +39,15 @@ func TestChain(t *testing.T) {
 	assert.True(t, expected.Equal(init.Chain(fields1, fields2, fields3).m))
 }
 
+func TestWithConfigsSameConfigType(t *testing.T) {
+	t.Parallel()
+
+	expectedConfig := frozen.Map{}.
+		With(standardFormat{}.TypeKey(), standardFormat{})
+	f := WithConfigs(NewJSONFormat(), NewStandardFormat())
+	assert.True(t, expectedConfig.Equal(f.m))
+}
+
 func TestFrom(t *testing.T) {
 	for _, c := range getUnresolvedFieldsCases() {
 		c := c
@@ -59,7 +67,7 @@ func TestFrom(t *testing.T) {
 }
 
 func TestOnto(t *testing.T) {
-	cases := testutil.GenerateMultipleFieldsCases()
+	cases := generateMultipleFieldsCases()
 	for _, c := range cases {
 		c := c
 		t.Run(c.Name, func(t *testing.T) {
@@ -159,6 +167,10 @@ func TestWithLogger(t *testing.T) {
 
 func setLogMockAssertion(logger *mockLogger, fields frozen.Map) {
 	setMockCopyAssertion(logger)
+	setPutFieldsAssertion(logger, fields)
+}
+
+func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
 	logger.On(
 		"PutFields",
 		mock.MatchedBy(
@@ -177,11 +189,11 @@ func getLoggerFromContext(t *testing.T, ctx context.Context) *mockLogger {
 	return m.MustGet(loggerKey{}).(*mockLogger)
 }
 
-func setMockCopyAssertion(logger *mockLogger) {
+func setMockCopyAssertion(logger *mockLogger) *mock.Call {
 	// set to return the same logger for testing purposes, in real case it will return
 	// a copied logger. Tests that use these usually are not checked for their return value
 	// as the return value is mocked
-	logger.On("Copy").Return(logger)
+	return logger.On("Copy").Return(logger)
 }
 
 func runFieldsMethod(t *testing.T, empty, nonEmpty func(*testing.T)) {
