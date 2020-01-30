@@ -154,7 +154,7 @@ func loggingDemo(ctx context.Context) {
 
 ### Logging in different formats
 
-There is the JSON format, you can set it by adding `WithConfig(log.JSONFormatter{})`. It will log in the following format:
+You can specify JSON output by adding `WithConfig(NewJSONFormat())`. It will log in the following format:
 ```js
 {
 	"fields": {
