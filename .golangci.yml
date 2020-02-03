@@ -1,0 +1,37 @@
+service:
+  golangci-lint-version: 1.19.1
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
+    - whitespace
+    - funlen
