@@ -8,7 +8,7 @@ This library is a contextual logging library that makes use of context as part o
 The library focuses on doing as many operations as possible, whether it is adding more fields, logger, or logger configuration, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
 
 ### Shallow Context Tree
-`Fields` are stored in the context tree when you use the `Onto` API. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`￿, it ensures that it will only add all the provided `Fields` once. This is very beneficial when you have a large amount of fields to be logged and the bigger the system you have, it is highly likely that the number of fields will grow.
+`Fields` are stored in the context tree when you use the `Onto` API. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is very beneficial when you have a large amount of fields to be logged and the bigger the system you have, it is highly likely that the number of fields will grow.
 
 ### Greater control over `Fields` and `Logger`
 There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control over it. The `With` methods allows many different types of `Fields` to be entered and APIs like `Chain` and `Suppress` make `Fields` a lot more customizable.
@@ -64,12 +64,12 @@ Suppress will ensure that the provided keys will not be logged. In this example,
 ```go
     f = f.Suppress("another", "more key", "alias")
 ```
-￿Chain provides a way of merging multiple fields. Just like before, precedence gets higher from left to right.
+`Chain` provides a way of merging multiple fields. Just like before, precedence gets higher from left to right.
 ```go
     f1 := log.With("key1", "value1")
     f2 := log.With("key2", "value2")
     f3 := log.With("key3", "value3")
-    f ￿= f.Chain(f1, f2, f3)
+    f = f.Chain(f1, f2, f3)
 ```
 A very important thing to note is that Fields are immutable which makes them thread-safe but it also means that you need to receive the returned value of fields operation as they do not mutate themselves.
 
