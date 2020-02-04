@@ -9,10 +9,30 @@ import (
 // Fields is a struct that contains all the fields data to log.
 type Fields struct{ m frozen.Map }
 
+// Debug logs from context at the debug level.
+func Debug(ctx context.Context, args ...interface{}) {
+	Fields{}.Debug(ctx, args...)
+}
+
+// Debugf logs from context at the debug level.
+func Debugf(ctx context.Context, format string, args ...interface{}) {
+	Fields{}.Debugf(ctx, format, args...)
+}
+
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
 	f := getFields(ctx)
 	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
+}
+
+// Info logs from context at the debug level.
+func Info(ctx context.Context, args ...interface{}) {
+	Fields{}.Info(ctx, args...)
+}
+
+// Infof logs from context at the debug level.
+func Infof(ctx context.Context, format string, args ...interface{}) {
+	Fields{}.Infof(ctx, format, args...)
 }
 
 // Suppress will ensure that suppressed keys are not logged.
@@ -57,11 +77,31 @@ func (f Fields) Chain(fieldses ...Fields) Fields {
 	return Fields{merged}
 }
 
+// Debug logs from context at the debug level.
+func (f Fields) Debug(ctx context.Context, args ...interface{}) {
+	f.From(ctx).Debug(args...)
+}
+
+// Debugf logs from context at the debug level.
+func (f Fields) Debugf(ctx context.Context, format string, args ...interface{}) {
+	f.From(ctx).Debugf(format, args...)
+}
+
 // From returns a logger with the new fields which is the fields from the context
 // merged with the current fields were current fields replaces value from
 // the context fields.
 func (f Fields) From(ctx context.Context) Logger {
 	return From(f.Onto(ctx))
+}
+
+// Info logs from context at the debug level.
+func (f Fields) Info(ctx context.Context, args ...interface{}) {
+	f.From(ctx).Info(args...)
+}
+
+// Infof logs from context at the debug level.
+func (f Fields) Infof(ctx context.Context, format string, args ...interface{}) {
+	f.From(ctx).Infof(format, args...)
 }
 
 // Onto finishes fields operation, merge them all with the precedence of fields
