@@ -76,14 +76,14 @@ A very important thing to note is that Fields are immutable which makes them thr
 ### Logging
 There are three levels of logging, they are `Debug`, `Info`, and `Error`. Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`.
 
-Logging can be accessed through the Debug, Info, and Error API. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
+Logging can be accessed through the `Debug`, `Info`, and `Error` API. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
 ```go
     log.Debug(ctx, "this is debug")
     log.Debugf(ctx, "%s with format", "this is debug")
     log.Info(ctx, "this is info")
     log.Infof(ctx, "%s with format", "this is info")
 ```
-For Error and Errorf, the error variable is required. The error message will be logged as a field with the key of "error_message"
+For `Error` and `Errorf`, the error variable is required. The error message will be logged as a field with the key of `error_message`
 ```go
     log.Error(ctx, errors.New("error"), "this is error")
     log.Errorf(ctx, errors.New("error"), "%s with format", "this is error")
@@ -138,7 +138,7 @@ JSON formatter will log in the following format:
 Fields will be logged as an object of the attribute `fields`. One thing to remember is that, for context reference, the key will use the provided alias.
 
 ##### Standard format
-The standard formatter will log in the following format without the parantheses:
+The standard formatter will log in the following format without the parentheses:
 ```
 (time in RFC3339Nano Format) (Fields) (Level) (Message)
 ```
