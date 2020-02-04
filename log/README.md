@@ -119,7 +119,9 @@ func logDemo(ctx context.Context){
     // Should you require the logger object itself, you can do so by using the
     // From API which will extract the logger in the context. If context does not
     // have any logger, it will returns a new standard logger. The returned logger
-    // is copied for immutability.
+    // is copied for immutability. The logger returned by From have all the fields
+    // and configuration applied to it. The fields are also resolved, meaning
+    // any context reference will use any value in the context at the time of call.
     logger := log.From(ctx)
 }
 ```
