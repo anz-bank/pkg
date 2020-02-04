@@ -24,7 +24,8 @@ func fieldsDemo(ctx context.Context) {
     
     // There is also the context fields where it will take values that correspond
     // to the given context key. The context key can be any object but you have
-    // to provide the alias for the key.
+    // to provide the alias for the key. If the key does not have any value in
+    // the context, it will not be logged.
     f = log.WithCtxRef("alias", ctxKey{})
     
     //TODO: add WithFunc or not?
@@ -77,3 +78,64 @@ A very important thing to note is that Fields are immutable which makes them thr
 
 ### Logging
 There are three levels of logging, they are `Debug`, `Info`, and `Error`. Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`.
+
+```go
+package logging
+
+import (
+    "context"
+    "errors"
+    
+    "github.com/anz-bank/pkg/log"
+)
+
+func logDemo(ctx context.Context){
+    // Logging can be accessed through the Debug, Info, and Error API.
+    // Each of the log functions require a context to be passed in.
+    // If the context contains fields, that fields will be logged along
+    // with the message given. If the context does not contain a logger
+    // a standard logger will be provided as the default.
+    log.Debug(ctx, "this is debug")
+    log.Debugf(ctx, "%s with format", "this is debug")
+    log.Info(ctx, "this is info")
+    log.Infof(ctx, "%s with format", "this is info")
+
+    // For Error and Errorf, the error variable is required. The error
+    // message will be logged as a field with the key of "error_message"
+    log.Error(ctx, errors.New("error"), "this is error")
+    log.Errorf(ctx, errors.New("error"), "%s with format", "this is error")
+
+    // If you would like to log certain fields without adding additional
+    // fields to the context, you can do so by using the same API on the
+    // additional fields. Additional fields are merged with the fields
+    // in context if the context contains fields and it also has higher 
+    // precedence but they do not mutate the fields in context.
+    log.With("additional", "fields").With("more", "fields").Debug(ctx, "debug")
+    log.With("additional", "fields").With("more", "fields").Debugf(ctx, "formatted %s", "debug")
+    
+    // This log will only log fields inside the context.
+    log.Debug(ctx, "no additional fields")
+
+    // Should you require the logger object itself, you can do so by using the
+    // From API which will extract the logger in the context. If context does not
+    // have any logger, it will returns a new standard logger. The returned logger
+    // is copied for immutability.
+    logger := log.From(ctx)
+}
+```
+
+### Configuring logger
+Logger configurations are treated as fields. This can be done through the `WithConfigs` API. You can add multiple configurations in a single `WithConfigs` operation. The configurations can also be saved in a context along with other fields. Even if you replace the logger, the configurations stay and will always be applied to the logger.
+```go
+package configs
+
+import (
+    "context"
+    
+    "github.com/anz-bank/pkg/log"
+)
+
+func configLog(ctx context.Context) {
+    
+}
+```
