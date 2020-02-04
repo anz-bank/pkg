@@ -17,25 +17,25 @@ type fieldsTest struct {
 	expected      frozen.Map
 }
 
-func TestDebug(t *testing.T) {
+func TestMainDebug(t *testing.T) {
 	t.Parallel()
 
 	testLog(t, Debug, "Debug")
 }
 
-func TestDebugf(t *testing.T) {
+func TestMainDebugf(t *testing.T) {
 	t.Parallel()
 
 	testLogWithFormat(t, Debugf, "Debugf")
 }
 
-func TestInfo(t *testing.T) {
+func TestMainInfo(t *testing.T) {
 	t.Parallel()
 
 	testLog(t, Info, "Info")
 }
 
-func TestInfof(t *testing.T) {
+func TestMainInfof(t *testing.T) {
 	t.Parallel()
 
 	testLogWithFormat(t, Infof, "Infof")
