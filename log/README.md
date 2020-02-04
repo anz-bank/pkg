@@ -3,141 +3,139 @@
 ## Log
 This library is a contextual logging library that makes use of context as part of the logging process. It is designed to makes development easier by using the context variable to log instead of passing a logger to every functions.
 
+## Why use this library?
+
+
 ## Main Features
 ### Fields
 Fields are key value data that are logged along with the log message. This library makes manipulating Fields easier and more flexible. With this library, everything is treated as Fields, that includes Fields themselves, logger configuration, and even the logger itself. This makes it possible for you to create everything in one chained operation.
 
 ```go
-package fields
-
-import(
-    "context"
-    
-    "github.com/anz-bank/pkg/log"
-)
-
-type ctxKey struct{}
-
-func fieldsDemo(ctx context.Context) {
-    // This is adding a regular field.
     f := log.With("key1", "value1")
-    
-    // There is also the context fields where it will take values that correspond
-    // to the given context key. The context key can be any object but you have
-    // to provide the alias for the key. If the key does not have any value in
-    // the context, it will not be logged.
+```
+There is also the context fields where it will take values that correspond to the given context key. The context key can be any object but you have to provide the alias for the key. If the key does not have any value in the context, it will not be logged.
+
+```go
     f = log.WithCtxRef("alias", ctxKey{})
-    
-    //TODO: add WithFunc or not?
-    
-    // You can also add multiple Fields by chaining the operation.
+```
+You can also add multiple Fields by chaining the operation.
+```go
     f = f.
     	  With("another", "key").
           With("more", 1).
     	  With("more key", 'q')
-
-    // One thing to remember, since fields are key value data, in the event of
-    // overlapping keys, values will be replaced based on the order of operation.
-    // In a chain operation, the later operations have higher precedence and will
-    // replace the keys. At this example, the value that corresponds to "another"
-    // is now "fields" instead of "key".
+```
+One thing to remember, since fields are key value data, in the event of overlapping keys, values will be replaced based on the order of operation. In a chain operation, the later operations have higher precedence and will replace the keys. At this example, the value that corresponds to `another` is now `fields` instead of `key`.
+```go
     f = f.With("another", "fields")
-
-    // As mentioned before, everything is treated as fields and that includes
-    // the logger and its configuration. Only one logger can be in fields and
-    // one of each type of configurations (e.g. only one rule for format etc).
-    // Because they are fields they will also follow the precedence rule, which
-    // means adding another logger or a configuration type will replace the older
-    // values.
+```
+As mentioned before, everything is treated as fields and that includes the logger and its configuration. Only one logger can be in fields and one of each type of configurations (e.g. only one rule for format etc). Because they are fields they will also follow the precedence rule, which means adding another logger or a configuration type will replace the older values.
+```go
     f = f.
     	  WithLogger(log.NewStandardLogger()).
           WithConfigs(log.NewJSONFormat())
-    
-    // The fields then can be used to log directly (example in later section) or
-    // they can be saved in the context for later use by using the Onto API.
+```
+The fields then can be used to log directly (example in later section) or they can be saved in the context for later use by using the `Onto` API.
+```go
     newCtx := f.Onto(ctx)
+```
+A couple more useful APIs to know.
 
-    // A couple more useful APIs to know.
+Suppress will ensure that the provided keys will not be logged. In this example, the key "another", "more key", and "alias" will not be logged. For context reference fields, you have to refer to them by their alias.
 
-    // Suppress will ensure that the provided keys will not be logged.
-    // In this example, the key "another", "more key", and "alias" will not 
-    // be logged. For context reference fields, you have to refer to them
-    // by their alias.
+```go
     f = f.Suppress("another", "more key", "alias")
-
-    // ￿Chain provides a way of merging multiple fields. Just like before,
-    // precedence gets higher from left to right.
+```
+￿Chain provides a way of merging multiple fields. Just like before, precedence gets higher from left to right.
+```go
     f1 := log.With("key1", "value1")
     f2 := log.With("key2", "value2")
     f3 := log.With("key3", "value3")
     f ￿= f.Chain(f1, f2, f3)
-}
 ```
-
 A very important thing to note is that Fields are immutable which makes them thread-safe but it also means that you need to receive the returned value of fields operation as they do not mutate themselves.
 
 ### Logging
 There are three levels of logging, they are `Debug`, `Info`, and `Error`. Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`.
 
+Logging can be accessed through the Debug, Info, and Error API. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
 ```go
-package logging
-
-import (
-    "context"
-    "errors"
-    
-    "github.com/anz-bank/pkg/log"
-)
-
-func logDemo(ctx context.Context){
-    // Logging can be accessed through the Debug, Info, and Error API.
-    // Each of the log functions require a context to be passed in.
-    // If the context contains fields, that fields will be logged along
-    // with the message given. If the context does not contain a logger
-    // a standard logger will be provided as the default.
     log.Debug(ctx, "this is debug")
     log.Debugf(ctx, "%s with format", "this is debug")
     log.Info(ctx, "this is info")
     log.Infof(ctx, "%s with format", "this is info")
-
-    // For Error and Errorf, the error variable is required. The error
-    // message will be logged as a field with the key of "error_message"
+```
+For Error and Errorf, the error variable is required. The error message will be logged as a field with the key of "error_message"
+```go
     log.Error(ctx, errors.New("error"), "this is error")
     log.Errorf(ctx, errors.New("error"), "%s with format", "this is error")
-
-    // If you would like to log certain fields without adding additional
-    // fields to the context, you can do so by using the same API on the
-    // additional fields. Additional fields are merged with the fields
-    // in context if the context contains fields and it also has higher 
-    // precedence but they do not mutate the fields in context.
+```
+ If you would like to log certain fields without adding additional fields to the context, you can do so by using the same API on the additional fields. Additional fields are merged with the fields in context if the context contains fields and it also has higher precedence but they do not mutate the fields in context.
+```go
     log.With("additional", "fields").With("more", "fields").Debug(ctx, "debug")
     log.With("additional", "fields").With("more", "fields").Debugf(ctx, "formatted %s", "debug")
     
-    // This log will only log fields inside the context.
+     // This log will only log fields inside the context.
     log.Debug(ctx, "no additional fields")
-
-    // Should you require the logger object itself, you can do so by using the
-    // From API which will extract the logger in the context. If context does not
-    // have any logger, it will returns a new standard logger. The returned logger
-    // is copied for immutability. The logger returned by From have all the fields
-    // and configuration applied to it. The fields are also resolved, meaning
-    // any context reference will use any value in the context at the time of call.
+```
+Should you require the logger object itself, you can do so by using the `From` API which will extract the logger in the context. If context does not have any logger, it will returns a new standard logger. The returned logger is copied for immutability. The logger returned by From have all the fields and configuration applied to it. The fields are also resolved, meaning any context reference will use any value in the context at the time of call.
+```go
     logger := log.From(ctx)
-}
+    
+    // This one will return a logger with the additional fields merged with context fields
+    logger := log.With("extra", "fields").From(ctx)
 ```
 
 ### Configuring logger
-Logger configurations are treated as fields. This can be done through the `WithConfigs` API. You can add multiple configurations in a single `WithConfigs` operation. The configurations can also be saved in a context along with other fields. Even if you replace the logger, the configurations stay and will always be applied to the logger.
+Logger configurations are treated as fields. This can be done through the `WithConfigs` API. You can add multiple configurations in a single `WithConfigs` operation. The configurations can also be saved in a context along with other fields. Even if you replace the logger, the configurations stay and will always be applied to the logger. Only one type of each configuration type can exist in a fields. If another config of the same type is added, it will replace the old one.
 ```go
-package configs
-
-import (
-    "context"
+    // This adds the JSON formatter to the logger.
+    f = log.WithConfigs(log.NewJSONFormat)
     
-    "github.com/anz-bank/pkg/log"
-)
+    // This will replace JSON formatter.
+    f = log.WithConfigs(log.NewStandardFormat)
 
-func configLog(ctx context.Context) {
-    
+    // You can add multiple configurations
+    f = log.WithConfigs(log.NewJSONFormat, log.NewStandardFormat)
+```
+
+Currently there is only the configuration for format
+
+#### Logging Format
+Currently there is only one logger which is the `StandardLogger` which uses [logrus](https://github.com/sirupsen/logrus). The provided formatter implements logrus formatter system. There are two formatter, the JSON formatter and the Standard formatter (which is the default formatter when no configuration is added).
+
+##### JSON format
+JSON formatter will log in the following format:
+```js
+{
+	"fields": {
+		"key1": "value1", // value can be any data types
+		"key2": "value2",
+	},
+	"level": "log level", // string, either INFO or DEBUG
+	"message": "log message", // string,
+	"timestamp": "log time", // timestamp in RFC3339Nano format
 }
 ```
+Fields will be logged as an object of the attribute `fields`. One thing to remember is that, for context reference, the key will use the provided alias.
+
+##### Standard format
+The standard formatter will log in the following format without the parantheses:
+```
+(time in RFC3339Nano Format) (Fields) (Level) (Message)
+```
+For example:
+```
+2020-02-05T09:05:11.041651+11:00 this=one have=fields INFO log with fields
+```
+In the current implementation, the fields are logged in a random order.
+
+#### Custom configuration
+It is possible to create your own configuration. You will have to create an object that implements the provided interface.
+```go
+type Config interface {
+	TypeKey() interface{}
+	Apply(logger Logger) error
+}
+```
+`TypeKey()` returns the type of the configuration and `Apply()` will apply the configuration to the logger. For formatters, use the `Formatter` type key provided by the library to ensure that it is recognized as a formatter. Formatters meant for `StandardLogger` need to implement [logrus' formatter](https://github.com/sirupsen/logrus#Formatters).
