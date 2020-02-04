@@ -59,7 +59,7 @@ The fields then can be used to log directly (example in later section) or they c
 ```
 A couple more useful APIs to know.
 
-Suppress will ensure that the provided keys will not be logged. In this example, the key "another", "more key", and "alias" will not be logged. For context reference fields, you have to refer to them by their alias.
+`Suppress` will ensure that the provided keys will not be logged. In this example, the key `another`, `more key`, and `alias` will not be logged. For context reference fields, you have to refer to them by their alias.
 
 ```go
     f = f.Suppress("another", "more key", "alias")
@@ -108,13 +108,13 @@ Should you require the logger object itself, you can do so by using the `From` A
 Logger configurations are treated as fields. This can be done through the `WithConfigs` API. You can add multiple configurations in a single `WithConfigs` operation. The configurations can also be saved in a context along with other fields. Even if you replace the logger, the configurations stay and will always be applied to the logger. Only one type of each configuration type can exist in a fields. If another config of the same type is added, it will replace the old one.
 ```go
     // This adds the JSON formatter to the logger.
-    f = log.WithConfigs(log.NewJSONFormat)
+    f = log.WithConfigs(log.NewJSONFormat())
     
     // This will replace JSON formatter.
-    f = log.WithConfigs(log.NewStandardFormat)
+    f = log.WithConfigs(log.NewStandardFormat())
 
     // You can add multiple configurations
-    f = log.WithConfigs(log.NewJSONFormat, log.NewStandardFormat)
+    f = log.WithConfigs(log.NewJSONFormat(), log.NewStandardFormat())
 ```
 
 Currently there is only the configuration for format
