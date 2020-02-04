@@ -130,7 +130,7 @@ JSON formatter will log in the following format:
 		"key1": "value1", // value can be any data types
 		"key2": "value2",
 	},
-	"level": "log level", // string, either INFO or DEBUG
+	"level": "log level", // string, either INFO, ERROR or DEBUG
 	"message": "log message", // string,
 	"timestamp": "log time", // timestamp in RFC3339Nano format
 }
