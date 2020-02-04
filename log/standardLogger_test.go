@@ -79,6 +79,50 @@ func TestDebugf(t *testing.T) {
 	})
 }
 
+func TestError(t *testing.T) {
+	testStandardLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+		NewStandardLogger().Error(testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Error(testMessage)
+	})
+
+	testStandardLogOutput(t, logrus.ErrorLevel, testField, func() {
+		getStandardLoggerWithFields().Error(testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.ErrorLevel, testField, func() {
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Error(testMessage)
+	})
+}
+
+func TestErrorf(t *testing.T) {
+	testStandardLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+		NewStandardLogger().Errorf(simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Errorf(simpleFormat, testMessage)
+	})
+
+	testStandardLogOutput(t, logrus.ErrorLevel, testField, func() {
+		getStandardLoggerWithFields().Errorf(simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.ErrorLevel, testField, func() {
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Errorf(simpleFormat, testMessage)
+	})
+}
+
 func TestInfo(t *testing.T) {
 	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
 		getNewStandardLogger().Info(testMessage)

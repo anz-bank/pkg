@@ -23,6 +23,14 @@ func (n *nullLogger) Debugf(format string, args ...interface{}) {
 	n.internal.Debugf(format, args...)
 }
 
+func (n *nullLogger) Error(args ...interface{}) {
+	n.internal.Error(args...)
+}
+
+func (n *nullLogger) Errorf(format string, args ...interface{}) {
+	n.internal.Errorf(format, args...)
+}
+
 func (n *nullLogger) Info(args ...interface{}) {
 	n.internal.Info(args...)
 }

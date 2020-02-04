@@ -2,12 +2,19 @@ package log
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"testing"
 
 	"github.com/alecthomas/assert"
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	formattedArgs = []interface{}{"this is a format %v %v %v %v", "this is a message", 12345, 2.3141, 'k'}
+	regularArgs   = []interface{}{"this is a message", 12345, 2.3141, 'k'}
+	errMsg        = errors.New("this is an error")
 )
 
 type fieldsTest struct {
@@ -41,27 +48,53 @@ func TestMainInfof(t *testing.T) {
 	testLogWithFormat(t, Infof, "Infof")
 }
 
-func testLog(t *testing.T, logFunc func(ctx context.Context, args ...interface{}), funcName string) {
-	args := []interface{}{"this is a message", 12345, 2.3141, 'k'}
-	callLog(t, funcName, args,
+func TestMainError(t *testing.T) {
+	t.Parallel()
+
+	callLog(t, "Error", regularArgs, frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
-			logFunc(WithLogger(m).Onto(context.Background()), args...)
+			Error(WithLogger(m).Onto(context.Background()), errMsg, regularArgs...)
 		},
 	)
 }
 
-func testLogWithFormat(t *testing.T, logFunc func(ctx context.Context, format string, args ...interface{}), funcName string) {
-	args := []interface{}{"this is a format %v %v %v %v", "this is a message", 12345, 2.3141, 'k'}
-	callLog(t, funcName, args,
+func TestMainErrorf(t *testing.T) {
+	t.Parallel()
+
+	callLog(t, "Errorf", formattedArgs, frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
-			logFunc(WithLogger(m).Onto(context.Background()), args[0].(string), args[1:]...)
+			Errorf(WithLogger(m).Onto(context.Background()), errMsg, formattedArgs[0].(string), formattedArgs[1:]...)
 		},
 	)
 }
 
-func callLog(t *testing.T, funcName string, args []interface{}, logFunc func(*mockLogger)) {
+func testLog(
+	t *testing.T,
+	logFunc func(ctx context.Context, args ...interface{}),
+	funcName string,
+) {
+	callLog(t, funcName, regularArgs, frozen.NewMap(),
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), regularArgs...)
+		},
+	)
+}
+
+func testLogWithFormat(
+	t *testing.T,
+	logFunc func(ctx context.Context, format string, args ...interface{}),
+	funcName string,
+) {
+	callLog(t, funcName, formattedArgs, frozen.NewMap(),
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), formattedArgs[0].(string), formattedArgs[1:]...)
+		},
+	)
+}
+
+func callLog(t *testing.T, funcName string, args []interface{}, fields frozen.Map, logFunc func(*mockLogger)) {
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, fields)
 	logger.On(funcName, args...)
 	logFunc(logger)
 	logger.AssertExpectations(t)
@@ -250,7 +283,7 @@ func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
 	logger.On(
 		"PutFields",
 		mock.MatchedBy(
-			func(arg frozen.Map) bool {
+			func(arg interface{}) bool {
 				return fields.Equal(arg)
 			},
 		),

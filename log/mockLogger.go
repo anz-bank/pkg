@@ -22,6 +22,14 @@ func (m *mockLogger) Debugf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, args...)...)
 }
 
+func (m *mockLogger) Error(args ...interface{}) {
+	m.Called(args...)
+}
+
+func (m *mockLogger) Errorf(format string, args ...interface{}) {
+	m.Called(append([]interface{}{format}, args...)...)
+}
+
 func (m *mockLogger) Info(args ...interface{}) {
 	m.Called(args...)
 }
