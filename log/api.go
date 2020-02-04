@@ -9,12 +9,12 @@ import (
 // Fields is a struct that contains all the fields data to log.
 type Fields struct{ m frozen.Map }
 
-// Debug logs from context at the debug level
+// Debug logs from context at the debug level.
 func Debug(ctx context.Context, args ...interface{}) {
 	Fields{}.Debug(ctx, args...)
 }
 
-// Debugf logs from context at the debug level
+// Debugf logs from context at the debug level.
 func Debugf(ctx context.Context, format string, args ...interface{}) {
 	Fields{}.Debugf(ctx, format, args...)
 }
@@ -25,12 +25,12 @@ func From(ctx context.Context) Logger {
 	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
 }
 
-// Info logs from context at the debug level
+// Info logs from context at the debug level.
 func Info(ctx context.Context, args ...interface{}) {
 	Fields{}.Info(ctx, args...)
 }
 
-// Infof logs from context at the debug level
+// Infof logs from context at the debug level.
 func Infof(ctx context.Context, format string, args ...interface{}) {
 	Fields{}.Infof(ctx, format, args...)
 }
@@ -77,12 +77,12 @@ func (f Fields) Chain(fieldses ...Fields) Fields {
 	return Fields{merged}
 }
 
-// Debug logs from context at the debug level
+// Debug logs from context at the debug level.
 func (f Fields) Debug(ctx context.Context, args ...interface{}) {
 	f.From(ctx).Debug(args...)
 }
 
-// Debugf logs from context at the debug level
+// Debugf logs from context at the debug level.
 func (f Fields) Debugf(ctx context.Context, format string, args ...interface{}) {
 	f.From(ctx).Debugf(format, args...)
 }
@@ -94,12 +94,12 @@ func (f Fields) From(ctx context.Context) Logger {
 	return From(f.Onto(ctx))
 }
 
-// Info logs from context at the debug level
+// Info logs from context at the debug level.
 func (f Fields) Info(ctx context.Context, args ...interface{}) {
 	f.From(ctx).Info(args...)
 }
 
-// Infof logs from context at the debug level
+// Infof logs from context at the debug level.
 func (f Fields) Infof(ctx context.Context, format string, args ...interface{}) {
 	f.From(ctx).Infof(format, args...)
 }
