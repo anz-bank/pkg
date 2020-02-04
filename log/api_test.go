@@ -17,6 +17,56 @@ type fieldsTest struct {
 	expected      frozen.Map
 }
 
+func TestDebug(t *testing.T) {
+	t.Parallel()
+
+	testLog(t, Debug, "Debug")
+}
+
+func TestDebugf(t *testing.T) {
+	t.Parallel()
+
+	testLogWithFormat(t, Debugf, "Debugf")
+}
+
+func TestInfo(t *testing.T) {
+	t.Parallel()
+
+	testLog(t, Info, "Info")
+}
+
+func TestInfof(t *testing.T) {
+	t.Parallel()
+
+	testLogWithFormat(t, Infof, "Infof")
+}
+
+func testLog(t *testing.T, logFunc func(ctx context.Context, args ...interface{}), funcName string) {
+	args := []interface{}{"this is a message", 12345, 2.3141, 'k'}
+	callLog(t, funcName, args,
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), args...)
+		},
+	)
+}
+
+func testLogWithFormat(t *testing.T, logFunc func(ctx context.Context, format string, args ...interface{}), funcName string) {
+	args := []interface{}{"this is a format %v %v %v %v", "this is a message", 12345, 2.3141, 'k'}
+	callLog(t, funcName, args,
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), args[0].(string), args[1:]...)
+		},
+	)
+}
+
+func callLog(t *testing.T, funcName string, args []interface{}, logFunc func(*mockLogger)) {
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On(funcName, args...)
+	logFunc(logger)
+	logger.AssertExpectations(t)
+}
+
 func TestChain(t *testing.T) {
 	t.Parallel()
 
