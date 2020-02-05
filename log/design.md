@@ -169,4 +169,4 @@ type internalLoggerOps interface {
 }
 ```
 
-This design ensures that users have what they need.
+This design ensures that users only have what they need while still providing flexibility over their `Fields`.
