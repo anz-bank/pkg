@@ -57,11 +57,6 @@ func WithCtxRef(key string, ctxKey interface{}) Fields {
 	return Fields{}.WithCtxRef(key, ctxKey)
 }
 
-// WithFunc creates a field with a string key and a callback value.
-func WithFunc(key string, f func(context.Context) interface{}) Fields {
-	return Fields{}.WithFunc(key, f)
-}
-
 // WithLogger adds logger which will be used for the log operation.
 func WithLogger(logger Logger) Fields {
 	return Fields{}.WithLogger(logger)
@@ -138,11 +133,6 @@ func (f Fields) WithConfigs(configs ...Config) Fields {
 // WithCtxRef adds key and the context key to the fields.
 func (f Fields) WithCtxRef(key string, ctxKey interface{}) Fields {
 	return f.with(key, ctxRef{ctxKey})
-}
-
-// WithFunc adds key and the function to the fields.
-func (f Fields) WithFunc(key string, val func(context.Context) interface{}) Fields {
-	return f.with(key, val)
 }
 
 // WithLogger adds logger which will be used for the log operation.

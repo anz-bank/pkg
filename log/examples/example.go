@@ -32,17 +32,6 @@ func fieldsDemo(ctx context.Context) {
 	// exist in the context, it will not be logged.
 	fields = fields.WithCtxRef("my alias", contextKey{})
 
-	// WithFunc adds a key and a function with a context argument which
-	// will be called before logging. If the result of the function is
-	// nil, it will not be logged.
-	ctx = context.WithValue(ctx, "bar", 42)
-	fields = fields.WithFunc("foo", func(ctx context.Context) interface{} {
-		return ctx.Value("bar")
-	})
-	fmt.Printf("Current Fields after using the With API: %s\n", fields.String(ctx))
-	ctx = context.WithValue(ctx, contextKey{}, "now exist in context")
-	fmt.Printf("Current Fields after using the With API and adding my alias to context: %s\n", fields.String(ctx))
-
 	// Fields operation can also be chained either by the With APIs or Chain API.
 	// An important thing to note is that fields operation always merge with the
 	// previous fields, but when key overlaps, the newest fields will always replace
@@ -53,9 +42,6 @@ func fieldsDemo(ctx context.Context) {
 	fields = fields.
 		With("test", "test too").
 		WithCtxRef("test three", contextKey2{}).
-		WithFunc("doesn't", func(context.Context) interface{} {
-			return "matter"
-		}).
 		With("test", "test four")
 
 	// The final fields will have ("out of": "things to write")
