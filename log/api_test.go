@@ -195,10 +195,10 @@ func TestWith(t *testing.T) {
 	)
 }
 
-func TestWithCtxRef(t *testing.T) {
+func TestWithContextRef(t *testing.T) {
 	t.Parallel()
 
-	f := WithCtxRef("key1", key1{}).WithCtxRef("key2", key2{}).WithCtxRef("key3", key3{})
+	f := WithContextRef("key1", key1{}).WithContextRef("key2", key2{}).WithContextRef("key3", key3{})
 
 	for i := f.m.Range(); i.Next(); {
 		assert.IsType(t, ctxRef{}, i.Value())
