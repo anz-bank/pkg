@@ -1,17 +1,40 @@
 # Contextual Logging
 
-## Log
+## Intro
 This library is a contextual logging library that makes use of context as part of the logging process. It is designed to make development easier by using the context variable to log instead of using a single global logger or passing a logger to every function.
+
+## Getting Started
+```go
+package main
+import (
+    "context"
+    
+    "github.com/anz-bank/pkg/log"
+)
+
+func main() {
+    ctx := context.Background()
+    logger := log.NewStandardLogger()
+    
+    // Setup with context fields.
+    ctx = log.WithLogger(logger).With("key1", "val1").With("key2", "val2").Onto(ctx)
+    
+    // This is how you log.
+    log.Debug(ctx, "Hello There!")
+    // This is how you log with temporary extra fields.
+    log.With("temporary", "fields").Info(ctx, "What's poppin?")
+}
+```
 
 ## Why use this library?
 ### Do a lot of things in one operation
-The library focuses on doing multiple operations, whether it is adding more fields, logger, or logger configuration, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
+The library focuses on doing multiple operations, whether it is adding fields or configuring the logger, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
 
 ### Shallow Context Tree
-`Fields` are stored in the context tree when you use the `Onto` method. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is extremely beneficial when several fields must be logged, which is common in large and complex codebase.
+`Fields` are stored in the context tree when you use the `Onto` method. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is extremely beneficial when several fields must be logged, which is common in large and complex codebases.
 
 ### Greater control over `Fields` and `Logger`
-There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control. The `With` methods allows many different types of `Fields` to be entered and APIs like [`Chain`](https://godoc.org/github.com/anz-bank/pkg/log#Fields.Chain) and [`Suppress`](https://godoc.org/github.com/anz-bank/pkg/log#Suppress) make `Fields` a lot more customizable.
+There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control. The `With` methods allow many different types of `Fields` to be entered and APIs like [`Chain`](https://godoc.org/github.com/anz-bank/pkg/log#Fields.Chain) and [`Suppress`](https://godoc.org/github.com/anz-bank/pkg/log#Suppress) make `Fields` a lot more customizable.
 
 ### Immutability
 The library ensures that`Fields` are immutable and the real `Logger` is never exposed. This is very beneficial in programs with concurrent processes.
@@ -117,10 +140,10 @@ Logger configurations are treated as fields. This can be done through the `WithC
     f = log.WithConfigs(log.NewJSONFormat(), log.NewStandardFormat())
 ```
 
-Currently there is only the configuration for format
+Currently only the format can be configured.
 
 #### Logging Format
-Currently there is only one logger which is the `StandardLogger` which uses [logrus](https://github.com/sirupsen/logrus). The provided formatter implements logrus formatter system. There are two formatter, the JSON formatter and the Standard formatter (which is the default formatter when no configuration is added).
+Currently there is only one logger which is the `StandardLogger` which uses [logrus](https://github.com/sirupsen/logrus). The provided formatter implements logrus formatter system. There are two formatters, the JSON formatter and the Standard formatter (which is the default formatter when no configuration is added).
 
 ##### JSON format
 JSON formatter will log in the following format:
