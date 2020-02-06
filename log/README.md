@@ -8,13 +8,13 @@ This library is a contextual logging library that makes use of context as part o
 The library focuses on doing multiple operations, whether it is adding more fields, logger, or logger configuration, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
 
 ### Shallow Context Tree
-`Fields` are stored in the context tree when you use the `Onto` method. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is very beneficial when you have several fields to be logged and the bigger the system you have, it is highly likely that the number of fields will grow.
+`Fields` are stored in the context tree when you use the `Onto` method. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is extremely beneficial when several fields must be logged, which is common in large and complex codebase.
 
 ### Greater control over `Fields` and `Logger`
-There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control over it. The `With` methods allows many different types of `Fields` to be entered and APIs like `Chain` and `Suppress` make `Fields` a lot more customizable.
+There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control. The `With` methods allows many different types of `Fields` to be entered and APIs like [`Chain`](https://godoc.org/github.com/anz-bank/pkg/log#Fields.Chain) and [`Suppress`](https://godoc.org/github.com/anz-bank/pkg/log#Suppress) make `Fields` a lot more customizable.
 
 ### Immutability
-The library ensures that`Fields` are immutable data structure and the real `Logger` is never exposed. This is very beneficial in programs with concurrent processes.
+The library ensures that`Fields` are immutable and the real `Logger` is never exposed. This is very beneficial in programs with concurrent processes.
 
 ### Customisable
 The library provides a lot of ways to customize your logger to meet your needs. You can create your own configuration or even an entirely different logger. The provided interfaces are small which makes it really easy to create your own configurations to the library.
