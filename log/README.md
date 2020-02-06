@@ -1,20 +1,20 @@
 # Contextual Logging
 
 ## Log
-This library is a contextual logging library that makes use of context as part of the logging process. It is designed to makes development easier by using the context variable to log instead of passing a logger to every functions.
+This library is a contextual logging library that makes use of context as part of the logging process. It is designed to make development easier by using the context variable to log instead of using a single global logger or passing a logger to every function.
 
 ## Why use this library?
 ### Do a lot of things in one operation
-The library focuses on doing as many operations as possible, whether it is adding more fields, logger, or logger configuration, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
+The library focuses on doing multiple operations, whether it is adding more fields, logger, or logger configuration, in one chained operation. This makes setup and logging very simple, especially when they involve `Fields`.
 
 ### Shallow Context Tree
-`Fields` are stored in the context tree when you use the `Onto` API. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is very beneficial when you have a large amount of fields to be logged and the bigger the system you have, it is highly likely that the number of fields will grow.
+`Fields` are stored in the context tree when you use the `Onto` method. Doing many things in one operation allows you to produce a shallow context tree as you do not need to add `Fields` one-by-one. By finalizing the `Fields` operation using `Onto`, it ensures that it will only add all the provided `Fields` once. This is very beneficial when you have several fields to be logged and the bigger the system you have, it is highly likely that the number of fields will grow.
 
 ### Greater control over `Fields` and `Logger`
 There are also many operations you can do on `Fields` as the library allows you to store fields in a variable for finer control over it. The `With` methods allows many different types of `Fields` to be entered and APIs like `Chain` and `Suppress` make `Fields` a lot more customizable.
 
 ### Immutability
-With this library, you do not need to worry in using it in concurrent process as they are immutable and thread-safe. The use of context ensure this and it makes sure the real logger is never exposed.
+The library ensures that`Fields` are immutable data structure and the real `Logger` is never exposed. This is very beneficial in programs with concurrent processes.
 
 ### Customisable
 The library provides a lot of ways to customize your logger to meet your needs. You can create your own configuration or even an entirely different logger. The provided interfaces are small which makes it really easy to create your own configurations to the library.
@@ -26,7 +26,7 @@ Compared to logrus, the library provides a built-in solution in implementing con
 
 ## Main Features
 ### Fields
-Fields are key value data that are logged along with the log message. This library makes manipulating Fields easier and more flexible. With this library, everything is treated as Fields, that includes Fields themselves, logger configuration, and even the logger itself. This makes it possible for you to create everything in one chained operation.
+Fields are key value data that are logged along with the log message. This library makes manipulating Fields easier and more flexible. With this library, everything is treated a Field, that includes Fields themselves, logger configuration, and even the logger itself. This makes it possible for you to create everything in one chained operation.
 
 ```go
     f := log.With("key1", "value1")
