@@ -93,9 +93,49 @@ func TestWithConfigsSameConfigType(t *testing.T) {
 	t.Parallel()
 
 	expectedConfig := frozen.Map{}.
-		With(standardFormat{}.TypeKey(), standardFormat{})
-	f := WithConfigs(NewJSONFormat(), NewStandardFormat())
+		With(standardFormat{}.TypeKey(), standardFormat{}).
+		With(infoLevel{}.TypeKey(), infoLevel{}).
+		With(stderrOut{}.TypeKey(), stderrOut{})
+
+	f := WithConfigs(
+		NewJSONFormat(),
+		NewStandardFormat(),
+		NewBufferOut(),
+		NewDebugLevel(),
+		NewInfoLevel(),
+		NewStderrOut(),
+	)
 	assert.True(t, expectedConfig.Equal(f.m))
+}
+
+func TestWithConfigLevel(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetLevel", errorLevel{}).Return(nil)
+	WithConfigs(NewInfoLevel(), NewDebugLevel(), NewErrorLevel()).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigOut(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetOutput", stderrOut{}).Return(nil)
+	WithConfigs(NewStdOut(), NewBufferOut(), NewStderrOut()).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigFormat(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetFormatter", jsonFormat{}).Return(nil)
+	WithConfigs(NewStandardFormat(), NewJSONFormat()).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
 }
 
 func TestFrom(t *testing.T) {

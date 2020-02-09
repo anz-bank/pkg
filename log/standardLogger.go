@@ -1,9 +1,11 @@
 package log
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -14,10 +16,26 @@ import (
 
 const keyFields = "_fields"
 
+type logrusLevelConfig interface {
+	getLogrusLevel() logrus.Level
+}
+
+type ioOutConfig interface {
+	getIoOut() io.Writer
+}
+
 type standardLogger struct {
 	internal *logrus.Logger
 	fields   frozen.Map
 }
+
+func (errorLevel) getLogrusLevel() logrus.Level { return logrus.ErrorLevel }
+func (debugLevel) getLogrusLevel() logrus.Level { return logrus.DebugLevel }
+func (infoLevel) getLogrusLevel() logrus.Level  { return logrus.InfoLevel }
+
+func (stderrOut) getIoOut() io.Writer { return os.Stderr }
+func (stdOut) getIoOut() io.Writer    { return os.Stdout }
+func (bufferOut) getIoOut() io.Writer { return &bytes.Buffer{} }
 
 func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	message := strings.Builder{}
@@ -65,10 +83,6 @@ func (jf jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
 func NewStandardLogger() Logger {
 	logger := logrus.New()
 	logger.SetFormatter(&standardFormat{})
-
-	// makes sure that it always logs every level
-	logger.SetLevel(logrus.DebugLevel)
-
 	// explicitly set it to os.Stderr
 	logger.SetOutput(os.Stderr)
 
@@ -102,6 +116,24 @@ func (sl *standardLogger) SetFormatter(formatter Config) error {
 		return errors.New("formatter is not logrus formatter type")
 	}
 	sl.internal.SetFormatter(logrusFormatter)
+	return nil
+}
+
+func (sl *standardLogger) SetLevel(level Config) error {
+	logrusLevel, isLogrusLevelConfig := level.(logrusLevelConfig)
+	if !isLogrusLevelConfig {
+		return errors.New("level is logrus type")
+	}
+	sl.internal.SetLevel(logrusLevel.getLogrusLevel())
+	return nil
+}
+
+func (sl *standardLogger) SetOutput(out Config) error {
+	ioOut, isIoOut := out.(ioOutConfig)
+	if !isIoOut {
+		return errors.New("out does not implement io.Writer")
+	}
+	sl.internal.SetOutput(ioOut.getIoOut())
 	return nil
 }
 

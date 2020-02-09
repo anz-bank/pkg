@@ -46,6 +46,14 @@ func (n *nullLogger) SetFormatter(formatter Config) error {
 	return n.internal.SetFormatter(formatter)
 }
 
+func (n *nullLogger) SetLevel(level Config) error {
+	return n.internal.SetLevel(level)
+}
+
+func (n *nullLogger) SetOutput(out Config) error {
+	return n.internal.SetOutput(out)
+}
+
 func setUpLogger() *standardLogger {
 	logger := NewStandardLogger().(*standardLogger)
 	logger.internal.SetOutput(&bytes.Buffer{})

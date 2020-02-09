@@ -41,3 +41,11 @@ func (m *mockLogger) Copy() Logger {
 func (m *mockLogger) SetFormatter(formatter Config) error {
 	return m.Called(formatter).Error(0)
 }
+
+func (m *mockLogger) SetLevel(level Config) error {
+	return m.Called(level).Error(0)
+}
+
+func (m *mockLogger) SetOutput(out Config) error {
+	return m.Called(out).Error(0)
+}
