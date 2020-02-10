@@ -29,9 +29,9 @@ type formattable interface {
 	SetFormatter(formatter Config) error
 }
 
-type settableLevel interface {
-	// SetLevel sets the logger level.
-	SetLevel(level Config) error
+type settableVerbosity interface {
+	// SetVerbosity sets the verbosity of the logger.
+	SetVerbosity(on bool) error
 }
 
 type settableOutput interface {

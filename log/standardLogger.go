@@ -29,10 +29,6 @@ type standardLogger struct {
 	fields   frozen.Map
 }
 
-func (errorLevel) getLogrusLevel() logrus.Level { return logrus.ErrorLevel }
-func (debugLevel) getLogrusLevel() logrus.Level { return logrus.DebugLevel }
-func (infoLevel) getLogrusLevel() logrus.Level  { return logrus.InfoLevel }
-
 func (stderrOut) getIoOut() io.Writer { return os.Stderr }
 func (stdOut) getIoOut() io.Writer    { return os.Stdout }
 func (bufferOut) getIoOut() io.Writer { return &bytes.Buffer{} }
@@ -119,12 +115,12 @@ func (sl *standardLogger) SetFormatter(formatter Config) error {
 	return nil
 }
 
-func (sl *standardLogger) SetLevel(level Config) error {
-	logrusLevel, isLogrusLevelConfig := level.(logrusLevelConfig)
-	if !isLogrusLevelConfig {
-		return errors.New("level is logrus type")
+func (sl *standardLogger) SetVerbosity(on bool) error {
+	if on {
+		sl.internal.SetLevel(logrus.DebugLevel)
+	} else {
+		sl.internal.SetLevel(logrus.InfoLevel)
 	}
-	sl.internal.SetLevel(logrusLevel.getLogrusLevel())
 	return nil
 }
 

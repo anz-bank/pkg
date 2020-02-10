@@ -4,7 +4,7 @@ type typeKey int
 
 const (
 	Formatter typeKey = iota
-	LevelSetter
+	verbosity
 	OutSetter
 )
 
@@ -16,9 +16,7 @@ type Config interface {
 type standardFormat struct{}
 type jsonFormat struct{}
 
-type errorLevel struct{}
-type debugLevel struct{}
-type infoLevel struct{}
+type verboseMode struct{ on bool }
 
 type stderrOut struct{}
 type stdOut struct{}
@@ -36,22 +34,10 @@ func (jf jsonFormat) Apply(logger Logger) error {
 	return applyFormatter(jf, logger)
 }
 
-func NewErrorLevel() Config             { return errorLevel{} }
-func (errorLevel) TypeKey() interface{} { return LevelSetter }
-func (el errorLevel) Apply(logger Logger) error {
-	return applyLevel(el, logger)
-}
-
-func NewDebugLevel() Config             { return debugLevel{} }
-func (debugLevel) TypeKey() interface{} { return LevelSetter }
-func (dl debugLevel) Apply(logger Logger) error {
-	return applyLevel(dl, logger)
-}
-
-func NewInfoLevel() Config             { return infoLevel{} }
-func (infoLevel) TypeKey() interface{} { return LevelSetter }
-func (il infoLevel) Apply(logger Logger) error {
-	return applyLevel(il, logger)
+func SetVerboseMode(on bool) Config      { return verboseMode{on} }
+func (verboseMode) TypeKey() interface{} { return verbosity }
+func (v verboseMode) Apply(logger Logger) error {
+	return logger.(settableVerbosity).SetVerbosity(v.on)
 }
 
 func NewStderrOut() Config             { return stderrOut{} }
@@ -74,10 +60,6 @@ func (b bufferOut) Apply(logger Logger) error {
 
 func applyFormatter(formatter Config, logger Logger) error {
 	return logger.(formattable).SetFormatter(formatter)
-}
-
-func applyLevel(level Config, logger Logger) error {
-	return logger.(settableLevel).SetLevel(level)
 }
 
 func applyOutput(out Config, logger Logger) error {

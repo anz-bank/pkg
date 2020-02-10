@@ -46,8 +46,8 @@ func (n *nullLogger) SetFormatter(formatter Config) error {
 	return n.internal.SetFormatter(formatter)
 }
 
-func (n *nullLogger) SetLevel(level Config) error {
-	return n.internal.SetLevel(level)
+func (n *nullLogger) SetVerbosity(on bool) error {
+	return n.internal.SetVerbosity(on)
 }
 
 func (n *nullLogger) SetOutput(out Config) error {

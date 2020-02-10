@@ -139,10 +139,10 @@ func configLogDemo(ctx context.Context) {
 	// of the same type is added. For example, if before you added StandardFormatter, calling WithConfig
 	// with JSONFormatter will replace StandardFormatter. Just like Fields, it will also be stored
 	// in the context.
-	ctx = log.WithConfigs(log.NewJSONFormat(), log.NewStderrOut(), log.NewDebugLevel()).Onto(ctx)
+	ctx = log.WithConfigs(log.NewJSONFormat(), log.NewStderrOut(), log.SetVerboseMode(true)).Onto(ctx)
 
 	// You can also have a log-specific configs by not saving it to the context.
-	log.WithConfigs(log.NewStandardFormat(), log.NewBufferOut(), log.NewInfoLevel()).
+	log.WithConfigs(log.NewStandardFormat(), log.NewBufferOut(), log.SetVerboseMode(false)).
 		WithLogger(log.NewStandardLogger()).
 		With("key", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
 		From(ctx).
