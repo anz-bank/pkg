@@ -85,12 +85,18 @@ func (sl *standardLogger) Debugf(format string, args ...interface{}) {
 	sl.setInfo().Debugf(format, args...)
 }
 
-func (sl *standardLogger) Error(args ...interface{}) {
-	sl.setInfo().Error(args...)
+func (sl *standardLogger) Error(errMsg error, args ...interface{}) {
+	if msg, _ := sl.fields.Get(errMsgKey); msg != errMsg.Error() {
+		sl.fields = sl.fields.With(errMsgKey, errMsg.Error())
+	}
+	sl.setInfo().Info(args...)
 }
 
-func (sl *standardLogger) Errorf(format string, args ...interface{}) {
-	sl.setInfo().Errorf(format, args...)
+func (sl *standardLogger) Errorf(errMsg error, format string, args ...interface{}) {
+	if msg, _ := sl.fields.Get(errMsgKey); msg != errMsg.Error() {
+		sl.fields = sl.fields.With(errMsgKey, errMsg.Error())
+	}
+	sl.setInfo().Infof(format, args...)
 }
 
 func (sl *standardLogger) Info(args ...interface{}) {

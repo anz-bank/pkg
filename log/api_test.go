@@ -51,7 +51,11 @@ func TestMainInfof(t *testing.T) {
 func TestMainError(t *testing.T) {
 	t.Parallel()
 
-	callLog(t, "Error", regularArgs, frozen.Map{}.With(errMsgKey, errMsg.Error()),
+	callLog(
+		t,
+		"Error",
+		append([]interface{}{errMsg}, regularArgs...),
+		frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
 			Error(WithLogger(m).Onto(context.Background()), errMsg, regularArgs...)
 		},
@@ -61,7 +65,11 @@ func TestMainError(t *testing.T) {
 func TestMainErrorf(t *testing.T) {
 	t.Parallel()
 
-	callLog(t, "Errorf", formattedArgs, frozen.Map{}.With(errMsgKey, errMsg.Error()),
+	callLog(
+		t,
+		"Errorf",
+		append([]interface{}{errMsg}, formattedArgs...),
+		frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
 			Errorf(WithLogger(m).Onto(context.Background()), errMsg, formattedArgs[0].(string), formattedArgs[1:]...)
 		},

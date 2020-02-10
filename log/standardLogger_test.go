@@ -2,6 +2,8 @@ package log
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -15,6 +17,8 @@ const (
 	testMessage  = "This is a test message"
 	simpleFormat = "%s"
 )
+
+var testError = errors.New("this is an error")
 
 // to test fields output for all log
 var testField = generateMultipleFieldsCases()[0].Fields
@@ -80,46 +84,46 @@ func TestDebugf(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	testStandardLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Error(testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		NewStandardLogger().Error(testError, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Error(testMessage)
+		logger.Error(testError, testMessage)
 	})
 
-	testStandardLogOutput(t, logrus.ErrorLevel, testField, func() {
-		getStandardLoggerWithFields().Error(testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		getStandardLoggerWithFields().Error(testError, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.ErrorLevel, testField, func() {
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
 		logger := getStandardLoggerWithFields()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Error(testMessage)
+		logger.Error(testError, testMessage)
 	})
 }
 
 func TestErrorf(t *testing.T) {
-	testStandardLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Errorf(simpleFormat, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		NewStandardLogger().Errorf(testError, simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.ErrorLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Errorf(simpleFormat, testMessage)
+		logger.Errorf(testError, simpleFormat, testMessage)
 	})
 
-	testStandardLogOutput(t, logrus.ErrorLevel, testField, func() {
-		getStandardLoggerWithFields().Errorf(simpleFormat, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		getStandardLoggerWithFields().Errorf(testError, simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.ErrorLevel, testField, func() {
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
 		logger := getStandardLoggerWithFields()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Errorf(simpleFormat, testMessage)
+		logger.Errorf(testError, simpleFormat, testMessage)
 	})
 }
 
@@ -171,8 +175,11 @@ func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, 
 	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
 	actualOutput := redirectOutput(t, logFunc)
 
-	// uses Contains to avoid checking timestamps and fields
+	// uses Contains to avoid checking timestamps
 	assert.Contains(t, actualOutput, expectedOutput)
+	for i := fields.Range(); i.Next(); {
+		assert.Contains(t, actualOutput, fmt.Sprintf("%s=%v", i.Key(), i.Value()))
+	}
 }
 
 func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
@@ -182,8 +189,11 @@ func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logF
 	assert.Equal(t, out["level"], strings.ToUpper(level.String()))
 	if fields.Count() != 0 {
 		// type correction because json unmarshall reads numbers as float64
+		if fields.Has("byte") && fields.Has("int") {
+			fields = fields.With("byte", float64('1')).With("int", float64(123))
+		}
 		assert.Equal(t,
-			convertToGoMap(fields.With("byte", float64('1')).With("int", float64(123))),
+			convertToGoMap(fields),
 			out["fields"].(map[string]interface{}),
 		)
 	}
