@@ -97,16 +97,16 @@ A couple more useful APIs to know.
 A very important thing to note is that Fields are immutable which makes them thread-safe but it also means that you need to receive the returned value of fields operation as they do not mutate themselves.
 
 ### Logging
-There are three levels of logging, they are `Debug`, `Info`, and `Error`. Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`.
+There are two levels of logging, they are `Debug` and `Info`.
 
-Logging can be accessed through the `Debug`, `Info`, and `Error` API. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
+Logging can be accessed through the `Debug`, `Info`, and `Error` API.  Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
 ```go
     log.Debug(ctx, "this is debug")
     log.Debugf(ctx, "%s with format", "this is debug")
     log.Info(ctx, "this is info")
     log.Infof(ctx, "%s with format", "this is info")
 ```
-For `Error` and `Errorf`, the error variable is required. The error message will be logged as a field with the key of `error_message`
+For `Error` and `Errorf`, the error variable is required. The error message will be logged as a field with the key of `error_message` and the log itself is in the `Info` level.
 ```go
     log.Error(ctx, errors.New("error"), "this is error")
     log.Errorf(ctx, errors.New("error"), "%s with format", "this is error")
@@ -153,7 +153,7 @@ JSON formatter will log in the following format:
 		"key1": "value1", // value can be any data types
 		"key2": "value2",
 	},
-	"level": "log level", // string, either INFO, ERROR or DEBUG
+	"level": "log level", // string, either INFO or DEBUG
 	"message": "log message", // string,
 	"timestamp": "log time", // timestamp in RFC3339Nano format
 }
