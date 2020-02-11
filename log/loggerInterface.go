@@ -33,8 +33,3 @@ type settableVerbosity interface {
 	// SetVerbosity sets the verbosity of the logger.
 	SetVerbosity(on bool) error
 }
-
-type settableOutput interface {
-	// SetOutput sets where the logger outputs its logs.
-	SetOutput(output Config) error
-}

@@ -94,15 +94,12 @@ func TestWithConfigsSameConfigType(t *testing.T) {
 
 	expectedConfig := frozen.Map{}.
 		With(standardFormat{}.TypeKey(), standardFormat{}).
-		With(verboseMode{}.TypeKey(), verboseMode{true}).
-		With(stderrOut{}.TypeKey(), stderrOut{})
+		With(verboseMode{}.TypeKey(), verboseMode{true})
 
 	f := WithConfigs(
 		NewJSONFormat(),
 		NewStandardFormat(),
-		NewBufferOut(),
 		SetVerboseMode(true),
-		NewStderrOut(),
 	)
 	assert.True(t, expectedConfig.Equal(f.m))
 }
@@ -114,16 +111,6 @@ func TestWithConfigLevel(t *testing.T) {
 	setLogMockAssertion(logger, frozen.NewMap())
 	logger.On("SetVerbosity", true).Return(nil)
 	WithConfigs(SetVerboseMode(false), SetVerboseMode(true)).WithLogger(logger).From(context.Background())
-	logger.AssertExpectations(t)
-}
-
-func TestWithConfigOut(t *testing.T) {
-	t.Parallel()
-
-	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
-	logger.On("SetOutput", stderrOut{}).Return(nil)
-	WithConfigs(NewStdOut(), NewBufferOut(), NewStderrOut()).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
 }
 

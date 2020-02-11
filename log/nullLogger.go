@@ -50,10 +50,6 @@ func (n *nullLogger) SetVerbosity(on bool) error {
 	return n.internal.SetVerbosity(on)
 }
 
-func (n *nullLogger) SetOutput(out Config) error {
-	return n.internal.SetOutput(out)
-}
-
 func setUpLogger() *standardLogger {
 	logger := NewStandardLogger().(*standardLogger)
 	logger.internal.SetOutput(&bytes.Buffer{})

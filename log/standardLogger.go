@@ -1,7 +1,6 @@
 package log
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,10 +27,6 @@ type standardLogger struct {
 	internal *logrus.Logger
 	fields   frozen.Map
 }
-
-func (stderrOut) getIoOut() io.Writer { return os.Stderr }
-func (stdOut) getIoOut() io.Writer    { return os.Stdout }
-func (bufferOut) getIoOut() io.Writer { return &bytes.Buffer{} }
 
 func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	message := strings.Builder{}
