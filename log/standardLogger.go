@@ -110,21 +110,12 @@ func (sl *standardLogger) SetFormatter(formatter Config) error {
 	return nil
 }
 
-func (sl *standardLogger) SetVerbosity(on bool) error {
+func (sl *standardLogger) SetVerbose(on bool) error {
 	if on {
 		sl.internal.SetLevel(logrus.DebugLevel)
 	} else {
 		sl.internal.SetLevel(logrus.InfoLevel)
 	}
-	return nil
-}
-
-func (sl *standardLogger) SetOutput(out Config) error {
-	ioOut, isIoOut := out.(ioOutConfig)
-	if !isIoOut {
-		return errors.New("out does not implement io.Writer")
-	}
-	sl.internal.SetOutput(ioOut.getIoOut())
 	return nil
 }
 

@@ -109,7 +109,7 @@ func TestWithConfigLevel(t *testing.T) {
 
 	logger := newMockLogger()
 	setLogMockAssertion(logger, frozen.NewMap())
-	logger.On("SetVerbosity", true).Return(nil)
+	logger.On("SetVerbose", true).Return(nil)
 	WithConfigs(SetVerboseMode(false), SetVerboseMode(true)).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
 }

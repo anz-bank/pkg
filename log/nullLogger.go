@@ -46,8 +46,8 @@ func (n *nullLogger) SetFormatter(formatter Config) error {
 	return n.internal.SetFormatter(formatter)
 }
 
-func (n *nullLogger) SetVerbosity(on bool) error {
-	return n.internal.SetVerbosity(on)
+func (n *nullLogger) SetVerbose(on bool) error {
+	return n.internal.SetVerbose(on)
 }
 
 func setUpLogger() *standardLogger {

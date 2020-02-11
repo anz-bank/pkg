@@ -30,6 +30,6 @@ type formattable interface {
 }
 
 type settableVerbosity interface {
-	// SetVerbosity sets the verbosity of the logger.
-	SetVerbosity(on bool) error
+	// SetVerbose sets the verbosity of the logger.
+	SetVerbose(on bool) error
 }

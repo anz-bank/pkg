@@ -42,6 +42,6 @@ func (m *mockLogger) SetFormatter(formatter Config) error {
 	return m.Called(formatter).Error(0)
 }
 
-func (m *mockLogger) SetVerbosity(on bool) error {
+func (m *mockLogger) SetVerbose(on bool) error {
 	return m.Called(on).Error(0)
 }
