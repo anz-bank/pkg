@@ -50,11 +50,11 @@ func WithConfigs(configs ...Config) Fields {
 	return Fields{}.WithConfigs(configs...)
 }
 
-// WithContextRef creates a field with a key that refers to the provided context key,
+// WithContextKey creates a field with a key that refers to the provided context key,
 // fields will use key as the fields property and take the value that corresponds
 // to ctxKey.
-func WithContextRef(key string, ctxKey interface{}) Fields {
-	return Fields{}.WithContextRef(key, ctxKey)
+func WithContextKey(key string, ctxKey interface{}) Fields {
+	return Fields{}.WithContextKey(key, ctxKey)
 }
 
 // WithLogger adds logger which will be used for the log operation.
@@ -130,8 +130,8 @@ func (f Fields) WithConfigs(configs ...Config) Fields {
 	})
 }
 
-// WithContextRef adds key and the context key to the fields.
-func (f Fields) WithContextRef(key string, ctxKey interface{}) Fields {
+// WithContextKey adds key and the context key to the fields.
+func (f Fields) WithContextKey(key string, ctxKey interface{}) Fields {
 	return f.with(key, ctxRef{ctxKey})
 }
 
