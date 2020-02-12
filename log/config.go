@@ -1,11 +1,14 @@
 package log
 
 type typeKey int
+type internalTypeKey int
 
 const (
 	Formatter typeKey = iota
-	verbosity
-	OutSetter
+)
+
+const (
+	verbosity internalTypeKey = iota
 )
 
 type Config interface {

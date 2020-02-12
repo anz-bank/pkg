@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -74,8 +73,6 @@ func (jf jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
 func NewStandardLogger() Logger {
 	logger := logrus.New()
 	logger.SetFormatter(&standardFormat{})
-	// explicitly set it to os.Stderr
-	logger.SetOutput(os.Stderr)
 
 	return &standardLogger{internal: logger}
 }
