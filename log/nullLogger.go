@@ -46,6 +46,10 @@ func (n *nullLogger) SetFormatter(formatter Config) error {
 	return n.internal.SetFormatter(formatter)
 }
 
+func (n *nullLogger) SetVerbose(on bool) error {
+	return n.internal.SetVerbose(on)
+}
+
 func setUpLogger() *standardLogger {
 	logger := NewStandardLogger().(*standardLogger)
 	logger.internal.SetOutput(&bytes.Buffer{})

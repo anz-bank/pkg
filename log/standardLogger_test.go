@@ -37,7 +37,7 @@ func TestCopyStandardLogger(t *testing.T) {
 
 func TestDebug(t *testing.T) {
 	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Debug(testMessage)
+		getNewStandardLogger().Debug(testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
@@ -59,7 +59,7 @@ func TestDebug(t *testing.T) {
 
 func TestDebugf(t *testing.T) {
 	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Debugf(simpleFormat, testMessage)
+		getNewStandardLogger().Debugf(simpleFormat, testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
@@ -81,7 +81,7 @@ func TestDebugf(t *testing.T) {
 
 func TestInfo(t *testing.T) {
 	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Info(testMessage)
+		getNewStandardLogger().Info(testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
@@ -103,7 +103,7 @@ func TestInfo(t *testing.T) {
 
 func TestInfof(t *testing.T) {
 	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Infof(simpleFormat, testMessage)
+		getNewStandardLogger().Infof(simpleFormat, testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
@@ -196,10 +196,13 @@ func TestPutFields(t *testing.T) {
 }
 
 func getNewStandardLogger() *standardLogger {
-	return NewStandardLogger().(*standardLogger)
+	l := NewStandardLogger().(*standardLogger)
+	l.internal.SetLevel(logrus.DebugLevel)
+	return l
 }
 
 func getStandardLoggerWithFields() *standardLogger {
-	logger := getNewStandardLogger().PutFields(testField)
-	return logger.(*standardLogger)
+	logger := getNewStandardLogger().PutFields(testField).(*standardLogger)
+	logger.internal.SetLevel(logrus.DebugLevel)
+	return logger
 }

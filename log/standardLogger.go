@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 	"time"
 
@@ -13,6 +13,14 @@ import (
 )
 
 const keyFields = "_fields"
+
+type logrusLevelConfig interface {
+	getLogrusLevel() logrus.Level
+}
+
+type ioOutConfig interface {
+	getIoOut() io.Writer
+}
 
 type standardLogger struct {
 	internal *logrus.Logger
@@ -66,12 +74,6 @@ func NewStandardLogger() Logger {
 	logger := logrus.New()
 	logger.SetFormatter(&standardFormat{})
 
-	// makes sure that it always logs every level
-	logger.SetLevel(logrus.DebugLevel)
-
-	// explicitly set it to os.Stderr
-	logger.SetOutput(os.Stderr)
-
 	return &standardLogger{internal: logger}
 }
 
@@ -102,6 +104,15 @@ func (sl *standardLogger) SetFormatter(formatter Config) error {
 		return errors.New("formatter is not logrus formatter type")
 	}
 	sl.internal.SetFormatter(logrusFormatter)
+	return nil
+}
+
+func (sl *standardLogger) SetVerbose(on bool) error {
+	if on {
+		sl.internal.SetLevel(logrus.DebugLevel)
+	} else {
+		sl.internal.SetLevel(logrus.InfoLevel)
+	}
 	return nil
 }
 
