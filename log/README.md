@@ -8,17 +8,17 @@ This library is a contextual logging library that makes use of context as part o
 package main
 import (
     "context"
-    
+
     "github.com/anz-bank/pkg/log"
 )
 
 func main() {
     ctx := context.Background()
     logger := log.NewStandardLogger()
-    
+
     // Setup with context fields.
     ctx = log.WithLogger(logger).With("key1", "val1").With("key2", "val2").Onto(ctx)
-    
+
     // This is how you log.
     log.Debug(ctx, "Hello There!")
     // This is how you log with temporary extra fields.
@@ -97,16 +97,14 @@ A couple more useful APIs to know.
 A very important thing to note is that Fields are immutable which makes them thread-safe but it also means that you need to receive the returned value of fields operation as they do not mutate themselves.
 
 ### Logging
-There are two levels of logging, they are `Debug` and `Info`.
-
-Logging can be accessed through the `Debug`, `Info`, and `Error` API.  Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
+Logging can be accessed through the `Debug`, `Info`, and `Error` API.  Each of them also have their format function counterpart which are `Debugf`, `Infof`, and `Errorf`. `Debug` and `Debugf` is only logged when the logger is in the verbose mode while the others will always be logged. Each of the log functions require a context to be passed in. If the context contains fields, that fields will be logged along with the message given. If the context does not contain a logger a standard logger will be provided as the default.
 ```go
     log.Debug(ctx, "this is debug")
     log.Debugf(ctx, "%s with format", "this is debug")
     log.Info(ctx, "this is info")
     log.Infof(ctx, "%s with format", "this is info")
 ```
-For `Error` and `Errorf`, the error variable is required. The error message will be logged as a field with the key of `error_message` and the log itself is in the `Info` level.
+For `Error` and `Errorf`, the error variable is required. The error message will be logged as a field with the key of `error_message`.
 ```go
     log.Error(ctx, errors.New("error"), "this is error")
     log.Errorf(ctx, errors.New("error"), "%s with format", "this is error")
@@ -115,14 +113,14 @@ For `Error` and `Errorf`, the error variable is required. The error message will
 ```go
     log.With("additional", "fields").With("more", "fields").Debug(ctx, "debug")
     log.With("additional", "fields").With("more", "fields").Debugf(ctx, "formatted %s", "debug")
-    
+
      // This log will only log fields inside the context.
     log.Debug(ctx, "no additional fields")
 ```
 Should you require the logger object itself, you can do so by using the `From` API which will extract the logger in the context. If context does not have any logger, it will returns a new standard logger. The returned logger is copied for immutability. The logger returned by From have all the fields and configuration applied to it. The fields are also resolved, meaning any context reference will use any value in the context at the time of call.
 ```go
     logger := log.From(ctx)
-    
+
     // This one will return a logger with the additional fields merged with context fields
     logger := log.With("extra", "fields").From(ctx)
 ```
@@ -132,7 +130,7 @@ Logger configurations are treated as fields. This can be done through the `WithC
 ```go
     // This adds the JSON formatter to the logger.
     f = log.WithConfigs(log.NewJSONFormat())
-    
+
     // This will replace JSON formatter.
     f = log.WithConfigs(log.NewStandardFormat())
 
