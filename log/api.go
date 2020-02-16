@@ -19,6 +19,16 @@ func Debugf(ctx context.Context, format string, args ...interface{}) {
 	Fields{}.Debugf(ctx, format, args...)
 }
 
+// Error logs from context at the info level with the error_message fields.
+func Error(ctx context.Context, err error, args ...interface{}) {
+	Fields{}.Error(ctx, err, args...)
+}
+
+// Errorf logs from context at the info level with the error_message fields.
+func Errorf(ctx context.Context, err error, format string, args ...interface{}) {
+	Fields{}.Errorf(ctx, err, format, args...)
+}
+
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
 	f := getFields(ctx)
@@ -80,6 +90,16 @@ func (f Fields) Debug(ctx context.Context, args ...interface{}) {
 // Debugf logs from context at the debug level.
 func (f Fields) Debugf(ctx context.Context, format string, args ...interface{}) {
 	f.From(ctx).Debugf(format, args...)
+}
+
+// Error logs from context at the info level with the error_message fields.
+func (f Fields) Error(ctx context.Context, errMsg error, args ...interface{}) {
+	f.With(errMsgKey, errMsg.Error()).From(ctx).Error(errMsg, args...)
+}
+
+// Errorf logs from context at the info level with the error_message fields.
+func (f Fields) Errorf(ctx context.Context, errMsg error, format string, args ...interface{}) {
+	f.With(errMsgKey, errMsg.Error()).From(ctx).Errorf(errMsg, format, args...)
 }
 
 // From returns a logger with the new fields which is the fields from the context

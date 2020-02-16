@@ -6,6 +6,8 @@ import (
 	"github.com/arr-ai/frozen"
 )
 
+const errMsgKey = "error_message"
+
 type fieldsContextKey struct{}
 type loggerKey struct{}
 type suppress struct{}

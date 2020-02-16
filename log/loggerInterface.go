@@ -8,7 +8,11 @@ type Logger interface {
 	Debug(args ...interface{})
 	// Debugf logs the message at the Debug level.
 	Debugf(format string, args ...interface{})
-	// Info logs the message at the Info level.
+	// Error logs the message at the Error level
+	Error(errMsg error, args ...interface{})
+	// Errorf logs the message at the Error level
+	Errorf(errMsg error, format string, args ...interface{})
+	// Info logs the message at the Info level
 	Info(args ...interface{})
 	// Infof logs the message at the Info level.
 	Infof(format string, args ...interface{})
