@@ -75,7 +75,7 @@ func TestConfigureLogger(t *testing.T) {
 			for i := c.contextFields.Range(); i.Next(); {
 				ctx = context.WithValue(ctx, i.Key(), i.Value())
 			}
-			Fields{c.unresolveds}.configureLogger(ctx, Logger(logger).(fieldSetter))
+			logger = configureLogger(Logger(logger).(fieldSetter), c.expected, []Config{}).(*mockLogger)
 			logger.AssertExpectations(t)
 		})
 	}
@@ -86,7 +86,7 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 
 	//TODO: add more configs
 	testCase := getUnresolvedFieldsCases()[0]
-	unresolveds := Fields{testCase.unresolveds}.WithConfigs(NewJSONFormat())
+	unresolved := Fields{testCase.unresolveds}.WithConfigs(NewJSONFormat())
 	expected := testCase.expected
 
 	logger := newMockLogger()
@@ -97,7 +97,7 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 	for i := testCase.contextFields.Range(); i.Next(); {
 		ctx = context.WithValue(ctx, i.Key(), i.Value())
 	}
-
-	unresolveds.configureLogger(ctx, Logger(logger).(fieldSetter))
+	resolved, configs := unresolved.getResolvedFields(ctx)
+	configureLogger(Logger(logger).(fieldSetter), resolved, configs)
 	logger.AssertExpectations(t)
 }

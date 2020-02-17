@@ -32,16 +32,13 @@ func (f Fields) getCopiedLogger() Logger {
 	return logger.(copyable).Copy()
 }
 
-func configureLogger(logger fieldSetter, fields frozen.Map, configs frozen.Set) Logger {
-	if configs.Count() > 0 {
-		logger = applyConfiguration(logger.(Logger), configs).(fieldSetter)
-	}
-	return logger.PutFields(fields)
+func configureLogger(logger fieldSetter, fields frozen.Map, configs []Config) Logger {
+	return applyConfiguration(logger.(Logger), configs).(fieldSetter).PutFields(fields)
 }
 
-func applyConfiguration(logger Logger, configs frozen.Set) Logger {
-	for c := configs.Range(); c.Next(); {
-		err := c.(Config).Apply(logger.(Logger))
+func applyConfiguration(logger Logger, configs []Config) Logger {
+	for _, c := range configs {
+		err := c.Apply(logger.(Logger))
 		if err != nil {
 			//TODO: should decide whether it should panic or not
 			panic(err)
@@ -50,10 +47,11 @@ func applyConfiguration(logger Logger, configs frozen.Set) Logger {
 	return logger
 }
 
-func (f Fields) getResolvedFields(ctx context.Context) (frozen.Map, frozen.Set) {
+func (f Fields) getResolvedFields(ctx context.Context) (frozen.Map, []Config) {
 	fields := f.m
-	var toSuppress, configBuilder frozen.SetBuilder
+	var toSuppress frozen.SetBuilder
 	toSuppress.Add(loggerKey{})
+	configs := make([]Config, 0)
 	for i := fields.Range(); i.Next(); {
 		switch k := i.Value().(type) {
 		case ctxRef:
@@ -72,10 +70,10 @@ func (f Fields) getResolvedFields(ctx context.Context) (frozen.Map, frozen.Set) 
 			toSuppress.Add(i.Key())
 		case Config:
 			toSuppress.Add(i.Key())
-			configBuilder.Add(k)
+			configs = append(configs, k)
 		}
 	}
-	return fields.Without(toSuppress.Finish()), configBuilder.Finish()
+	return fields.Without(toSuppress.Finish()), configs
 }
 
 func (f Fields) with(key, val interface{}) Fields {
