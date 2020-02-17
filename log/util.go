@@ -10,7 +10,7 @@ const errMsgKey = "error_message"
 
 type fieldsContextKey struct{}
 type canonicalFieldsKey struct{}
-type canonicalListenerKey struct {}
+type listenerKey struct {}
 type loggerKey struct{}
 type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
@@ -27,23 +27,19 @@ func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})
 	if !exists {
-		panic("Logger has not been added")
+		return NewStandardLogger()
 	}
 	return logger.(copyable).Copy()
 }
 
-func (f Fields) configureLogger(ctx context.Context, logger fieldSetter, configs frozen.Set) Logger {
-	for c := configs.Range(); c.Next(); {
-		err := c.(Config).Apply(logger.(Logger))
-		if err != nil {
-			//TODO: should decide whether it should panic or not
-			panic(err)
-		}
+func configureLogger(logger fieldSetter, fields frozen.Map, configs frozen.Set) Logger {
+	if configs.Count() > 0 {
+		logger = applyConfiguration(logger.(Logger), configs).(fieldSetter)
 	}
-	return logger.PutFields(f.m)
+	return logger.PutFields(fields)
 }
 
-func (f Fields) applyConfiguration(logger Logger, configs frozen.Set) Logger {
+func applyConfiguration(logger Logger, configs frozen.Set) Logger {
 	for c := configs.Range(); c.Next(); {
 		err := c.(Config).Apply(logger.(Logger))
 		if err != nil {
@@ -96,34 +92,36 @@ func getCanonicalFields(ctx context.Context) *frozen.MapBuilder {
 
 func addCanonicalFields(mb *frozen.MapBuilder, fields Fields) {
 	for i := fields.m.Range(); i.Next(); {
-		if f, exists := mb.Get(i.Key()); exists {
-			if	val, isList := f.([]interface{}); isList {
-				mb.Put(i.Key(), append(val, i.Value()))
+		switch k := i.Key().(type) {
+		case Config, Logger:
+			mb.Put(k, i.Value())
+		default:
+			if f, exists := mb.Get(k); exists {
+				if	val, isList := f.([]interface{}); isList {
+					mb.Put(k, append(val, i.Value()))
+				} else {
+					mb.Put(k, []interface{}{f, i.Value()})
+				}
 			} else {
-				mb.Put(i.Key(), []interface{}{f, i.Value()})
+				mb.Put(k, i.Value())
 			}
-		} else {
-			mb.Put(i.Key(), i.Value())
 		}
 	}
 }
 
-func doCallbackIfRegistered(ctx context.Context, fields Fields, cb func(context.Context, Fields)) {
-	callbacks, exists := ctx.Value(canonicalListenerKey{}).(frozen.Set)
-	if !exists {
-		return
-	}
-	if callbacks.Has(cb) {
-		cb(ctx, fields)
+func doCallbacks(ctx context.Context, fields Fields) {
+	callbacks := ctx.Value(listenerKey{})
+	if callbacks != nil {
+		for _, c := range callbacks.([]func(context.Context, Fields)) {
+			c(ctx, fields)
+		}
 	}
 }
 
-func from(ctx context.Context, f Fields, callback ...func(context.Context, Fields)) Logger {
+func from(ctx context.Context, f Fields) Logger {
 	fields, configs := f.getResolvedFields(ctx)
-	if len(callback) == 1 {
-		doCallbackIfRegistered(ctx, Fields{fields}, callback[0])
-	}
-	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter), configs)
+	doCallbacks(ctx, Fields{fields})
+	return configureLogger(f.getCopiedLogger().(fieldSetter), fields, configs)
 }
 
 func getFields(ctx context.Context) Fields {

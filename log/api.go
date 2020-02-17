@@ -44,6 +44,21 @@ func Infof(ctx context.Context, format string, args ...interface{}) {
 	Fields{}.Infof(ctx, format, args...)
 }
 
+// RegisterListener registers callbacks that are called after a log.
+func RegisterListener(ctx context.Context, callback func(context.Context, Fields)) context.Context{
+	cbList, isList := ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	if !isList {
+		cbList = []func(context.Context, Fields){callback}
+	} else {
+		cbList = append(cbList, callback)
+	}
+	return context.WithValue(
+		context.WithValue(ctx, canonicalFieldsKey{}, frozen.NewMapBuilder(0)),
+		listenerKey{},
+		cbList,
+	)
+}
+
 // Suppress will ensure that suppressed keys are not logged.
 func Suppress(keys ...string) Fields {
 	return Fields{}.Suppress(keys...)
@@ -161,9 +176,8 @@ func (f Fields) WithLogger(logger Logger) Fields {
 
 // String returns a string that represent the current fields
 func (f Fields) String(ctx context.Context) string {
-	fields := &fieldsCollector{}
-	f.configureLogger(ctx, fields)
-	return fields.fields.String()
+	m, _ := f.getResolvedFields(ctx)
+	return m.String()
 }
 
 // MergedString returns a string that represents the current fields merged by fields in context
