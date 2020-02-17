@@ -25,7 +25,7 @@ func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})
 	if !exists {
-		panic("Logger has not been added")
+		return NewStandardLogger()
 	}
 	return logger.(copyable).Copy()
 }
