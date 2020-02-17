@@ -31,8 +31,7 @@ func Errorf(ctx context.Context, err error, format string, args ...interface{}) 
 
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
-	f := getFields(ctx)
-	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
+	return from(ctx, getFields(ctx))
 }
 
 // Info logs from context at the debug level.

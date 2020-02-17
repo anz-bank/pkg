@@ -9,6 +9,8 @@ import (
 const errMsgKey = "error_message"
 
 type fieldsContextKey struct{}
+type canonicalFieldsKey struct{}
+type canonicalListenerKey struct {}
 type loggerKey struct{}
 type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
@@ -64,6 +66,42 @@ func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger 
 
 func (f Fields) with(key, val interface{}) Fields {
 	return Fields{f.m.With(key, val)}
+}
+
+func getCanonicalFields(ctx context.Context) *frozen.MapBuilder {
+	mb, exists := ctx.Value(canonicalFieldsKey{}).(*frozen.MapBuilder)
+	if !exists {
+		return frozen.NewMapBuilder(0)
+	}
+	return mb
+}
+
+func addCanonicalFields(mb *frozen.MapBuilder, fields Fields) {
+	for i := fields.m.Range(); i.Next(); {
+		if f, exists := mb.Get(i.Key()); exists {
+			if	val, isList := f.([]interface{}); isList {
+				mb.Put(i.Key(), append(val, i.Value()))
+			} else {
+				mb.Put(i.Key(), []interface{}{f, i.Value()})
+			}
+		} else {
+			mb.Put(i.Key(), i.Value())
+		}
+	}
+}
+
+func doCallbackIfRegistered(ctx context.Context, fields Fields, cb func(context.Context, Fields)) {
+	callbacks, exists := ctx.Value(canonicalListenerKey{}).(frozen.Set)
+	if !exists {
+		return
+	}
+	if callbacks.Has(cb) {
+		cb(ctx, fields)
+	}
+}
+
+func from(ctx context.Context, f Fields) Logger {
+	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
 }
 
 func getFields(ctx context.Context) Fields {
