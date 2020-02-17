@@ -27,14 +27,36 @@ func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})
 	if !exists {
-		return NewStandardLogger()
+		panic("Logger has not been added")
 	}
 	return logger.(copyable).Copy()
 }
 
-func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger {
+func (f Fields) configureLogger(ctx context.Context, logger fieldSetter, configs frozen.Set) Logger {
+	for c := configs.Range(); c.Next(); {
+		err := c.(Config).Apply(logger.(Logger))
+		if err != nil {
+			//TODO: should decide whether it should panic or not
+			panic(err)
+		}
+	}
+	return logger.PutFields(f.m)
+}
+
+func (f Fields) applyConfiguration(logger Logger, configs frozen.Set) Logger {
+	for c := configs.Range(); c.Next(); {
+		err := c.(Config).Apply(logger.(Logger))
+		if err != nil {
+			//TODO: should decide whether it should panic or not
+			panic(err)
+		}
+	}
+	return logger
+}
+
+func (f Fields) getResolvedFields(ctx context.Context) (frozen.Map, frozen.Set) {
 	fields := f.m
-	var toSuppress frozen.SetBuilder
+	var toSuppress, configBuilder frozen.SetBuilder
 	toSuppress.Add(loggerKey{})
 	for i := fields.Range(); i.Next(); {
 		switch k := i.Value().(type) {
@@ -54,14 +76,10 @@ func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger 
 			toSuppress.Add(i.Key())
 		case Config:
 			toSuppress.Add(i.Key())
-			err := k.Apply(logger.(Logger))
-			if err != nil {
-				//TODO: should decide whether it should panic or not
-				panic(err)
-			}
+			configBuilder.Add(k)
 		}
 	}
-	return logger.PutFields(fields.Without(toSuppress.Finish()))
+	return fields.Without(toSuppress.Finish()), configBuilder.Finish()
 }
 
 func (f Fields) with(key, val interface{}) Fields {
@@ -100,8 +118,12 @@ func doCallbackIfRegistered(ctx context.Context, fields Fields, cb func(context.
 	}
 }
 
-func from(ctx context.Context, f Fields) Logger {
-	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
+func from(ctx context.Context, f Fields, callback ...func(context.Context, Fields)) Logger {
+	fields, configs := f.getResolvedFields(ctx)
+	if len(callback) == 1 {
+		doCallbackIfRegistered(ctx, Fields{fields}, callback[0])
+	}
+	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter), configs)
 }
 
 func getFields(ctx context.Context) Fields {
