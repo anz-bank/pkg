@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/arr-ai/frozen"
+	"github.com/stretchr/testify/assert"
 )
 
 type key1 struct{}
@@ -100,4 +101,21 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 	resolved, configs := unresolved.getResolvedFields(ctx)
 	configureLogger(Logger(logger).(fieldSetter), resolved, configs)
 	logger.AssertExpectations(t)
+}
+
+func TestRegisterListener(t *testing.T) {
+	t.Parallel()
+
+	mockListener1 := OnLog
+
+	ctx := RegisterListener(context.Background(), mockListener1)
+	cbs, isCallbackList := ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	assert.True(t, isCallbackList)
+	assert.Equal(t, 1, len(cbs))
+
+	mockListener2 := func(context.Context, Fields){}
+	ctx = RegisterListener(ctx, mockListener2)
+	cbs, isCallbackList = ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	assert.True(t, isCallbackList)
+	assert.Equal(t, 2, len(cbs))
 }
