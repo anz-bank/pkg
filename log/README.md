@@ -202,13 +202,13 @@ Fields will be logged as an object of the attribute `fields`. One thing to remem
 The standard formatter will log in the following format without the parentheses:
 
 ```text
-(time in RFC3339Nano Format) (Fields) (Level) (Message)
+(time in RFC3339Nano Format) (Level) (Fields) (Message)
 ```
 
 For example:
 
 ```log
-2020-02-05T09:05:11.041651+11:00 this=one have=fields INFO log with fields
+2020-02-05T09:05:11.041651+11:00 INFO this=one have=fields log with fields
 ```
 
 In the current implementation, the fields are logged in a random order.
