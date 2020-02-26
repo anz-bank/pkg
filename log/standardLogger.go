@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -14,40 +13,25 @@ import (
 
 const keyFields = "_fields"
 
-type logrusLevelConfig interface {
-	getLogrusLevel() logrus.Level
-}
-
-type ioOutConfig interface {
-	getIoOut() io.Writer
-}
-
 type standardLogger struct {
 	internal *logrus.Logger
 	fields   frozen.Map
 }
 
 func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
-	message := strings.Builder{}
-	message.WriteString(entry.Time.Format(time.RFC3339Nano))
-	message.WriteByte(' ')
+	sections := append(make([]string, 0, 5), entry.Time.Format(time.RFC3339Nano), strings.ToUpper(entry.Level.String()))
 
 	if entry.Data[keyFields] != nil && entry.Data[keyFields].(frozen.Map).Count() != 0 {
-		message.WriteString(getFormattedField(entry.Data[keyFields].(frozen.Map)))
-		message.WriteByte(' ')
+		sections = append(sections, getFormattedField(entry.Data[keyFields].(frozen.Map)))
 	}
 
-	message.WriteString(strings.ToUpper(entry.Level.String()))
-	message.WriteByte(' ')
-
 	if entry.Message != "" {
-		message.WriteString(entry.Message)
-		message.WriteByte(' ')
+		sections = append(sections, entry.Message)
 	}
 
 	// TODO: add codelinker's message here
-	message.WriteByte('\n')
-	return []byte(message.String()), nil
+	sections = append(sections, "\n")
+	return []byte(strings.Join(sections, " ")), nil
 }
 
 func (jf jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
