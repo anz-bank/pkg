@@ -130,6 +130,11 @@ func (sl *standardLogger) SetVerbose(on bool) error {
 	return nil
 }
 
+func (sl *standardLogger) SetOutput(w io.Writer) error {
+	sl.internal.SetOutput(w)
+	return nil
+}
+
 func (sl *standardLogger) Copy() Logger {
 	return &standardLogger{sl.getCopiedInternalLogger(), sl.fields}
 }

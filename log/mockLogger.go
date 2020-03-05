@@ -1,6 +1,8 @@
 package log
 
 import (
+	"io"
+
 	"github.com/arr-ai/frozen"
 	"github.com/stretchr/testify/mock"
 )
@@ -52,4 +54,8 @@ func (m *mockLogger) SetFormatter(formatter Config) error {
 
 func (m *mockLogger) SetVerbose(on bool) error {
 	return m.Called(on).Error(0)
+}
+
+func (m *mockLogger) SetOutput(w io.Writer) error {
+	return m.Called(w).Error(0)
 }

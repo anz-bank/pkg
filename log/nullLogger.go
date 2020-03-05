@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"io"
 
 	"github.com/arr-ai/frozen"
 )
@@ -56,6 +57,10 @@ func (n *nullLogger) SetFormatter(formatter Config) error {
 
 func (n *nullLogger) SetVerbose(on bool) error {
 	return n.internal.SetVerbose(on)
+}
+
+func (n *nullLogger) SetOutput(w io.Writer) error {
+	return n.internal.SetOutput(w)
 }
 
 func setUpLogger() *standardLogger {

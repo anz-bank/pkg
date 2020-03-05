@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"strconv"
@@ -162,6 +163,16 @@ func TestWithConfigFormat(t *testing.T) {
 	setLogMockAssertion(logger, frozen.NewMap())
 	logger.On("SetFormatter", jsonFormat{}).Return(nil)
 	WithConfigs(NewStandardFormat(), NewJSONFormat()).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigOutput(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetOutput", &bytes.Buffer{}).Return(nil)
+	WithConfigs(NewWriter(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
 }
 
