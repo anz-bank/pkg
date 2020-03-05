@@ -47,7 +47,7 @@ func (v verboseMode) Apply(logger Logger) error {
 	return logger.(settableVerbosity).SetVerbose(v.on)
 }
 
-func NewWriter(w io.Writer) Config {
+func SetOutput(w io.Writer) Config {
 	return outputConfig{w}
 }
 

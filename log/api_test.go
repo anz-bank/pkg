@@ -172,7 +172,7 @@ func TestWithConfigOutput(t *testing.T) {
 	logger := newMockLogger()
 	setLogMockAssertion(logger, frozen.NewMap())
 	logger.On("SetOutput", &bytes.Buffer{}).Return(nil)
-	WithConfigs(NewWriter(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
+	WithConfigs(SetOutput(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
 }
 
