@@ -1,6 +1,10 @@
 package log
 
-import "github.com/arr-ai/frozen"
+import (
+	"io"
+
+	"github.com/arr-ai/frozen"
+)
 
 // Logger is the underlying logger that is to be added to a context.
 type Logger interface {
@@ -36,4 +40,9 @@ type formattable interface {
 type settableVerbosity interface {
 	// SetVerbose sets the verbosity of the logger.
 	SetVerbose(on bool) error
+}
+
+type settableOutput interface {
+	// SetOutput sets where the logger outputs to.
+	SetOutput(w io.Writer) error
 }

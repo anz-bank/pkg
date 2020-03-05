@@ -1,5 +1,7 @@
 package log
 
+import "io"
+
 type typeKey int
 type internalTypeKey int
 
@@ -9,6 +11,7 @@ const (
 
 const (
 	verbosity internalTypeKey = iota
+	output
 )
 
 type Config interface {
@@ -20,6 +23,7 @@ type standardFormat struct{}
 type jsonFormat struct{}
 
 type verboseMode struct{ on bool }
+type outputConfig struct{ writer io.Writer }
 
 func NewStandardFormat() Config             { return standardFormat{} }
 func (standardFormat) TypeKey() interface{} { return Formatter }
@@ -41,6 +45,16 @@ func (verboseMode) TypeKey() interface{} { return verbosity }
 
 func (v verboseMode) Apply(logger Logger) error {
 	return logger.(settableVerbosity).SetVerbose(v.on)
+}
+
+func SetOutput(w io.Writer) Config {
+	return outputConfig{w}
+}
+
+func (outputConfig) TypeKey() interface{} { return output }
+
+func (o outputConfig) Apply(logger Logger) error {
+	return logger.(settableOutput).SetOutput(o.writer)
 }
 
 func applyFormatter(formatter Config, logger Logger) error {
