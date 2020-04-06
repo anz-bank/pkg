@@ -104,7 +104,7 @@ func loggingDemo(ctx context.Context) {
 	// by the logger. There are two levels of logging, Debug and Info. Each will also have
 	// the format counterpart, Debugf and Infof.
 	// Logging will log in the following format:
-	// (time in RFC3339Nano Format) (Fields) (Level) (Message)
+	// (time in RFC3339Nano Format) (Level) (Fields) (Message)
 	// Fields themselves are logged as a space separated list of key=value.
 	log.From(ctx).Debug("This does not have any fields")
 

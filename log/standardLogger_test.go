@@ -172,11 +172,11 @@ func TestInfof(t *testing.T) {
 }
 
 func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
-	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
 	actualOutput := redirectOutput(t, logFunc)
 
 	// uses Contains to avoid checking timestamps
-	assert.Contains(t, actualOutput, expectedOutput)
+	assert.Contains(t, actualOutput, strings.ToUpper(level.String()))
+	assert.Contains(t, actualOutput, testMessage)
 	for i := fields.Range(); i.Next(); {
 		assert.Contains(t, actualOutput, fmt.Sprintf("%s=%v", i.Key(), i.Value()))
 	}
