@@ -32,17 +32,17 @@ type fieldSetter interface {
 	PutFields(fields frozen.Map) Logger
 }
 
-type formattable interface {
+type Formattable interface {
 	// SetFormatter sets the formatter for the logger.￿
 	SetFormatter(formatter Config) error
 }
 
-type settableVerbosity interface {
+type SettableVerbosity interface {
 	// SetVerbose sets the verbosity of the logger.
 	SetVerbose(on bool) error
 }
 
-type settableOutput interface {
+type SettableOutput interface {
 	// SetOutput sets where the logger outputs to.
 	SetOutput(w io.Writer) error
 }
