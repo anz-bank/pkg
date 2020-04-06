@@ -44,7 +44,7 @@ func SetVerboseMode(on bool) Config {
 func (verboseMode) TypeKey() interface{} { return verbosity }
 
 func (v verboseMode) Apply(logger Logger) error {
-	return logger.(settableVerbosity).SetVerbose(v.on)
+	return logger.(SettableVerbosity).SetVerbose(v.on)
 }
 
 func SetOutput(w io.Writer) Config {
@@ -54,9 +54,9 @@ func SetOutput(w io.Writer) Config {
 func (outputConfig) TypeKey() interface{} { return output }
 
 func (o outputConfig) Apply(logger Logger) error {
-	return logger.(settableOutput).SetOutput(o.writer)
+	return logger.(SettableOutput).SetOutput(o.writer)
 }
 
 func applyFormatter(formatter Config, logger Logger) error {
-	return logger.(formattable).SetFormatter(formatter)
+	return logger.(Formattable).SetFormatter(formatter)
 }
