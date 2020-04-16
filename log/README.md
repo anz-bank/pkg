@@ -230,8 +230,6 @@ fields. If another config of the same type is added, it will replace the old one
     f = log.WithConfigs(log.NewJSONFormat(), log.NewStandardFormat())
 ```
 
-Currently only the format can be configured.
-
 #### Logging Format
 
 Currently there is only one logger which is the `StandardLogger` which uses 
@@ -273,6 +271,43 @@ For example:
 ```
 
 In the current implementation, the fields are logged in a random order.
+
+#### Verbosity
+
+Setting the verbose mode of the logger will log debug entries:
+
+```go
+    ctx := context.Background()
+
+    // By default, the logger will not log debug entries
+    log.Info(ctx, "not logged")
+
+    // Make the logger log debug level entries
+    ctx = log.WithConfigs(log.SetVerboseMode(true)).Onto(ctx)
+    
+    // With verbose mode enabled, the logger will log debug entries
+    log.Info(ctx, "logged")
+```
+
+#### Log Caller
+
+Setting the logger to log the caller will include the a reference to the source from which the log
+was called:
+
+```go
+    ctx := context.Background()
+
+    // By default, the logger will not log the caller
+    // 2020-02-05T09:05:11.041651+11:00 INFO one
+    log.Info(ctx, "one")
+
+    // Make the logger log the caller
+    ctx = log.WithConfigs(log.SetLogCaller(true)).Onto(ctx)
+    
+    // With caller log enabled, the logger will log the caller
+    // 2020-02-05T09:05:11.041651+11:00 INFO two [/path/to/example.go:42]
+    log.Info(ctx, "two")
+```
 
 #### Custom configuration
 

@@ -36,6 +36,7 @@ func TestLogrusPkgEntry(t *testing.T) {
 		Time:    time.Now(),
 		Message: "message",
 		Data:    frozen.NewMap(frozen.KV("cat", "dog")),
+		Caller:  CodeReference{"example.go", 123},
 		Verbose: true,
 	}
 

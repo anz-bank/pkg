@@ -12,6 +12,7 @@ const (
 const (
 	verbosity internalTypeKey = iota
 	output
+	logCaller
 )
 
 type Config interface {
@@ -24,6 +25,7 @@ type jsonFormat struct{}
 
 type verboseMode struct{ on bool }
 type outputConfig struct{ writer io.Writer }
+type logCallerConfig struct{ on bool }
 
 func NewStandardFormat() Config             { return standardFormat{} }
 func (standardFormat) TypeKey() interface{} { return FormatterType }
@@ -55,6 +57,17 @@ func (outputConfig) TypeKey() interface{} { return output }
 
 func (o outputConfig) Apply(logger Logger) error {
 	return logger.(SettableOutput).SetOutput(o.writer)
+}
+
+// SetLogCaller sets whether or not a reference to the calling function is logged.
+func SetLogCaller(on bool) Config {
+	return logCallerConfig{on}
+}
+
+func (logCallerConfig) TypeKey() interface{} { return logCaller }
+
+func (c logCallerConfig) Apply(logger Logger) error {
+	return logger.(SettableLogCaller).SetLogCaller(c.on)
 }
 
 func applyFormatter(formatter Config, logger Logger) error {

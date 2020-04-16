@@ -59,3 +59,7 @@ func (m *mockLogger) SetVerbose(on bool) error {
 func (m *mockLogger) SetOutput(w io.Writer) error {
 	return m.Called(w).Error(0)
 }
+
+func (m *mockLogger) SetLogCaller(on bool) error {
+	return m.Called(on).Error(0)
+}

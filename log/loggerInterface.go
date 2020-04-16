@@ -35,10 +35,23 @@ type LogEntry struct {
 	// Data set by the user.
 	Data frozen.Map
 
+	// Source code reference of the calling function.
+	// Initialised if SetLogCaller is true.
+	Caller CodeReference
+
 	// True if the log is verbose (Debug), false otherwise (Info or Error)
 	Verbose bool
 }
 
+// CodeReference describes a reference to a point within a source code file.
+type CodeReference struct {
+
+	// Path of the file (within the local file system) where the source code is found
+	File string
+
+	// Line number (1-indexed) within the source code file
+	Line int
+}
 
 type copyable interface {
 	// Copy returns a logger whose data is copied from the caller.
@@ -69,4 +82,9 @@ type SettableVerbosity interface {
 type SettableOutput interface {
 	// SetOutput sets where the logger outputs to.
 	SetOutput(w io.Writer) error
+}
+
+type SettableLogCaller interface {
+	// SetLogCaller sets whether or not a reference to the calling function is logged.
+	SetLogCaller(on bool) error
 }
