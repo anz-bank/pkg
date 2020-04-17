@@ -224,4 +224,4 @@ type Config interface {
 }
 ```
 
-`TypeKey()` returns the type of the configuration and `Apply()` will apply the configuration to the logger. For formatters, use the `Formatter` type key provided by the library to ensure that it is recognized as a formatter. Formatters meant for `StandardLogger` need to implement [logrus' formatter](https://github.com/sirupsen/logrus#Formatters).
+`TypeKey()` returns the type of the configuration and `Apply()` will apply the configuration to the logger. For formatters, use the `FormatterType` type key provided by the library to ensure that it is recognized as a formatter.

@@ -6,7 +6,7 @@ type typeKey int
 type internalTypeKey int
 
 const (
-	Formatter typeKey = iota
+	FormatterType typeKey = iota
 )
 
 const (
@@ -26,13 +26,13 @@ type verboseMode struct{ on bool }
 type outputConfig struct{ writer io.Writer }
 
 func NewStandardFormat() Config             { return standardFormat{} }
-func (standardFormat) TypeKey() interface{} { return Formatter }
+func (standardFormat) TypeKey() interface{} { return FormatterType }
 func (sf standardFormat) Apply(logger Logger) error {
 	return applyFormatter(sf, logger)
 }
 
 func NewJSONFormat() Config             { return jsonFormat{} }
-func (jsonFormat) TypeKey() interface{} { return Formatter }
+func (jsonFormat) TypeKey() interface{} { return FormatterType }
 func (jf jsonFormat) Apply(logger Logger) error {
 	return applyFormatter(jf, logger)
 }

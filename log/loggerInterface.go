@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"time"
 
 	"github.com/arr-ai/frozen"
 )
@@ -22,6 +23,23 @@ type Logger interface {
 	Infof(format string, args ...interface{})
 }
 
+// LogEntry describes an entry to log.
+type LogEntry struct {
+
+	// Time at which the log entry was created
+	Time time.Time
+
+	// Message passed to Debug, Info or Error
+	Message string
+
+	// Data set by the user.
+	Data frozen.Map
+
+	// True if the log is verbose (Debug), false otherwise (Info or Error)
+	Verbose bool
+}
+
+
 type copyable interface {
 	// Copy returns a logger whose data is copied from the caller.
 	Copy() Logger
@@ -33,8 +51,14 @@ type fieldSetter interface {
 }
 
 type Formattable interface {
-	// SetFormatter sets the formatter for the logger.￿
+	// SetFormatter sets the formatter for the logger.
+	// The formatter provided must also implement the Formatter interface.
 	SetFormatter(formatter Config) error
+}
+
+type Formatter interface {
+	// Format translates a log entry into a string representation
+	Format(*LogEntry) (string, error)
 }
 
 type SettableVerbosity interface {
