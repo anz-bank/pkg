@@ -25,6 +25,12 @@ type fieldsTest struct {
 	expected      frozen.Map
 }
 
+type testHook struct { }
+
+func (h *testHook) OnLogged(entry *LogEntry) error {
+	return nil
+}
+
 func TestMainDebug(t *testing.T) {
 	t.Parallel()
 
@@ -173,6 +179,16 @@ func TestWithConfigOutput(t *testing.T) {
 	setLogMockAssertion(logger, frozen.NewMap())
 	logger.On("SetOutput", &bytes.Buffer{}).Return(nil)
 	WithConfigs(SetOutput(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithHooks(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("AddHooks", mock.Anything).Return(nil)
+	WithConfigs(AddHooks(&testHook{})).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
 }
 

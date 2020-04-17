@@ -24,6 +24,15 @@ var testError = errors.New("this is an error")
 // to test fields output for all log
 var testField = generateMultipleFieldsCases()[0].Fields
 
+type recordHook struct {
+	entries []*LogEntry
+}
+
+func (h *recordHook) OnLogged(entry *LogEntry) error {
+	h.entries = append(h.entries, entry)
+	return nil
+}
+
 func TestCopyStandardLogger(t *testing.T) {
 	t.Parallel()
 
@@ -248,6 +257,34 @@ func TestPutFields(t *testing.T) {
 				assert.True(t, c.Fields.Equal(logger.fields))
 			})
 	}
+}
+
+func TestAddHooks(t *testing.T) {
+	hook := recordHook{}
+	logger := getNewStandardLogger()
+	require.NoError(t, logger.SetLogCaller(true))
+	require.NoError(t, logger.AddHooks(&hook))
+	logger.Info("info")
+	logger.Debug("debug")
+	logger.Error(errors.New("error"), "error")
+	assert.Equal(t, 3, len(hook.entries))
+	assert.Equal(t, "info", hook.entries[0].Message)
+	assert.Equal(t, "debug", hook.entries[1].Message)
+	assert.Equal(t, "error", hook.entries[2].Message)
+}
+
+func TestAddHooksInfoLevel(t *testing.T) {
+	hook := recordHook{}
+	logger := getNewStandardLogger()
+	logger.internal.SetLevel(logrus.InfoLevel)
+	require.NoError(t, logger.SetLogCaller(true))
+	require.NoError(t, logger.AddHooks(&hook))
+	logger.Info("info")
+	logger.Debug("debug") // should not be received by hook
+	logger.Error(errors.New("error"), "error")
+	assert.Equal(t, 2, len(hook.entries))
+	assert.Equal(t, "info", hook.entries[0].Message)
+	assert.Equal(t, "error", hook.entries[1].Message)
 }
 
 func TestLogCaller(t *testing.T) {

@@ -60,6 +60,10 @@ func (m *mockLogger) SetOutput(w io.Writer) error {
 	return m.Called(w).Error(0)
 }
 
+func (m *mockLogger) AddHooks(hooks ...Hook) error {
+	return m.Called(hooks).Error(0)
+}
+
 func (m *mockLogger) SetLogCaller(on bool) error {
 	return m.Called(on).Error(0)
 }

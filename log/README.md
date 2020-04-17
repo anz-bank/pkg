@@ -309,6 +309,18 @@ was called:
     log.Info(ctx, "two")
 ```
 
+#### Hook
+
+Hooks can be added to the logger that are notified when an entry is logged:
+
+```go
+    type myHook struct { }
+    func (h *myHook) OnLogged(entry *LogEntry) error { ... }
+
+    ctx = log.WithConfigs(log.AddHook(myHook{})).Onto(context.Background())
+    log.Info(ctx, "message") // log entry sent to hook
+```
+
 #### Custom configuration
 
 It is possible to create your own configuration. You will have to create an object that implements 
