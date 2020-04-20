@@ -12,6 +12,7 @@ const (
 const (
 	verbosity internalTypeKey = iota
 	output
+	addHooks
 	logCaller
 )
 
@@ -25,6 +26,7 @@ type jsonFormat struct{}
 
 type verboseMode struct{ on bool }
 type outputConfig struct{ writer io.Writer }
+type addHooksConfig struct{ hooks []Hook }
 type logCallerConfig struct{ on bool }
 
 func NewStandardFormat() Config             { return standardFormat{} }
@@ -57,6 +59,17 @@ func (outputConfig) TypeKey() interface{} { return output }
 
 func (o outputConfig) Apply(logger Logger) error {
 	return logger.(SettableOutput).SetOutput(o.writer)
+}
+
+// AddHooks adds the given hooks to the logger.
+func AddHooks(hooks ...Hook) Config {
+	return addHooksConfig{hooks}
+}
+
+func (addHooksConfig) TypeKey() interface{} { return addHooks }
+
+func (o addHooksConfig) Apply(logger Logger) error {
+	return logger.(AddableHooks).AddHooks(o.hooks...)
 }
 
 // SetLogCaller sets whether or not a reference to the calling function is logged.

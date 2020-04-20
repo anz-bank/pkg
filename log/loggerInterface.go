@@ -53,6 +53,11 @@ type CodeReference struct {
 	Line int
 }
 
+// Hook describes a callback to receive notice when an entry is logged
+type Hook interface {
+	OnLogged(*LogEntry) error
+}
+
 type copyable interface {
 	// Copy returns a logger whose data is copied from the caller.
 	Copy() Logger
@@ -82,6 +87,11 @@ type SettableVerbosity interface {
 type SettableOutput interface {
 	// SetOutput sets where the logger outputs to.
 	SetOutput(w io.Writer) error
+}
+
+type AddableHooks interface {
+	// AddHooks adds the given hooks to the logger.
+	AddHooks(hooks ...Hook) error
 }
 
 type SettableLogCaller interface {

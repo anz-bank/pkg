@@ -147,6 +147,13 @@ func (sl *standardLogger) SetOutput(w io.Writer) error {
 	return nil
 }
 
+func (sl *standardLogger) AddHooks(hooks ...Hook) error {
+	for _, hook := range hooks {
+		sl.internal.AddHook(pkgHookToLogrusHook{hook})
+	}
+	return nil
+}
+
 func (sl *standardLogger) SetLogCaller(on bool) error {
 	sl.logCaller = on
 	return nil

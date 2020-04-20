@@ -65,6 +65,19 @@ func logrusEntryToPkgLogEntry(entry *logrus.Entry) *LogEntry {
 	}
 }
 
+// Component to convert a pkg hook into a logrus hook.
+type pkgHookToLogrusHook struct {
+	hook Hook
+}
+
+func (h pkgHookToLogrusHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (h pkgHookToLogrusHook) Fire(entry *logrus.Entry) error {
+	return h.hook.OnLogged(logrusEntryToPkgLogEntry(entry))
+}
+
 // Convert the pkg concept of verbosity to a logrus level.
 func verboseToLogrusLevel(verbose bool) logrus.Level {
 	if verbose {

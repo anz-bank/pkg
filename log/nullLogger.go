@@ -63,6 +63,10 @@ func (n *nullLogger) SetOutput(w io.Writer) error {
 	return n.internal.SetOutput(w)
 }
 
+func (n *nullLogger) AddHooks(hooks ...Hook) error {
+	return n.internal.AddHooks(hooks...)
+}
+
 func (n *nullLogger) SetLogCaller(on bool) error {
 	return n.internal.SetLogCaller(on)
 }
