@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"time"
 
@@ -21,8 +22,9 @@ type ioOutConfig interface {
 }
 
 type standardLogger struct {
-	internal *logrus.Logger
-	fields   frozen.Map
+	internal  *logrus.Logger
+	fields    frozen.Map
+	logCaller bool
 }
 
 func (sf standardFormat) Format(entry *LogEntry) (string, error) {
@@ -43,7 +45,12 @@ func (sf standardFormat) Format(entry *LogEntry) (string, error) {
 		message.WriteByte(' ')
 	}
 
-	// TODO: add codelinker's message here
+	if entry.Caller.File != "" {
+		message.WriteByte('[')
+		message.WriteString(fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line))
+		message.WriteByte(']')
+	}
+
 	message.WriteByte('\n')
 	return message.String(), nil
 }
@@ -53,6 +60,9 @@ func (jf jsonFormat) Format(entry *LogEntry) (string, error) {
 	jsonFile["timestamp"] = entry.Time.Format(time.RFC3339Nano)
 	jsonFile["message"] = entry.Message
 	jsonFile["level"] = strings.ToUpper(verboseToLogrusLevel(entry.Verbose).String())
+	if entry.Caller.File != "" {
+		jsonFile["caller"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
+	}
 	if entry.Data.Count() != 0 {
 		fields := make(map[string]interface{})
 		for i := entry.Data.Range(); i.Next(); {
@@ -67,7 +77,7 @@ func (jf jsonFormat) Format(entry *LogEntry) (string, error) {
 	return string(data) + "\n", nil
 }
 
-// NewStandardLogger returns a logger with a standard formater
+// NewStandardLogger returns a logger with a standard formatter
 func NewStandardLogger() Logger {
 	logger := logrus.New()
 	logger.SetFormatter(&pkgFormatterToLogrusFormatter{&standardFormat{}})
@@ -137,8 +147,13 @@ func (sl *standardLogger) SetOutput(w io.Writer) error {
 	return nil
 }
 
+func (sl *standardLogger) SetLogCaller(on bool) error {
+	sl.logCaller = on
+	return nil
+}
+
 func (sl *standardLogger) Copy() Logger {
-	return &standardLogger{sl.getCopiedInternalLogger(), sl.fields}
+	return &standardLogger{sl.getCopiedInternalLogger(), sl.fields, sl.logCaller}
 }
 
 func (sl *standardLogger) log(verbose bool, args ...interface{}) {
@@ -146,6 +161,7 @@ func (sl *standardLogger) log(verbose bool, args ...interface{}) {
 		Time:    time.Now(),
 		Message: fmt.Sprint(args...),
 		Data:    sl.fields,
+		Caller:  sl.getLogEntryCaller(),
 		Verbose: verbose,
 	})
 }
@@ -155,8 +171,17 @@ func (sl *standardLogger) logf(verbose bool, format string, args ...interface{})
 		Time:    time.Now(),
 		Message: fmt.Sprintf(format, args...),
 		Data:    sl.fields,
+		Caller:  sl.getLogEntryCaller(),
 		Verbose: verbose,
 	})
+}
+
+func (sl *standardLogger) getLogEntryCaller() CodeReference {
+	if !sl.logCaller {
+		return CodeReference{}
+	}
+	_, file, line, _ := runtime.Caller(3)
+	return CodeReference{file, line}
 }
 
 func getFormattedField(fields frozen.Map) string {

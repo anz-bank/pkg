@@ -6,6 +6,7 @@ import (
 )
 
 const dataFieldKey = "_data"
+const dataFieldCaller = "_caller"
 
 // Log the given entry with the logrus logger.
 func logWithLogrus(logger *logrus.Logger, e *LogEntry) {
@@ -43,7 +44,7 @@ func (f pkgFormatterToLogrusFormatter) Format(entry *logrus.Entry) ([]byte, erro
 func pkgLogEntryToLogrusEntry(logger *logrus.Logger, entry *LogEntry) *logrus.Entry {
 	return &logrus.Entry{
 		Logger:  logger,
-		Data:    logrus.Fields{dataFieldKey: entry.Data},
+		Data:    logrus.Fields{dataFieldKey: entry.Data, dataFieldCaller: entry.Caller},
 		Time:    entry.Time,
 		Level:   verboseToLogrusLevel(entry.Verbose),
 		Caller:  nil,
@@ -59,6 +60,7 @@ func logrusEntryToPkgLogEntry(entry *logrus.Entry) *LogEntry {
 		Time:    entry.Time,
 		Message: entry.Message,
 		Data:    entry.Data[dataFieldKey].(frozen.Map),
+		Caller:  entry.Data[dataFieldCaller].(CodeReference),
 		Verbose: logrusLevelToVerbose(entry.Level),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -247,6 +248,28 @@ func TestPutFields(t *testing.T) {
 				assert.True(t, c.Fields.Equal(logger.fields))
 			})
 	}
+}
+
+func TestLogCaller(t *testing.T) {
+
+	// test standard logger
+	actualOutput := redirectOutput(t, func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetLogCaller(true))
+		logger.Debug(testMessage)
+	})
+	assert.Regexp(t, regexp.MustCompile(".*\\[.*standardLogger_test.go:\\d+]"), actualOutput)
+
+	// test json logger
+	out := make(map[string]interface{})
+	require.NoError(t, json.Unmarshal([]byte(redirectOutput(t, func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetLogCaller(true))
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debug(testMessage)
+	})), &out))
+	assert.Equal(t, out["message"], testMessage)
+	assert.Regexp(t, regexp.MustCompile(".*standardLogger_test.go:\\d+"), out["caller"])
 }
 
 func getNewStandardLogger() *standardLogger {

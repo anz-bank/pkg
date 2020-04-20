@@ -63,6 +63,10 @@ func (n *nullLogger) SetOutput(w io.Writer) error {
 	return n.internal.SetOutput(w)
 }
 
+func (n *nullLogger) SetLogCaller(on bool) error {
+	return n.internal.SetLogCaller(on)
+}
+
 func setUpLogger() *standardLogger {
 	logger := NewStandardLogger().(*standardLogger)
 	logger.internal.SetOutput(&bytes.Buffer{})

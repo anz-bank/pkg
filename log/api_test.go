@@ -176,6 +176,16 @@ func TestWithConfigOutput(t *testing.T) {
 	logger.AssertExpectations(t)
 }
 
+func TestWithConfigLogCaller(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetLogCaller", true).Return(nil)
+	WithConfigs(SetLogCaller(false), SetLogCaller(true)).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
 func TestFrom(t *testing.T) {
 	for _, c := range getUnresolvedFieldsCases() {
 		c := c
