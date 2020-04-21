@@ -1,12 +1,13 @@
 package log
 
 import (
+	"testing"
+	"time"
+
 	"github.com/alecthomas/assert"
 	"github.com/arr-ai/frozen"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestLogrusPkgFormatters(t *testing.T) {

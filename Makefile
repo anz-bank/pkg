@@ -1,4 +1,4 @@
-all: test check-coverage  ## test and check coverage
+all: test check-coverage lint  ## test, check coverage and lint
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
 	@echo '$(COLOUR_GREEN)Success$(COLOUR_NORMAL)'
 
@@ -28,6 +28,25 @@ CHECK_COVERAGE = awk -F '[ \t%]+' '/^total:/ {print; if ($$3 < $(COVERAGE)) exit
 FAIL_COVERAGE = { echo '$(COLOUR_RED)FAIL - Coverage below $(COVERAGE)%$(COLOUR_NORMAL)'; exit 1; }
 
 .PHONY: test check-coverage cover
+
+
+# -- Lint ---------------------------------------------------------------------
+
+GOLINT_VERSION = 1.24.0
+GOLINT_INSTALLED_VERSION = $(or $(word 4,$(shell golangci-lint --version 2>/dev/null)),0.0.0)
+GOLINT_MIN_VERSION = $(shell printf '%s\n' $(GOLINT_VERSION) $(GOLINT_INSTALLED_VERSION) | sort -V | head -n 1)
+
+lint: ## Lint source code
+ifeq ($(GOLINT_MIN_VERSION), $(GOLINT_VERSION))
+	golangci-lint run
+else
+lint: lint-with-docker
+endif
+
+lint-with-docker:
+	docker run --rm -v $(PWD):/src -w /src golangci/golangci-lint:v$(GOLINT_VERSION) golangci-lint run
+
+.PHONY: lint
 
 
 # --- Utilities ---------------------------------------------------------------

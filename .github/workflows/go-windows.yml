@@ -22,7 +22,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Make
-        run: make
+      - name: Test
+        # lint-with-docker doesn't work on mac/win github actions. Just run test only.
+        run: make test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
