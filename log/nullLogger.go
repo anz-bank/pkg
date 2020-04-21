@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"io"
 
 	"github.com/arr-ai/frozen"
 )
@@ -21,6 +22,14 @@ func (n *nullLogger) Debug(args ...interface{}) {
 
 func (n *nullLogger) Debugf(format string, args ...interface{}) {
 	n.internal.Debugf(format, args...)
+}
+
+func (n *nullLogger) Error(errMsg error, args ...interface{}) {
+	n.internal.Error(errMsg, args...)
+}
+
+func (n *nullLogger) Errorf(errMsg error, format string, args ...interface{}) {
+	n.internal.Errorf(errMsg, format, args...)
 }
 
 func (n *nullLogger) Info(args ...interface{}) {
@@ -44,6 +53,22 @@ func (n *nullLogger) Copy() Logger {
 
 func (n *nullLogger) SetFormatter(formatter Config) error {
 	return n.internal.SetFormatter(formatter)
+}
+
+func (n *nullLogger) SetVerbose(on bool) error {
+	return n.internal.SetVerbose(on)
+}
+
+func (n *nullLogger) SetOutput(w io.Writer) error {
+	return n.internal.SetOutput(w)
+}
+
+func (n *nullLogger) AddHooks(hooks ...Hook) error {
+	return n.internal.AddHooks(hooks...)
+}
+
+func (n *nullLogger) SetLogCaller(on bool) error {
+	return n.internal.SetLogCaller(on)
 }
 
 func setUpLogger() *standardLogger {

@@ -6,6 +6,8 @@ import (
 	"github.com/arr-ai/frozen"
 )
 
+const errMsgKey = "error_message"
+
 type fieldsContextKey struct{}
 type loggerKey struct{}
 type suppress struct{}
@@ -23,7 +25,7 @@ func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
 func (f Fields) getCopiedLogger() Logger {
 	logger, exists := f.m.Get(loggerKey{})
 	if !exists {
-		panic("Logger has not been added")
+		return NewStandardLogger()
 	}
 	return logger.(copyable).Copy()
 }

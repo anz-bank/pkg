@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
+	"io"
+	"runtime"
 	"strings"
 	"time"
 
@@ -12,24 +13,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const keyFields = "_fields"
-
-type standardLogger struct {
-	internal *logrus.Logger
-	fields   frozen.Map
+type logrusLevelConfig interface {
+	getLogrusLevel() logrus.Level
 }
 
-func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
+type ioOutConfig interface {
+	getIoOut() io.Writer
+}
+
+type standardLogger struct {
+	internal  *logrus.Logger
+	fields    frozen.Map
+	logCaller bool
+}
+
+func (sf standardFormat) Format(entry *LogEntry) (string, error) {
 	message := strings.Builder{}
 	message.WriteString(entry.Time.Format(time.RFC3339Nano))
 	message.WriteByte(' ')
 
-	if entry.Data[keyFields] != nil && entry.Data[keyFields].(frozen.Map).Count() != 0 {
-		message.WriteString(getFormattedField(entry.Data[keyFields].(frozen.Map)))
+	if entry.Data.Count() != 0 {
+		message.WriteString(getFormattedField(entry.Data))
 		message.WriteByte(' ')
 	}
 
-	message.WriteString(strings.ToUpper(entry.Level.String()))
+	message.WriteString(strings.ToUpper(verboseToLogrusLevel(entry.Verbose).String()))
 	message.WriteByte(' ')
 
 	if entry.Message != "" {
@@ -37,58 +45,74 @@ func (sf standardFormat) Format(entry *logrus.Entry) ([]byte, error) {
 		message.WriteByte(' ')
 	}
 
-	// TODO: add codelinker's message here
+	if entry.Caller.File != "" {
+		message.WriteByte('[')
+		message.WriteString(fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line))
+		message.WriteByte(']')
+	}
+
 	message.WriteByte('\n')
-	return []byte(message.String()), nil
+	return message.String(), nil
 }
 
-func (jf jsonFormat) Format(entry *logrus.Entry) ([]byte, error) {
+func (jf jsonFormat) Format(entry *LogEntry) (string, error) {
 	jsonFile := make(map[string]interface{})
 	jsonFile["timestamp"] = entry.Time.Format(time.RFC3339Nano)
 	jsonFile["message"] = entry.Message
-	jsonFile["level"] = strings.ToUpper(entry.Level.String())
-	if entry.Data[keyFields] != nil && entry.Data[keyFields].(frozen.Map).Count() != 0 {
+	jsonFile["level"] = strings.ToUpper(verboseToLogrusLevel(entry.Verbose).String())
+	if entry.Caller.File != "" {
+		jsonFile["caller"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
+	}
+	if entry.Data.Count() != 0 {
 		fields := make(map[string]interface{})
-		for i := entry.Data[keyFields].(frozen.Map).Range(); i.Next(); {
+		for i := entry.Data.Range(); i.Next(); {
 			fields[i.Key().(string)] = i.Value()
 		}
 		jsonFile["fields"] = fields
 	}
 	data, err := json.Marshal(jsonFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return append(data, '\n'), err
+	return string(data) + "\n", nil
 }
 
-// NewStandardLogger returns a logger with logrus standard logger as the internal logger
+// NewStandardLogger returns a logger with a standard formatter
 func NewStandardLogger() Logger {
 	logger := logrus.New()
-	logger.SetFormatter(&standardFormat{})
-
-	// makes sure that it always logs every level
-	logger.SetLevel(logrus.DebugLevel)
-
-	// explicitly set it to os.Stderr
-	logger.SetOutput(os.Stderr)
+	logger.SetFormatter(&pkgFormatterToLogrusFormatter{&standardFormat{}})
 
 	return &standardLogger{internal: logger}
 }
 
 func (sl *standardLogger) Debug(args ...interface{}) {
-	sl.setInfo().Debug(args...)
+	sl.log(true, args...)
 }
 
 func (sl *standardLogger) Debugf(format string, args ...interface{}) {
-	sl.setInfo().Debugf(format, args...)
+	sl.logf(true, format, args...)
+}
+
+func (sl *standardLogger) Error(errMsg error, args ...interface{}) {
+	if msg, _ := sl.fields.Get(errMsgKey); msg != errMsg.Error() {
+		sl.fields = sl.fields.With(errMsgKey, errMsg.Error())
+	}
+	sl.log(false, args...)
+}
+
+func (sl *standardLogger) Errorf(errMsg error, format string, args ...interface{}) {
+	if msg, _ := sl.fields.Get(errMsgKey); msg != errMsg.Error() {
+		sl.fields = sl.fields.With(errMsgKey, errMsg.Error())
+	}
+	sl.logf(false, format, args...)
 }
 
 func (sl *standardLogger) Info(args ...interface{}) {
-	sl.setInfo().Info(args...)
+	sl.log(false, args...)
 }
 
 func (sl *standardLogger) Infof(format string, args ...interface{}) {
-	sl.setInfo().Infof(format, args...)
+	sl.logf(false, format, args...)
 }
 
 func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
@@ -97,23 +121,74 @@ func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
 }
 
 func (sl *standardLogger) SetFormatter(formatter Config) error {
-	logrusFormatter, isLogrusFormatter := formatter.(logrus.Formatter)
-	if !isLogrusFormatter {
-		return errors.New("formatter is not logrus formatter type")
+	switch f := formatter.(type) {
+	case Formatter:
+		sl.internal.SetFormatter(&pkgFormatterToLogrusFormatter{f})
+		return nil
+	case logrus.Formatter: // deprecated. provided for legacy support only
+		sl.internal.SetFormatter(f)
+		return nil
+	default:
+		return errors.New("formatter must be pkg.Formatter or logrus.Formatter")
 	}
-	sl.internal.SetFormatter(logrusFormatter)
+}
+
+func (sl *standardLogger) SetVerbose(on bool) error {
+	if on {
+		sl.internal.SetLevel(logrus.DebugLevel)
+	} else {
+		sl.internal.SetLevel(logrus.InfoLevel)
+	}
+	return nil
+}
+
+func (sl *standardLogger) SetOutput(w io.Writer) error {
+	sl.internal.SetOutput(w)
+	return nil
+}
+
+func (sl *standardLogger) AddHooks(hooks ...Hook) error {
+	for _, hook := range hooks {
+		sl.internal.AddHook(pkgHookToLogrusHook{hook})
+	}
+	return nil
+}
+
+func (sl *standardLogger) SetLogCaller(on bool) error {
+	sl.logCaller = on
 	return nil
 }
 
 func (sl *standardLogger) Copy() Logger {
-	return &standardLogger{sl.getCopiedInternalLogger(), sl.fields}
+	return &standardLogger{sl.getCopiedInternalLogger(), sl.fields, sl.logCaller}
 }
 
-func (sl *standardLogger) setInfo() *logrus.Entry {
-	// TODO: set linker here
-	return sl.internal.WithFields(logrus.Fields{
-		keyFields: sl.fields,
+func (sl *standardLogger) log(verbose bool, args ...interface{}) {
+	logWithLogrus(sl.internal, &LogEntry{
+		Time:    time.Now(),
+		Message: fmt.Sprint(args...),
+		Data:    sl.fields,
+		Caller:  sl.getLogEntryCaller(),
+		Verbose: verbose,
 	})
+}
+
+func (sl *standardLogger) logf(verbose bool, format string, args ...interface{}) {
+	logWithLogrus(sl.internal, &LogEntry{
+		Time:    time.Now(),
+		Message: fmt.Sprintf(format, args...),
+		Data:    sl.fields,
+		Caller:  sl.getLogEntryCaller(),
+		Verbose: verbose,
+	})
+}
+
+func (sl *standardLogger) getLogEntryCaller() CodeReference {
+	if !sl.logCaller {
+		return CodeReference{}
+	}
+	_, file, line, _ := runtime.Caller(3)
+	return CodeReference{file, line}
 }
 
 func getFormattedField(fields frozen.Map) string {

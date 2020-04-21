@@ -2,6 +2,9 @@ package log
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -16,8 +19,19 @@ const (
 	simpleFormat = "%s"
 )
 
+var testError = errors.New("this is an error")
+
 // to test fields output for all log
 var testField = generateMultipleFieldsCases()[0].Fields
+
+type recordHook struct {
+	entries []*LogEntry
+}
+
+func (h *recordHook) OnLogged(entry *LogEntry) error {
+	h.entries = append(h.entries, entry)
+	return nil
+}
 
 func TestCopyStandardLogger(t *testing.T) {
 	t.Parallel()
@@ -37,7 +51,7 @@ func TestCopyStandardLogger(t *testing.T) {
 
 func TestDebug(t *testing.T) {
 	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Debug(testMessage)
+		getNewStandardLogger().Debug(testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
@@ -59,7 +73,7 @@ func TestDebug(t *testing.T) {
 
 func TestDebugf(t *testing.T) {
 	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Debugf(simpleFormat, testMessage)
+		getNewStandardLogger().Debugf(simpleFormat, testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
@@ -79,9 +93,53 @@ func TestDebugf(t *testing.T) {
 	})
 }
 
+func TestError(t *testing.T) {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		NewStandardLogger().Error(testError, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Error(testError, testMessage)
+	})
+
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		getStandardLoggerWithFields().Error(testError, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Error(testError, testMessage)
+	})
+}
+
+func TestErrorf(t *testing.T) {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		NewStandardLogger().Errorf(testError, simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Errorf(testError, simpleFormat, testMessage)
+	})
+
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		getStandardLoggerWithFields().Errorf(testError, simpleFormat, testMessage)
+	})
+
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+		logger := getStandardLoggerWithFields()
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Errorf(testError, simpleFormat, testMessage)
+	})
+}
+
 func TestInfo(t *testing.T) {
 	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Info(testMessage)
+		getNewStandardLogger().Info(testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
@@ -103,7 +161,7 @@ func TestInfo(t *testing.T) {
 
 func TestInfof(t *testing.T) {
 	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
-		NewStandardLogger().Infof(simpleFormat, testMessage)
+		getNewStandardLogger().Infof(simpleFormat, testMessage)
 	})
 
 	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
@@ -127,8 +185,11 @@ func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, 
 	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
 	actualOutput := redirectOutput(t, logFunc)
 
-	// uses Contains to avoid checking timestamps and fields
+	// uses Contains to avoid checking timestamps
 	assert.Contains(t, actualOutput, expectedOutput)
+	for i := fields.Range(); i.Next(); {
+		assert.Contains(t, actualOutput, fmt.Sprintf("%s=%v", i.Key(), i.Value()))
+	}
 }
 
 func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
@@ -138,8 +199,11 @@ func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logF
 	assert.Equal(t, out["level"], strings.ToUpper(level.String()))
 	if fields.Count() != 0 {
 		// type correction because json unmarshall reads numbers as float64
+		if fields.Has("byte") && fields.Has("int") {
+			fields = fields.With("byte", float64('1')).With("int", float64(123))
+		}
 		assert.Equal(t,
-			convertToGoMap(fields.With("byte", float64('1')).With("int", float64(123))),
+			convertToGoMap(fields),
 			out["fields"].(map[string]interface{}),
 		)
 	}
@@ -195,11 +259,64 @@ func TestPutFields(t *testing.T) {
 	}
 }
 
+func TestAddHooks(t *testing.T) {
+	hook := recordHook{}
+	logger := getNewStandardLogger()
+	require.NoError(t, logger.SetLogCaller(true))
+	require.NoError(t, logger.AddHooks(&hook))
+	logger.Info("info")
+	logger.Debug("debug")
+	logger.Error(errors.New("error"), "error")
+	assert.Equal(t, 3, len(hook.entries))
+	assert.Equal(t, "info", hook.entries[0].Message)
+	assert.Equal(t, "debug", hook.entries[1].Message)
+	assert.Equal(t, "error", hook.entries[2].Message)
+}
+
+func TestAddHooksInfoLevel(t *testing.T) {
+	hook := recordHook{}
+	logger := getNewStandardLogger()
+	logger.internal.SetLevel(logrus.InfoLevel)
+	require.NoError(t, logger.SetLogCaller(true))
+	require.NoError(t, logger.AddHooks(&hook))
+	logger.Info("info")
+	logger.Debug("debug") // should not be received by hook
+	logger.Error(errors.New("error"), "error")
+	assert.Equal(t, 2, len(hook.entries))
+	assert.Equal(t, "info", hook.entries[0].Message)
+	assert.Equal(t, "error", hook.entries[1].Message)
+}
+
+func TestLogCaller(t *testing.T) {
+
+	// test standard logger
+	actualOutput := redirectOutput(t, func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetLogCaller(true))
+		logger.Debug(testMessage)
+	})
+	assert.Regexp(t, regexp.MustCompile(".*\\[.*standardLogger_test.go:\\d+]"), actualOutput)
+
+	// test json logger
+	out := make(map[string]interface{})
+	require.NoError(t, json.Unmarshal([]byte(redirectOutput(t, func() {
+		logger := getNewStandardLogger()
+		require.NoError(t, logger.SetLogCaller(true))
+		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
+		logger.Debug(testMessage)
+	})), &out))
+	assert.Equal(t, out["message"], testMessage)
+	assert.Regexp(t, regexp.MustCompile(".*standardLogger_test.go:\\d+"), out["caller"])
+}
+
 func getNewStandardLogger() *standardLogger {
-	return NewStandardLogger().(*standardLogger)
+	l := NewStandardLogger().(*standardLogger)
+	l.internal.SetLevel(logrus.DebugLevel)
+	return l
 }
 
 func getStandardLoggerWithFields() *standardLogger {
-	logger := getNewStandardLogger().PutFields(testField)
-	return logger.(*standardLogger)
+	logger := getNewStandardLogger().PutFields(testField).(*standardLogger)
+	logger.internal.SetLevel(logrus.DebugLevel)
+	return logger
 }

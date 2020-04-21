@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/anz-bank/pkg/log"
 )
@@ -25,23 +26,12 @@ func fieldsDemo(ctx context.Context) {
 	// With adds a regular key value pair.
 	fields := log.With("hello", "world")
 
-	// WithCtxRef adds a key whose value will be taken from the context
+	// WithContextKey adds a key whose value will be taken from the context
 	// before logging. You have to define an alias to the key which will
 	// be used during logging as context key are usually a struct or iota
 	// which has no information about it when logged. If the key does not
 	// exist in the context, it will not be logged.
-	fields = fields.WithCtxRef("my alias", contextKey{})
-
-	// WithFunc adds a key and a function with a context argument which
-	// will be called before logging. If the result of the function is
-	// nil, it will not be logged.
-	ctx = context.WithValue(ctx, "bar", 42)
-	fields = fields.WithFunc("foo", func(ctx context.Context) interface{} {
-		return ctx.Value("bar")
-	})
-	fmt.Printf("Current Fields after using the With API: %s\n", fields.String(ctx))
-	ctx = context.WithValue(ctx, contextKey{}, "now exist in context")
-	fmt.Printf("Current Fields after using the With API and adding my alias to context: %s\n", fields.String(ctx))
+	fields = fields.WithContextKey("my alias", contextKey{})
 
 	// Fields operation can also be chained either by the With APIs or Chain API.
 	// An important thing to note is that fields operation always merge with the
@@ -52,10 +42,7 @@ func fieldsDemo(ctx context.Context) {
 	// In this example, the final fields will have ("test": "test four") instead of ("test": "test too").
 	fields = fields.
 		With("test", "test too").
-		WithCtxRef("test three", contextKey2{}).
-		WithFunc("doesn't", func(context.Context) interface{} {
-			return "matter"
-		}).
+		WithContextKey("test three", contextKey2{}).
 		With("test", "test four")
 
 	// The final fields will have ("out of": "things to write")
@@ -139,12 +126,12 @@ func configLogDemo(ctx context.Context) {
 	// of the same type is added. For example, if before you added StandardFormatter, calling WithConfig
 	// with JSONFormatter will replace StandardFormatter. Just like Fields, it will also be stored
 	// in the context.
-	ctx = log.WithConfigs(log.NewJSONFormat()).Onto(ctx)
+	ctx = log.WithConfigs(log.NewJSONFormat(), log.SetVerboseMode(true), log.SetOutput(os.Stdout)).Onto(ctx)
 
 	// You can also have a log-specific configs by not saving it to the context.
-	log.WithConfigs(log.NewStandardFormat(), log.NewStandardFormat()).
+	log.WithConfigs(log.NewStandardFormat(), log.SetVerboseMode(false)).
 		WithLogger(log.NewStandardLogger()).
-		With("yeet", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
+		With("key", map[string]interface{}{"foo": "bar", "doesn't": "matter"}).
 		From(ctx).
 		Info("json formatted log")
 }

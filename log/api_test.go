@@ -1,7 +1,9 @@
 package log
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"strconv"
 	"testing"
 
@@ -10,11 +12,23 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var (
+	formattedArgs = []interface{}{"this is a format %v %v %v %v", "this is a message", 12345, 2.3141, 'k'}
+	regularArgs   = []interface{}{"this is a message", 12345, 2.3141, 'k'}
+	errMsg        = errors.New("this is an error")
+)
+
 type fieldsTest struct {
 	name          string
 	unresolveds   frozen.Map
 	contextFields frozen.Map
 	expected      frozen.Map
+}
+
+type testHook struct { }
+
+func (h *testHook) OnLogged(entry *LogEntry) error {
+	return nil
 }
 
 func TestMainDebug(t *testing.T) {
@@ -41,27 +55,61 @@ func TestMainInfof(t *testing.T) {
 	testLogWithFormat(t, Infof, "Infof")
 }
 
-func testLog(t *testing.T, logFunc func(ctx context.Context, args ...interface{}), funcName string) {
-	args := []interface{}{"this is a message", 12345, 2.3141, 'k'}
-	callLog(t, funcName, args,
+func TestMainError(t *testing.T) {
+	t.Parallel()
+
+	callLog(
+		t,
+		"Error",
+		append([]interface{}{errMsg}, regularArgs...),
+		frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
-			logFunc(WithLogger(m).Onto(context.Background()), args...)
+			Error(WithLogger(m).Onto(context.Background()), errMsg, regularArgs...)
 		},
 	)
 }
 
-func testLogWithFormat(t *testing.T, logFunc func(ctx context.Context, format string, args ...interface{}), funcName string) {
-	args := []interface{}{"this is a format %v %v %v %v", "this is a message", 12345, 2.3141, 'k'}
-	callLog(t, funcName, args,
+func TestMainErrorf(t *testing.T) {
+	t.Parallel()
+
+	callLog(
+		t,
+		"Errorf",
+		append([]interface{}{errMsg}, formattedArgs...),
+		frozen.Map{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
-			logFunc(WithLogger(m).Onto(context.Background()), args[0].(string), args[1:]...)
+			Errorf(WithLogger(m).Onto(context.Background()), errMsg, formattedArgs[0].(string), formattedArgs[1:]...)
 		},
 	)
 }
 
-func callLog(t *testing.T, funcName string, args []interface{}, logFunc func(*mockLogger)) {
+func testLog(
+	t *testing.T,
+	logFunc func(ctx context.Context, args ...interface{}),
+	funcName string,
+) {
+	callLog(t, funcName, regularArgs, frozen.NewMap(),
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), regularArgs...)
+		},
+	)
+}
+
+func testLogWithFormat(
+	t *testing.T,
+	logFunc func(ctx context.Context, format string, args ...interface{}),
+	funcName string,
+) {
+	callLog(t, funcName, formattedArgs, frozen.NewMap(),
+		func(m *mockLogger) {
+			logFunc(WithLogger(m).Onto(context.Background()), formattedArgs[0].(string), formattedArgs[1:]...)
+		},
+	)
+}
+
+func callLog(t *testing.T, funcName string, args []interface{}, fields frozen.Map, logFunc func(*mockLogger)) {
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, fields)
 	logger.On(funcName, args...)
 	logFunc(logger)
 	logger.AssertExpectations(t)
@@ -93,9 +141,65 @@ func TestWithConfigsSameConfigType(t *testing.T) {
 	t.Parallel()
 
 	expectedConfig := frozen.Map{}.
-		With(standardFormat{}.TypeKey(), standardFormat{})
-	f := WithConfigs(NewJSONFormat(), NewStandardFormat())
+		With(standardFormat{}.TypeKey(), standardFormat{}).
+		With(verboseMode{}.TypeKey(), verboseMode{true})
+
+	f := WithConfigs(
+		NewJSONFormat(),
+		NewStandardFormat(),
+		SetVerboseMode(true),
+	)
 	assert.True(t, expectedConfig.Equal(f.m))
+}
+
+func TestWithConfigLevel(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetVerbose", true).Return(nil)
+	WithConfigs(SetVerboseMode(false), SetVerboseMode(true)).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigFormat(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetFormatter", jsonFormat{}).Return(nil)
+	WithConfigs(NewStandardFormat(), NewJSONFormat()).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigOutput(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetOutput", &bytes.Buffer{}).Return(nil)
+	WithConfigs(SetOutput(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithHooks(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("AddHooks", mock.Anything).Return(nil)
+	WithConfigs(AddHooks(&testHook{})).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
+}
+
+func TestWithConfigLogCaller(t *testing.T) {
+	t.Parallel()
+
+	logger := newMockLogger()
+	setLogMockAssertion(logger, frozen.NewMap())
+	logger.On("SetLogCaller", true).Return(nil)
+	WithConfigs(SetLogCaller(false), SetLogCaller(true)).WithLogger(logger).From(context.Background())
+	logger.AssertExpectations(t)
 }
 
 func TestFrom(t *testing.T) {
@@ -195,10 +299,10 @@ func TestWith(t *testing.T) {
 	)
 }
 
-func TestWithCtxRef(t *testing.T) {
+func TestWithContextRef(t *testing.T) {
 	t.Parallel()
 
-	f := WithCtxRef("key1", key1{}).WithCtxRef("key2", key2{}).WithCtxRef("key3", key3{})
+	f := WithContextKey("key1", key1{}).WithContextKey("key2", key2{}).WithContextKey("key3", key3{})
 
 	for i := f.m.Range(); i.Next(); {
 		assert.IsType(t, ctxRef{}, i.Value())
@@ -224,7 +328,7 @@ func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
 	logger.On(
 		"PutFields",
 		mock.MatchedBy(
-			func(arg frozen.Map) bool {
+			func(arg interface{}) bool {
 				return fields.Equal(arg)
 			},
 		),
