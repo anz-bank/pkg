@@ -1,11 +1,9 @@
 name: Go-Windows
 on:
   push:
-    branches:
-      - "*"
+    branches: [master]
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
 jobs:
   build-and-test-windows:
     name: Build Windows and test

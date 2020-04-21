@@ -1,11 +1,9 @@
 name: Go-Linux
 on:
   push:
-    branches:
-      - "*"
+    branches: [master]
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
 jobs:
   build-and-test-linux:
     name: Build Linux and test

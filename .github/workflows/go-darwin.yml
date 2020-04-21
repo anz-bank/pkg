@@ -1,11 +1,9 @@
 name: Go-Darwin
 on:
   push:
-    branches:
-      - "*"
+    branches: [master]
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
 jobs:
   build-and-test-darwin:
     name: Build Darwin and test
