@@ -25,7 +25,7 @@ type fieldsTest struct {
 	expected      frozen.Map
 }
 
-type testHook struct { }
+type testHook struct{}
 
 func (h *testHook) OnLogged(entry *LogEntry) error {
 	return nil
@@ -236,7 +236,7 @@ func TestOnto(t *testing.T) {
 			}
 			ctx := fields.Onto(context.Background())
 
-			logger = getLoggerFromContext(t, ctx)
+			logger = getLoggerFromContext(ctx, t)
 
 			logger.AssertExpectations(t)
 		})
@@ -327,15 +327,11 @@ func setLogMockAssertion(logger *mockLogger, fields frozen.Map) {
 func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
 	logger.On(
 		"PutFields",
-		mock.MatchedBy(
-			func(arg interface{}) bool {
-				return fields.Equal(arg)
-			},
-		),
+		mock.MatchedBy(fields.Equal),
 	).Return(logger)
 }
 
-func getLoggerFromContext(t *testing.T, ctx context.Context) *mockLogger {
+func getLoggerFromContext(ctx context.Context, t *testing.T) *mockLogger {
 	m, exists := ctx.Value(fieldsContextKey{}).(frozen.Map)
 	if !exists {
 		t.Fatal("Fields not set yet")

@@ -13,14 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type logrusLevelConfig interface {
-	getLogrusLevel() logrus.Level
-}
-
-type ioOutConfig interface {
-	getIoOut() io.Writer
-}
-
 type standardLogger struct {
 	internal  *logrus.Logger
 	fields    frozen.Map

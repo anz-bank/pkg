@@ -24,7 +24,7 @@ type Logger interface {
 }
 
 // LogEntry describes an entry to log.
-type LogEntry struct {
+type LogEntry struct { // nolint:golint // log.LogEntry stutters but is public API now.
 
 	// Time at which the log entry was created
 	Time time.Time

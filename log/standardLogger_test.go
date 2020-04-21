@@ -19,7 +19,7 @@ const (
 	simpleFormat = "%s"
 )
 
-var testError = errors.New("this is an error")
+var errTest = errors.New("this is an error")
 
 // to test fields output for all log
 var testField = generateMultipleFieldsCases()[0].Fields
@@ -94,46 +94,46 @@ func TestDebugf(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
-		NewStandardLogger().Error(testError, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+		NewStandardLogger().Error(errTest, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Error(testError, testMessage)
+		logger.Error(errTest, testMessage)
 	})
 
-	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
-		getStandardLoggerWithFields().Error(testError, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, errTest.Error()), func() {
+		getStandardLoggerWithFields().Error(errTest, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, errTest.Error()), func() {
 		logger := getStandardLoggerWithFields()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Error(testError, testMessage)
+		logger.Error(errTest, testMessage)
 	})
 }
 
 func TestErrorf(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
-		NewStandardLogger().Errorf(testError, simpleFormat, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+		NewStandardLogger().Errorf(errTest, simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, testError.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Errorf(testError, simpleFormat, testMessage)
+		logger.Errorf(errTest, simpleFormat, testMessage)
 	})
 
-	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
-		getStandardLoggerWithFields().Errorf(testError, simpleFormat, testMessage)
+	testStandardLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, errTest.Error()), func() {
+		getStandardLoggerWithFields().Errorf(errTest, simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, testError.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, testField.With(errMsgKey, errTest.Error()), func() {
 		logger := getStandardLoggerWithFields()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
-		logger.Errorf(testError, simpleFormat, testMessage)
+		logger.Errorf(errTest, simpleFormat, testMessage)
 	})
 }
 
@@ -288,14 +288,13 @@ func TestAddHooksInfoLevel(t *testing.T) {
 }
 
 func TestLogCaller(t *testing.T) {
-
 	// test standard logger
 	actualOutput := redirectOutput(t, func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetLogCaller(true))
 		logger.Debug(testMessage)
 	})
-	assert.Regexp(t, regexp.MustCompile(".*\\[.*standardLogger_test.go:\\d+]"), actualOutput)
+	assert.Regexp(t, regexp.MustCompile(`.*\[.*standardLogger_test.go:\d+]`), actualOutput)
 
 	// test json logger
 	out := make(map[string]interface{})
@@ -306,7 +305,7 @@ func TestLogCaller(t *testing.T) {
 		logger.Debug(testMessage)
 	})), &out))
 	assert.Equal(t, out["message"], testMessage)
-	assert.Regexp(t, regexp.MustCompile(".*standardLogger_test.go:\\d+"), out["caller"])
+	assert.Regexp(t, regexp.MustCompile(`.*standardLogger_test.go:\d+`), out["caller"])
 }
 
 func getNewStandardLogger() *standardLogger {
