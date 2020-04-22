@@ -1,6 +1,6 @@
 # pkg
 
-!![CI linux](https://github.com/anz-bank/pkg/workflows/Go-Linux/badge.svg?branch=master)
+[![Go-Linux](https://github.com/anz-bank/pkg/workflows/Go-Linux/badge.svg)](https://github.com/anz-bank/pkg/actions?query=workflow%3AGo-Linux+branch%3Amaster)
 [![Godoc](https://img.shields.io/badge/godoc-ref-blue)](https://pkg.go.dev/github.com/anz-bank/pkg)
 [![Slack chat](https://img.shields.io/badge/slack-anzoss-795679?logo=slack)](https://anzoss.slack.com/app_redirect?channel=pkg)
 
