@@ -1,4 +1,4 @@
-all: test check-coverage lint  ## test, check coverage and lint
+all: test check-coverage lint build-examples ## test, check coverage, lint and build examples
 	@if [ -e .git/rebase-merge ]; then git --no-pager log -1 --pretty='%h %s'; fi
 	@echo '$(COLOUR_GREEN)Success$(COLOUR_NORMAL)'
 
@@ -6,8 +6,7 @@ clean::  ## Remove generated files
 
 .PHONY: all clean
 
-
-# -- Test ---------------------------------------------------------------------
+# -- Test --------------------------------------------------------------
 
 COVERFILE = coverage.out
 COVERAGE = 83
@@ -29,8 +28,7 @@ FAIL_COVERAGE = { echo '$(COLOUR_RED)FAIL - Coverage below $(COVERAGE)%$(COLOUR_
 
 .PHONY: test check-coverage cover
 
-
-# -- Lint ---------------------------------------------------------------------
+# -- Lint --------------------------------------------------------------
 
 GOLINT_VERSION = 1.24.0
 GOLINT_INSTALLED_VERSION = $(or $(word 4,$(shell golangci-lint --version 2>/dev/null)),0.0.0)
@@ -48,8 +46,18 @@ lint-with-docker:
 
 .PHONY: lint
 
+# -- Build examples ----------------------------------------------------
 
-# --- Utilities ---------------------------------------------------------------
+# The `_examples` directory by starting with `_` is ignored by the Go
+# tools. We want to ignore it so we don't create empty godocs for it,
+# but we also want to ensure that it still builds so add the special
+# target `build-examples`:
+build-examples:
+	go build -o log-examples ./log/_examples
+
+.PHONY: build-examples
+
+# -- Utilities ---------------------------------------------------------
 
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
 COLOUR_RED    = $(shell tput setaf 1 2>/dev/null)
