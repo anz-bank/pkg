@@ -86,3 +86,17 @@ func (c logCallerConfig) Apply(logger Logger) error {
 func applyFormatter(formatter Config, logger Logger) error {
 	return logger.(Formattable).SetFormatter(formatter)
 }
+
+type forwardingHook struct {
+	logger Logger
+}
+
+func (h *forwardingHook) OnLogged(entry *LogEntry) error {
+	h.logger.(entryLogger).Log(entry)
+	return nil
+}
+
+// NewForwardingHook returns a Hook that forwards all entries to the given Logger.
+func NewForwardingHook(logger Logger) Hook {
+	return &forwardingHook{logger}
+}

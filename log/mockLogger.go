@@ -40,6 +40,10 @@ func (m *mockLogger) Infof(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, args...)...)
 }
 
+func (m *mockLogger) Log(entry *LogEntry) {
+	m.Called(entry)
+}
+
 func (m *mockLogger) PutFields(fields frozen.Map) Logger {
 	return m.Called(fields).Get(0).(Logger)
 }

@@ -107,6 +107,10 @@ func (sl *standardLogger) Infof(format string, args ...interface{}) {
 	sl.logf(false, format, args...)
 }
 
+func (sl *standardLogger) Log(entry *LogEntry) {
+	logWithLogrus(sl.internal, entry)
+}
+
 func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
 	sl.fields = fields
 	return sl
