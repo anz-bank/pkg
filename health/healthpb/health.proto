@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package anz.health.v1;
+
+option go_package = ".;healthpb";
+
+// Health ...
+service Health {
+  // Alive ....
+  rpc Alive(AliveRequest) returns (AliveResponse);
+  // Ready ....
+  rpc Ready(ReadyRequest) returns (ReadyResponse);
+  // Version ...
+  rpc Version(VersionRequest) returns (VersionResponse);
+}
+
+message AliveRequest {}
+
+message ReadyRequest {}
+
+message VersionRequest {}
+
+message AliveResponse {}
+
+message ReadyResponse {
+  bool ready = 1;
+}
+
+// VersionResponse provides version information specified at compile time.
+//    RepoUrl:      canonical repository source code URL, e.g. https://github.com/anz-bank/pkg
+//    CommitHash:   full git commit hash, e.g. 1ee4e1f233caea38d6e331299f57dd86efb47361
+//    BuildLogURL:  CI run URL, e.g. https://github.com/anz-bank/pkg/actions/runs/84341844
+//    ContainerTag: canonical container tag, e.g. gcr.io/google-containers/hugo
+//    SemVer:       Semantic versioning compliant version
+//    ScannerURLs:  Additional code scan links, e.g. { "codecov.io" : "https://codecov.io/..." }
+message VersionResponse {
+  string repo_url = 1;
+  string commit_hash = 2;
+  string build_log_url = 3;
+  string container_tag = 4;
+  string semver = 5;
+  map<string, string> scanner_urls = 6;
+}
