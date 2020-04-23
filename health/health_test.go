@@ -23,15 +23,18 @@ func TestNewServer(t *testing.T) {
 
 func TestSetReady(t *testing.T) {
 	s, _ := NewServer()
-	require.False(t, s.ready)
+	require.False(t, s.grpcServer.ready)
+	require.False(t, s.httpServer.ready)
 	s.SetReady(true)
-	require.True(t, s.ready)
+	require.True(t, s.grpcServer.ready)
+	require.True(t, s.httpServer.ready)
 	s.SetReady(false)
-	require.False(t, s.ready)
+	require.False(t, s.grpcServer.ready)
+	require.False(t, s.httpServer.ready)
 }
 
 func TestAlive(t *testing.T) {
-	s, _ := NewServer()
+	s, _ := NewGRPCServer()
 	ctx := context.Background()
 	req := &pb.AliveRequest{}
 	resp, err := s.Alive(ctx, req)
@@ -41,7 +44,7 @@ func TestAlive(t *testing.T) {
 }
 
 func TestReady(t *testing.T) {
-	s, _ := NewServer()
+	s, _ := NewGRPCServer()
 	ctx := context.Background()
 	req := &pb.ReadyRequest{}
 	resp, err := s.Ready(ctx, req)
@@ -92,7 +95,7 @@ func TestVersion(t *testing.T) {
 	Semver = "v0.0.0"
 	ScannerURLs = `{"scanner1" : "http://example.com", "scanner2" : "https://scan2"}`
 
-	s, err := NewServer()
+	s, err := NewGRPCServer()
 	require.NoError(t, err)
 	ctx := context.Background()
 	req := &pb.VersionRequest{}
@@ -151,7 +154,7 @@ func TestValidationBadSemver(t *testing.T) {
 func TestHTTPAlive(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/healthz", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 	s.ServeHTTP(w, req)
 
 	resp := w.Result()
@@ -164,7 +167,7 @@ func TestHTTPAlive(t *testing.T) {
 func TestHTTPNotReady(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/readyz", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
@@ -177,7 +180,7 @@ func TestHTTPNotReady(t *testing.T) {
 func TestHTTPReady(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/readyz", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 	s.SetReady(true)
 
 	s.ServeHTTP(w, req)
@@ -191,7 +194,7 @@ func TestHTTPReady(t *testing.T) {
 func TestHTTPVersion(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/version", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 	s.version = versionFixture()
 
 	s.ServeHTTP(w, req)
@@ -206,7 +209,7 @@ func TestHTTPVersion(t *testing.T) {
 func TestHTTPNotFound(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/MISSING_PATH", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 	s.version = versionFixture()
 
 	s.ServeHTTP(w, req)
@@ -220,7 +223,7 @@ func TestHTTPNotFound(t *testing.T) {
 func TestHTTPMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest("POST", "http://example.com/MISSING_PATH", nil)
 	w := httptest.NewRecorder()
-	s, _ := NewServer()
+	s, _ := NewHTTPServer()
 	s.version = versionFixture()
 
 	s.ServeHTTP(w, req)
