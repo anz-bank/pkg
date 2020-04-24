@@ -202,6 +202,23 @@ func TestWithConfigLogCaller(t *testing.T) {
 	logger.AssertExpectations(t)
 }
 
+func TestNewForwardingHook(t *testing.T) {
+	t.Parallel()
+
+	targetBuffer := bytes.Buffer{}
+	targetLogger := WithConfigs(SetOutput(&targetBuffer)).
+		WithLogger(NewStandardLogger()).
+		From(context.Background())
+	sourceBuffer := bytes.Buffer{}
+	sourceLogger := WithConfigs(SetOutput(&sourceBuffer), AddHooks(NewForwardingHook(targetLogger))).
+		WithLogger(NewStandardLogger()).
+		From(context.Background())
+
+	sourceLogger.Info("message")
+	assert.True(t, sourceBuffer.Len() > 0)
+	assert.Equal(t, sourceBuffer, targetBuffer)
+}
+
 func TestFrom(t *testing.T) {
 	for _, c := range getUnresolvedFieldsCases() {
 		c := c

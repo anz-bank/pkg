@@ -68,6 +68,11 @@ type fieldSetter interface {
 	PutFields(fields frozen.Map) Logger
 }
 
+type entryLogger interface {
+	// Log the given log entry.
+	Log(entry *LogEntry)
+}
+
 type Formattable interface {
 	// SetFormatter sets the formatter for the logger.
 	// The formatter provided must also implement the Formatter interface.

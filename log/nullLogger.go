@@ -19,6 +19,7 @@ func (n *nullLogger) Error(errMsg error, args ...interface{})                 {}
 func (n *nullLogger) Errorf(errMsg error, format string, args ...interface{}) {}
 func (n *nullLogger) Info(args ...interface{})                                {}
 func (n *nullLogger) Infof(format string, args ...interface{})                {}
+func (n *nullLogger) Log(entry *LogEntry)                                     {}
 
 func (n *nullLogger) PutFields(fields frozen.Map) Logger {
 	return n
