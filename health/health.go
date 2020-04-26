@@ -25,95 +25,80 @@ var (
 	ErrInvalidSemver = fmt.Errorf("invalid semver")
 )
 
+// --- Server ----------------------------------------------------------------
+
 // Server ...
 type Server struct {
-	grpcServer *GRPCServer
-	httpServer *HTTPServer
+	GRPC *GRPCServer
+	HTTP *HTTPServer
+	data *serverData
 }
 
 // NewServer ...
 func NewServer() (*Server, error) {
-	g, err := NewGRPCServer()
+	data, err := newServerData()
 	if err != nil {
 		return nil, err
 	}
-	h, err := NewHTTPServer()
-	if err != nil {
-		return nil, err
+
+	s := &Server{
+		GRPC: NewGRPCServer(data),
+		HTTP: NewHTTPServer(data),
+		data: data,
 	}
-	return &Server{grpcServer: g, httpServer: h}, nil
+	return s, nil
 }
 
-// SetReady ...
 func (s *Server) SetReady(ready bool) {
-	s.grpcServer.SetReady(ready)
-	s.httpServer.SetReady(ready)
+	s.data.SetReady(ready)
 }
 
-// RegisterWith ...
-func (s *Server) RegisterWith(g *grpc.Server) {
-	s.grpcServer.RegisterWith(g)
-}
+// --- GRPCServer ------------------------------------------------------------
 
-// RegisterWith ...
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.httpServer.ServeHTTP(w, r)
-}
-
-// Server ...
+// GRPCServer implements a gRPC interface for the Health service serving the
+// health data supplied a Service.
 type GRPCServer struct {
 	pb.UnimplementedHealthServer
-
-	ready   bool
-	version *pb.VersionResponse
+	data *serverData
 }
 
-func NewGRPCServer() (*GRPCServer, error) {
-	version, err := NewVersion()
-	if err != nil {
-		return nil, err
-	}
-	return &GRPCServer{version: version}, nil
+// NewGRPCServer returns a GRPCServer that serves the data provided by the
+// Service interface provided.
+func NewGRPCServer(data *serverData) *GRPCServer {
+	return &GRPCServer{data: data}
+}
+
+// RegisterWith registers the Health GRPCServer with the given grpc.Server.
+func (g *GRPCServer) RegisterWith(s *grpc.Server) {
+	pb.RegisterHealthServer(s, g)
 }
 
 // Alive ...
-func (*GRPCServer) Alive(_ context.Context, _ *pb.AliveRequest) (*pb.AliveResponse, error) {
+func (g *GRPCServer) Alive(_ context.Context, _ *pb.AliveRequest) (*pb.AliveResponse, error) {
 	return &pb.AliveResponse{}, nil
 }
 
 // Ready ...
 func (g *GRPCServer) Ready(_ context.Context, _ *pb.ReadyRequest) (*pb.ReadyResponse, error) {
-	return &pb.ReadyResponse{Ready: g.ready}, nil
+	return &pb.ReadyResponse{Ready: g.data.Ready()}, nil
 }
 
 // Version ...
 func (g *GRPCServer) Version(_ context.Context, _ *pb.VersionRequest) (*pb.VersionResponse, error) {
-	return g.version, nil
+	return g.data.Version(), nil
 }
 
-// SetReady ...
-func (g *GRPCServer) SetReady(ready bool) {
-	g.ready = ready
-}
+// --- HTTPServer ------------------------------------------------------------
 
-// RegisterWith ...
-func (g *GRPCServer) RegisterWith(s *grpc.Server) {
-	pb.RegisterHealthServer(s, g)
-}
-
-// HTTPServer ...
+// HTTPServer implements an HTTP service for the Health service serving the
+// health data supplied by Service.
 type HTTPServer struct {
-	ready   bool
-	version *pb.VersionResponse
+	data *serverData
 }
 
 // NewHTTPServer
-func NewHTTPServer() (*HTTPServer, error) {
-	version, err := NewVersion()
-	if err != nil {
-		return nil, err
-	}
-	return &HTTPServer{version: version}, nil
+func NewHTTPServer(data *serverData) *HTTPServer {
+	return &HTTPServer{data: data}
 }
 
 // ServeHTTP ...
@@ -136,13 +121,13 @@ func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleAlive ...
-func (*HTTPServer) HandleAlive(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPServer) HandleAlive(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%d ok\n", http.StatusOK)
 }
 
 // HandleReady ...
 func (h *HTTPServer) HandleReady(w http.ResponseWriter, r *http.Request) {
-	if !h.ready {
+	if !h.data.Ready() {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintf(w, "%d service unavailable\n", http.StatusServiceUnavailable)
 		return
@@ -152,13 +137,39 @@ func (h *HTTPServer) HandleReady(w http.ResponseWriter, r *http.Request) {
 
 // HandleVersion ...
 func (h *HTTPServer) HandleVersion(w http.ResponseWriter, r *http.Request) {
-	b, _ := json.MarshalIndent(h.version, "", "  ")
+	b, _ := json.MarshalIndent(h.data.Version(), "", "  ")
 	_, _ = w.Write(b)
 }
 
+// --- serverData -------------------------------------------------------------
+
+type serverData struct {
+	ready   bool
+	version *pb.VersionResponse
+}
+
+func newServerData() (*serverData, error) {
+	v, err := NewVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	return &serverData{version: v}, nil
+}
+
 // SetReady ...
-func (h *HTTPServer) SetReady(ready bool) {
-	h.ready = ready
+func (sd *serverData) SetReady(ready bool) {
+	sd.ready = ready
+}
+
+// Ready ...
+func (sd *serverData) Ready() bool {
+	return sd.ready
+}
+
+// Version ...
+func (sd *serverData) Version() *pb.VersionResponse {
+	return sd.version
 }
 
 // NewVersion

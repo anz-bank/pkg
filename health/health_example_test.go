@@ -11,10 +11,10 @@ import (
 
 func Example() {
 	healthServer, _ := health.NewServer()
-	go http.ListenAndServe(":8082", healthServer)
+	go http.ListenAndServe(":8082", healthServer.HTTP)
 
 	grpcServer := grpc.NewServer()
-	healthServer.RegisterWith(grpcServer)
+	healthServer.GRPC.RegisterWith(grpcServer)
 	lis, _ := net.Listen("tcp", ":8080")
 	go grpcServer.Serve(lis)
 
