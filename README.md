@@ -13,3 +13,30 @@ Common ANZ Go Packages
     GNU make
 -   Build with `make`
 -   View build options with `make help`
+
+On OSX, after installing go [1.14](https://golang.org/doc/install) run
+
+    brew install golangci/tap/golangci-lint make
+
+### Working with protos
+
+All generated code derived from Protobuf and gRPC definitions is
+committed to this repo, however if you need to regenerate the Go code or
+work with gRPC, install the following tools:
+
+-   proto3 and gRPC
+    -   https://github.com/protocolbuffers/protobuf/releases
+    -   https://github.com/golang/protobuf
+    -   https://github.com/grpc/grpc
+-   [`prototool`](https://github.com/uber/prototool/blob/dev/docs/install.md)
+-   [`goimports`](https://godoc.org/golang.org/x/tools/cmd/goimports)
+-   [`gprcurl`](https://github.com/fullstorydev/grpcurl)
+
+On OSX run
+
+    (cd /tmp; go get -u golang.org/x/tools/goimports)
+    brew grpcurl protoc-gen-go grpc prototool
+
+After the initial installation run
+
+    make generate

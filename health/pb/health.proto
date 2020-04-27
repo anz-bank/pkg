@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package anz.health.v1;
+
+option go_package = "github.com/anz-bank/pkg/health/pb";
+
+// Health service provides application health-related information.
+// Applications may use it to provide liveness and readiness endpoints.
+// Application version information is also made available which should
+// be set at build time. This helps identify exactly which version of the
+// application is healthy or not.
+service Health {
+  // Alive returns an empty response. If the caller receives the response
+  // without error, it means that the application is alive.
+  rpc Alive(AliveRequest) returns (AliveResponse);
+  // Ready returns a response with a bool value indicating whether
+  // the application is ready to receive traffic. An application may
+  // become ready or not ready any number of times.
+  rpc Ready(ReadyRequest) returns (ReadyResponse);
+  // Version returns information to identify the running version of the
+  // application.
+  rpc Version(VersionRequest) returns (VersionResponse);
+}
+
+message AliveRequest {}
+
+message ReadyRequest {}
+
+message VersionRequest {}
+
+message AliveResponse {}
+
+message ReadyResponse {
+  bool ready = 1;
+}
+
+// VersionResponse provides version information specified at compile time.
+message VersionResponse {
+  // Canonical repository source code URL, e.g. https://github.com/anz-bank/pkg
+  string repo_url = 1;
+  // Full git commit hash, e.g. 1ee4e1f233caea38d6e331299f57dd86efb47361
+  string commit_hash = 2;
+  // CI run URL, e.g. https://github.com/anz-bank/pkg/actions/runs/84341844
+  string build_log_url = 3;
+  // Canonical container tag, e.g. gcr.io/google-containers/hugo
+  string container_tag = 4;
+  // Semantic versioning compliant version
+  string semver = 5;
+  // Additional code scan links, e.g. { "codecov.io" : "https://codecov.io/..." }
+  map<string, string> scanner_urls = 6;
+}
