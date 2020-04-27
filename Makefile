@@ -9,7 +9,7 @@ clean::  ## Remove generated files
 # -- Test --------------------------------------------------------------
 
 COVERFILE = coverage.out
-COVERAGE = 83
+COVERAGE = 87.6
 
 test:  ## Run tests and generate a coverage file
 	go test -coverprofile=$(COVERFILE) ./...
@@ -56,6 +56,13 @@ build-examples:
 	go build -o log-examples ./log/_examples
 
 .PHONY: build-examples
+
+# -- Generate ----------------------------------------------------------
+
+generate:
+	go generate ./...
+
+.PHONY: generate
 
 # -- Utilities ---------------------------------------------------------
 
