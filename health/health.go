@@ -136,6 +136,7 @@ func (g *GRPCServer) Version(_ context.Context, _ *pb.VersionRequest) (*pb.Versi
 // /healthz, /readyz and /version
 type HTTPServer struct {
 	*healthData
+	mux *http.ServeMux
 }
 
 // NewHTTPServer returns an HTTPServer.
@@ -157,28 +158,45 @@ func NewHTTPServer() (*HTTPServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &HTTPServer{healthData: healthData}, nil
+	h := &HTTPServer{healthData: healthData, mux: http.NewServeMux()}
+	h.RegisterWith(h.mux)
+	return h, nil
+}
+
+// The Router interface allows HTTPServer.RegisterWith to work with any
+// type of mux that implements the Handle method as defined on http.ServeMux.
+type Router interface {
+	Handle(path string, h http.Handler)
+}
+
+// RegisterWith registers our handlers for /healthz, /readyz and /version
+// with the given Router. This allows for sharing the root namespace
+// with other paths and not requiring that the caller register each handler
+// individually.
+func (h *HTTPServer) RegisterWith(r Router) {
+	r.Handle("/healthz", requireGet(h.HandleAlive))
+	r.Handle("/readyz", requireGet(h.HandleReady))
+	r.Handle("/version", requireGet(h.HandleVersion))
+}
+
+// requireGet is http middleware that ensures that the request's method is GET.
+// It has a slightly different signature to normal middleware, to suit our use case.
+func requireGet(next http.HandlerFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			msg := fmt.Sprintf("%d method not allowed, use GET", http.StatusMethodNotAllowed)
+			http.Error(w, msg, http.StatusMethodNotAllowed)
+			return
+		}
+		next(w, r)
+	})
 }
 
 // ServeHTTP implements http.Handler, handling GET requests for /healthz,
-// /readyz and /version. Other methods will return a 405 Method Not Allowed,
-// and other paths will return 404 Not Found.
+// /readyz and /version. Other methods on these paths will return
+// 405 Method Not Allowed, and other paths will return 404 Not Found.
 func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		msg := fmt.Sprintf("%d method not allowed, use GET", http.StatusMethodNotAllowed)
-		http.Error(w, msg, http.StatusMethodNotAllowed)
-		return
-	}
-	switch r.URL.Path {
-	case "/healthz":
-		h.HandleAlive(w, r)
-	case "/readyz":
-		h.HandleReady(w, r)
-	case "/version":
-		h.HandleVersion(w, r)
-	default:
-		http.NotFound(w, r)
-	}
+	h.mux.ServeHTTP(w, r)
 }
 
 // HandleAlive returns a 200 OK response. If the caller receives this, it means

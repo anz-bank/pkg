@@ -245,7 +245,7 @@ func TestHTTPNotFound(t *testing.T) {
 }
 
 func TestHTTPMethodNotAllowed(t *testing.T) {
-	req := httptest.NewRequest("POST", "http://example.com/MISSING_PATH", nil)
+	req := httptest.NewRequest("POST", "http://example.com/version", nil)
 	w := httptest.NewRecorder()
 	s, err := NewHTTPServer()
 	require.NoError(t, err)
@@ -259,7 +259,7 @@ func TestHTTPMethodNotAllowed(t *testing.T) {
 	require.Equal(t, "405 method not allowed, use GET\n", string(body))
 }
 
-func TestRegisterWith(t *testing.T) {
+func TestGRPCRegisterWith(t *testing.T) {
 	grpcServer := grpc.NewServer()
 	hs, err := NewGRPCServer()
 	require.NoError(t, err)
