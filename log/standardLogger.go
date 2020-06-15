@@ -192,8 +192,8 @@ func (sl *standardLogger) getLogEntryCaller() CodeReference {
 	// the call stack than this method whereas the second entry point (Fields) if 4 method calls
 	// higher. Walk up the call stack and return the first caller outside the pkg logger framework.
 	for skip := 3; skip < 5; skip++ {
-		_, file, line, ok := runtime.Caller(3)
-		if !ok || pkgCallerFilePattern.MatchString(file) {
+		_, file, line, ok := runtime.Caller(skip)
+		if !ok || (pkgCallerFilePattern.MatchString(file) && !strings.Contains(file, "test")) { //exclude the test caller
 			continue
 		}
 		return CodeReference{file, line}
