@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -318,4 +319,43 @@ func getStandardLoggerWithFields() *standardLogger {
 	logger := getNewStandardLogger().PutFields(testField).(*standardLogger)
 	logger.internal.SetLevel(logrus.DebugLevel)
 	return logger
+}
+
+func TestStandardLogger(t *testing.T) {
+	logger := getNewStandardLogger()
+	buffer := bytes.Buffer{}
+	require.NoError(t, logger.SetOutput(&buffer))
+	require.NoError(t, logger.SetVerbose(true))
+	logger.Info("info")
+	require.True(t, strings.Contains(buffer.String(), "info"))
+	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //don't log caller
+
+	//set log caller
+	buffer.Reset()
+	require.NoError(t, logger.SetLogCaller(true))
+	logger.Info("info")
+
+	require.True(t, strings.Contains(buffer.String(), "info"))
+	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //log caller
+}
+
+func TestStandardLoggerWithFields(t *testing.T) {
+	logger := getStandardLoggerWithFields()
+	buffer := bytes.Buffer{}
+	require.NoError(t, logger.SetOutput(&buffer))
+	require.NoError(t, logger.SetVerbose(false))
+
+	logger.Info("info")
+	require.True(t, strings.Contains(buffer.String(), "info"))
+	require.True(t, strings.Contains(buffer.String(), "string=this is an unnecessarily long sentence"))
+	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //don't log caller
+
+	//set log caller
+	buffer.Reset()
+	require.NoError(t, logger.SetLogCaller(true))
+	logger.Info("info")
+
+	require.True(t, strings.Contains(buffer.String(), "info"))
+	require.True(t, strings.Contains(buffer.String(), "string=this is an unnecessarily long sentence"))
+	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //log caller
 }
