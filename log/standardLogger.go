@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -179,12 +180,27 @@ func (sl *standardLogger) logf(verbose bool, format string, args ...interface{})
 	})
 }
 
+//Avoiding underscores so you don’t match the test case.
+//Negative lookbehind like (?<!test) could make this regex cleaner but it’s not supported by go regular expressions
+var pkgCallerFilePattern = regexp.MustCompile(`^.*anz-bank/pkg[^/]*/log/[a-zA-Z]+.go$`)
+
 func (sl *standardLogger) getLogEntryCaller() CodeReference {
 	if !sl.logCaller {
 		return CodeReference{}
 	}
-	_, file, line, _ := runtime.Caller(3)
-	return CodeReference{file, line}
+
+	// There are two entry points to log an entry within the pkg logger: log directly against the
+	// Logger or log against the Fields. The first entry point (Logger) is 3 method calls higher in
+	// the call stack than this method whereas the second entry point (Fields) if 4 method calls
+	// higher. Walk up the call stack and return the first caller outside the pkg logger framework.
+	for skip := 3; skip < 5; skip++ {
+		_, file, line, ok := runtime.Caller(skip)
+		if !ok || pkgCallerFilePattern.MatchString(file) {
+			continue
+		}
+		return CodeReference{file, line}
+	}
+	return CodeReference{}
 }
 
 func getFormattedField(fields frozen.Map) string {
