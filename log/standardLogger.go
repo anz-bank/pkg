@@ -189,11 +189,11 @@ func (sl *standardLogger) getLogEntryCaller() CodeReference {
 		return CodeReference{}
 	}
 
-	// There are two entry points to log an entry within the pkg logger: log directly against the
-	// Logger or log against the Fields. The first entry point (Logger) is 3 method calls higher in
-	// the call stack than this method whereas the second entry point (Fields) if 4 method calls
-	// higher. Walk up the call stack and return the first caller outside the pkg logger framework.
-	for skip := 3; skip < 5; skip++ {
+	// There are several entry points to log an entry within the pkg logger.
+	// The shortest entry point (Logger.Info) is 3 method calls higher in the call stack
+	// than this method whereas the longest entry point (log.Info) if 5 method calls higher.
+	// Walk up the call stack and return the first caller outside the pkg logger framework.
+	for skip := 3; skip < 6; skip++ {
 		_, file, line, ok := runtime.Caller(skip)
 		if !ok || pkgCallerFilePattern.MatchString(file) {
 			continue
