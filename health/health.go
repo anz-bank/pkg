@@ -192,6 +192,17 @@ func requireGet(next http.HandlerFunc) http.Handler {
 	})
 }
 
+// IsHealthEndpoint returns true if the request is for one of our health
+// check endpoints (/healthz or /readyz). It is intended to be used with
+// the OpenCensus ochttp plugin to not trace health checks.
+//
+// Use it in the ochttp.Handler:
+//
+//     ochttp.Handler{IsHealthEndpoint: health.IsHealthEndpoint, ...}
+func IsHealthEndpoint(r *http.Request) bool {
+	return r.URL.Path == "/healthz" || r.URL.Path == "/readyz"
+}
+
 // ServeHTTP implements http.Handler, handling GET requests for /healthz,
 // /readyz and /version. Other methods on these paths will return
 // 405 Method Not Allowed, and other paths will return 404 Not Found.

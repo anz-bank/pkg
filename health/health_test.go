@@ -268,3 +268,14 @@ func TestGRPCRegisterWith(t *testing.T) {
 	_, ok := info["anz.health.v1.Health"]
 	require.True(t, ok)
 }
+
+func TestIsHealthEndpoint(t *testing.T) {
+	req := httptest.NewRequest("GET", "/readyz", nil)
+	require.True(t, IsHealthEndpoint(req))
+
+	req = httptest.NewRequest("GET", "/healthz", nil)
+	require.True(t, IsHealthEndpoint(req))
+
+	req = httptest.NewRequest("GET", "/version", nil)
+	require.False(t, IsHealthEndpoint(req))
+}
