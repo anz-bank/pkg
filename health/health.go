@@ -64,27 +64,51 @@ var (
 	ErrInvalidSemver = fmt.Errorf("invalid semver")
 )
 
+// State holds the state published by the health servers. Typically a
+// single instance is shared amongst all servers.
+type State struct {
+	Ready   bool
+	Version *pb.VersionResponse
+}
+
+// NewState returns a State with the global version variables set in the
+// Version field, and Ready as false. If any of the global version variables
+// cannot be parsed, an error is returned.
+func NewState() (*State, error) {
+	v, err := newVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	return &State{Version: v}, nil
+}
+
+// SetReady sets the ready status served. The value can be changed as
+// many times as is necessary over the lifetime of the application.
+func (d *State) SetReady(ready bool) {
+	d.Ready = ready
+}
+
 // Server is a server that can serve health data via gRPC and HTTP.
 type Server struct {
+	*State
 	GRPC *GRPCServer
 	HTTP *HTTPServer
-
-	*healthData
 }
 
 // NewServer returns a health.Server implementing a gRPC and an HTTP server, to
 // serve a common set of underlying health data. If any of the package-level
 // version variables are invalid, an error is returned.
 func NewServer() (*Server, error) {
-	healthData, err := newHealthData()
+	state, err := NewState()
 	if err != nil {
 		return nil, err
 	}
 
 	s := &Server{
-		GRPC:       &GRPCServer{healthData: healthData},
-		HTTP:       &HTTPServer{healthData: healthData},
-		healthData: healthData,
+		GRPC:  &GRPCServer{State: state},
+		HTTP:  &HTTPServer{State: state},
+		State: state,
 	}
 	return s, nil
 }
@@ -92,19 +116,18 @@ func NewServer() (*Server, error) {
 // GRPCServer implements a gRPC interface for the Health service serving the
 // anz.health.v1.Health service.
 type GRPCServer struct {
+	*State
 	pb.UnimplementedHealthServer // embedded for forward compatible implementations
-
-	*healthData
 }
 
 // NewGRPCServer returns a GRPCServer. If any of the package-level version
 // variables are invalid, an error is returned.
 func NewGRPCServer() (*GRPCServer, error) {
-	healthData, err := newHealthData()
+	state, err := NewState()
 	if err != nil {
 		return nil, err
 	}
-	return &GRPCServer{healthData: healthData}, nil
+	return &GRPCServer{State: state}, nil
 }
 
 // RegisterWith registers the Health GRPCServer with the given grpc.Server.
@@ -123,19 +146,19 @@ func (g *GRPCServer) Alive(_ context.Context, _ *pb.AliveRequest) (*pb.AliveResp
 // value indicating whether the application is ready to receive traffic. An
 // application may become ready or not ready any number of times.
 func (g *GRPCServer) Ready(_ context.Context, _ *pb.ReadyRequest) (*pb.ReadyResponse, error) {
-	return &pb.ReadyResponse{Ready: g.healthData.ready}, nil
+	return &pb.ReadyResponse{Ready: g.State.Ready}, nil
 }
 
 // Version implements the anz.health.v1.Health.Version method, returning
 // information to identify the running version of the application.
 func (g *GRPCServer) Version(_ context.Context, _ *pb.VersionRequest) (*pb.VersionResponse, error) {
-	return g.healthData.version, nil
+	return g.State.Version, nil
 }
 
 // HTTPServer implements an HTTP interface for the Health service at
 // /healthz, /readyz and /version
 type HTTPServer struct {
-	*healthData
+	*State
 	mux *http.ServeMux
 }
 
@@ -154,11 +177,11 @@ type HTTPServer struct {
 // If any of the package-level version variables are invalid, an error
 // is returned.
 func NewHTTPServer() (*HTTPServer, error) {
-	healthData, err := newHealthData()
+	state, err := NewState()
 	if err != nil {
 		return nil, err
 	}
-	h := &HTTPServer{healthData: healthData, mux: http.NewServeMux()}
+	h := &HTTPServer{State: state, mux: http.NewServeMux()}
 	h.RegisterWith(h.mux)
 	return h, nil
 }
@@ -192,6 +215,17 @@ func requireGet(next http.HandlerFunc) http.Handler {
 	})
 }
 
+// IsHealthEndpoint returns true if the request is for one of our health
+// check endpoints (/healthz or /readyz). It is intended to be used with
+// the OpenCensus ochttp plugin to not trace health checks.
+//
+// Use it in the ochttp.Handler:
+//
+//     ochttp.Handler{IsHealthEndpoint: health.IsHealthEndpoint, ...}
+func IsHealthEndpoint(r *http.Request) bool {
+	return r.URL.Path == "/healthz" || r.URL.Path == "/readyz"
+}
+
 // ServeHTTP implements http.Handler, handling GET requests for /healthz,
 // /readyz and /version. Other methods on these paths will return
 // 405 Method Not Allowed, and other paths will return 404 Not Found.
@@ -211,7 +245,7 @@ func (h *HTTPServer) HandleAlive(w http.ResponseWriter, r *http.Request) {
 // receive traffic. An application may become ready or not ready any number of
 // times.
 func (h *HTTPServer) HandleReady(w http.ResponseWriter, r *http.Request) {
-	if !h.healthData.ready {
+	if !h.State.Ready {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintf(w, "%d service unavailable\n", http.StatusServiceUnavailable)
 		return
@@ -224,28 +258,8 @@ func (h *HTTPServer) HandleReady(w http.ResponseWriter, r *http.Request) {
 // of the health.pb.VersionResponse struct.
 func (h *HTTPServer) HandleVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	b, _ := json.MarshalIndent(h.healthData.version, "", "  ")
+	b, _ := json.MarshalIndent(h.State.Version, "", "  ")
 	_, _ = w.Write(b)
-}
-
-type healthData struct {
-	ready   bool
-	version *pb.VersionResponse
-}
-
-func newHealthData() (*healthData, error) {
-	v, err := newVersion()
-	if err != nil {
-		return nil, err
-	}
-
-	return &healthData{version: v}, nil
-}
-
-// SetReady sets the ready status served. The value can be changed as
-// many times as is necessary over the lifetime of the application.
-func (d *healthData) SetReady(ready bool) {
-	d.ready = ready
 }
 
 func newVersion() (*pb.VersionResponse, error) {

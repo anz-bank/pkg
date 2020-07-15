@@ -24,11 +24,11 @@ func TestNewServer(t *testing.T) {
 
 func TestSetReady(t *testing.T) {
 	s, _ := NewServer()
-	require.False(t, s.healthData.ready)
+	require.False(t, s.State.Ready)
 	s.SetReady(true)
-	require.True(t, s.healthData.ready)
+	require.True(t, s.State.Ready)
 	s.SetReady(false)
-	require.False(t, s.healthData.ready)
+	require.False(t, s.State.Ready)
 }
 
 func TestAlive(t *testing.T) {
@@ -218,7 +218,7 @@ func TestHTTPVersion(t *testing.T) {
 	w := httptest.NewRecorder()
 	s, err := NewHTTPServer()
 	require.NoError(t, err)
-	s.healthData.version = versionFixture()
+	s.State.Version = versionFixture()
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
@@ -234,7 +234,7 @@ func TestHTTPNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	s, err := NewHTTPServer()
 	require.NoError(t, err)
-	s.healthData.version = versionFixture()
+	s.State.Version = versionFixture()
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
@@ -249,7 +249,7 @@ func TestHTTPMethodNotAllowed(t *testing.T) {
 	w := httptest.NewRecorder()
 	s, err := NewHTTPServer()
 	require.NoError(t, err)
-	s.healthData.version = versionFixture()
+	s.State.Version = versionFixture()
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
@@ -267,4 +267,15 @@ func TestGRPCRegisterWith(t *testing.T) {
 	info := grpcServer.GetServiceInfo()
 	_, ok := info["anz.health.v1.Health"]
 	require.True(t, ok)
+}
+
+func TestIsHealthEndpoint(t *testing.T) {
+	req := httptest.NewRequest("GET", "/readyz", nil)
+	require.True(t, IsHealthEndpoint(req))
+
+	req = httptest.NewRequest("GET", "/healthz", nil)
+	require.True(t, IsHealthEndpoint(req))
+
+	req = httptest.NewRequest("GET", "/version", nil)
+	require.False(t, IsHealthEndpoint(req))
 }
