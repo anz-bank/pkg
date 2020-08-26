@@ -266,7 +266,7 @@ func newVersion() (*pb.VersionResponse, error) {
 	var scannerURLs map[string]string
 	if ScannerURLs != "" {
 		if err := json.Unmarshal([]byte(ScannerURLs), &scannerURLs); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid ScannerURLs JSON: %w", err)
 		}
 	}
 	version := &pb.VersionResponse{
@@ -292,17 +292,17 @@ var semverRe = regexp.MustCompile(`^` +
 func validateVersion(v *pb.VersionResponse) error {
 	for s, u := range v.ScannerUrls {
 		if _, err := url.ParseRequestURI(u); err != nil {
-			return fmt.Errorf("%s: %w", s, err)
+			return fmt.Errorf("invalid Scanner URL '%s': %w", s, err)
 		}
 	}
 	if v.RepoUrl != Undefined {
 		if _, err := url.ParseRequestURI(v.RepoUrl); err != nil {
-			return err
+			return fmt.Errorf("invalid RepoURL '%s': %w", v.RepoUrl, err)
 		}
 	}
 	if v.BuildLogUrl != Undefined {
 		if _, err := url.ParseRequestURI(v.BuildLogUrl); err != nil {
-			return err
+			return fmt.Errorf("invalid BuildLogURL '%s': %w", v.BuildLogUrl, err)
 		}
 	}
 	if v.Semver != Undefined {
