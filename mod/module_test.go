@@ -14,6 +14,27 @@ const (
 	RemoteRepo     = "github.com/anz-bank/sysl-examples"
 )
 
+func TestConfigGitHubMode(t *testing.T) {
+	err := Config(GitHubMode, nil, nil)
+	assert.Error(t, err)
+
+	cacheDir := ".cache"
+	err = Config(GitHubMode, &cacheDir, nil)
+	assert.NoError(t, err)
+}
+
+func TestConfigGoModulesMode(t *testing.T) {
+	fs := afero.NewOsFs()
+	CreateGomodFile(t, fs)
+	defer RemoveGomodFile(t, fs)
+	err := Config(GoModulesMode, nil, nil)
+	assert.NoError(t, err)
+}
+func TestConfigWrongMode(t *testing.T) {
+	err := Config("wrong", nil, nil)
+	assert.Error(t, err)
+}
+
 func TestAdd(t *testing.T) {
 	var testMods Modules
 	testMods.Add(&Module{Name: "modulepath"})
@@ -28,7 +49,7 @@ func TestLen(t *testing.T) {
 	assert.Equal(t, 1, testMods.Len())
 }
 
-func TestFindGoModules(t *testing.T) {
+func TestRetrieveGoModules(t *testing.T) {
 	fs := afero.NewOsFs()
 	CreateGomodFile(t, fs)
 	defer RemoveGomodFile(t, fs)
@@ -49,7 +70,7 @@ func TestFindGoModules(t *testing.T) {
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
 
-func TestFindWithWrongPath(t *testing.T) {
+func TestRetrieveWithWrongPath(t *testing.T) {
 	fs := afero.NewOsFs()
 	CreateGomodFile(t, fs)
 	defer RemoveGomodFile(t, fs)
@@ -60,7 +81,7 @@ func TestFindWithWrongPath(t *testing.T) {
 	assert.Nil(t, mod)
 }
 
-func TestFindGitHubMode(t *testing.T) {
+func TestRetrieveGitHubMode(t *testing.T) {
 	mode = GitHubMode
 	defer func() {
 		mode = GoModulesMode
@@ -82,7 +103,7 @@ func TestFindGitHubMode(t *testing.T) {
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
 
-func TestFindWithWrongPathGitHubMode(t *testing.T) {
+func TestRetrieveWithWrongPathGitHubMode(t *testing.T) {
 	mode = GitHubMode
 	defer func() {
 		mode = GoModulesMode

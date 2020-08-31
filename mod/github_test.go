@@ -6,6 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGitHubMgrInit(t *testing.T) {
+	githubmod := &githubMgr{}
+	dir := ".pkgcache"
+	err := githubmod.Init(&dir, nil)
+	assert.NoError(t, err)
+
+	err = githubmod.Init(nil, nil)
+	assert.Error(t, err)
+}
+
 func TestGitHubMgrGet(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
