@@ -19,7 +19,8 @@ func TestGitHubMgrInit(t *testing.T) {
 func TestGitHubMgrGet(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	githubmod.Init(&dir, nil)
+	err := githubmod.Init(&dir, nil)
+	assert.NoError(t, err)
 	testMods := Modules{}
 
 	mod, err := githubmod.Get(RemoteDepsFile, "", &testMods)

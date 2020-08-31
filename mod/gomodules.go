@@ -24,6 +24,15 @@ type goModule struct {
 
 type goModules struct{}
 
+func (d *goModules) Init(modName string) error {
+	err := runGo(context.Background(), ioutil.Discard, "mod", "init", modName)
+	if err != nil {
+		return errors.New(fmt.Sprintf("go mod init failed: %s", err.Error()))
+	}
+
+	return nil
+}
+
 func (d *goModules) Get(filename, ver string, m *Modules) (mod *Module, err error) {
 	if names := strings.Split(filename, "/"); len(names) > 0 {
 		for i := range names[1:] {

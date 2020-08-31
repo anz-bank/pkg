@@ -7,6 +7,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestModInit(t *testing.T) {
+	fs := afero.NewOsFs()
+	gomod := &goModules{}
+
+	// assumes the test folder (cwd) is not a go module folder
+	removeFile(t, fs, "go.sum")
+	removeFile(t, fs, "go.mod")
+
+	err := gomod.Init("test")
+	assert.NoError(t, err)
+
+	removeFile(t, fs, "go.sum")
+	removeFile(t, fs, "go.mod")
+}
+
+func TestModInitAlreadyExists(t *testing.T) {
+	fs := afero.NewOsFs()
+	gomod := &goModules{}
+
+	// assumes the test folder (cwd) is not a go module folder
+	removeFile(t, fs, "go.sum")
+	removeFile(t, fs, "go.mod")
+
+	err := gomod.Init("test")
+	assert.NoError(t, err)
+
+	err = gomod.Init("test")
+	assert.Error(t, err)
+
+	removeFile(t, fs, "go.sum")
+	removeFile(t, fs, "go.mod")
+}
+
 func TestGoModulesGet(t *testing.T) {
 	gomod := &goModules{}
 	testMods := Modules{}

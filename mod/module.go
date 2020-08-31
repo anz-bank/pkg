@@ -29,7 +29,7 @@ type ModeType string
 
 const (
 	GitHubMode    ModeType = "github"
-	GoModulesMode          = "go modules"
+	GoModulesMode ModeType = "go modules"
 )
 const MasterBranch = "master"
 
