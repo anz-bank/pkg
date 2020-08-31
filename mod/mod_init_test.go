@@ -7,31 +7,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSyslModInit(t *testing.T) {
+func TestModInit(t *testing.T) {
 	fs := afero.NewOsFs()
 
 	// assumes the test folder (cwd) is not a go module folder
 	removeFile(t, fs, "go.sum")
 	removeFile(t, fs, "go.mod")
 
-	err := SyslModInit("test")
+	err := ModInit("test")
 	assert.NoError(t, err)
 
 	removeFile(t, fs, "go.sum")
 	removeFile(t, fs, "go.mod")
 }
 
-func TestSyslModInitAlreadyExists(t *testing.T) {
+func TestModInitAlreadyExists(t *testing.T) {
 	fs := afero.NewOsFs()
 
 	// assumes the test folder (cwd) is not a go module folder
 	removeFile(t, fs, "go.sum")
 	removeFile(t, fs, "go.mod")
 
-	err := SyslModInit("test")
+	err := ModInit("test")
 	assert.NoError(t, err)
 
-	err = SyslModInit("test")
+	err = ModInit("test")
 	assert.Error(t, err)
 
 	removeFile(t, fs, "go.sum")

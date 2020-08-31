@@ -59,7 +59,7 @@ func CreateGomodFile(t *testing.T, fs afero.Fs) {
 	gomod, err := fs.Create("go.mod")
 	assert.NoError(t, err)
 	defer gomod.Close()
-	_, err = gomod.WriteString("module github.com/anz-bank/sysl/pkg/mod")
+	_, err = gomod.WriteString("module github.com/anz-bank/pkg/mod")
 	assert.NoError(t, err)
 	err = gomod.Sync()
 	assert.NoError(t, err)
