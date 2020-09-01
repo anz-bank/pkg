@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 type Module struct {
@@ -23,7 +21,7 @@ type Modules []*Module
 
 var modules Modules
 var manager DependencyManager = &goModules{}
-var mode ModeType
+var mode ModeType = GoModulesMode
 
 type ModeType string
 
@@ -50,7 +48,7 @@ func (m *Modules) Len() int {
 	return len(*m)
 }
 
-func Config(m ModeType, cacheDir, accessToken *string) error {
+func Config(m ModeType, gomodName, cacheDir, accessToken *string) error {
 	mode = m
 	switch mode {
 	case GitHubMode:
@@ -60,10 +58,17 @@ func Config(m ModeType, cacheDir, accessToken *string) error {
 		}
 		manager = gh
 	case GoModulesMode:
+		gm := &goModules{}
 		if !fileExists("go.mod", false) {
-			return errors.New("no go.mod file, run `go mod init` first")
+			var modName string
+			if gomodName != nil {
+				modName = *gomodName
+			}
+			if err := gm.Init(modName); err != nil {
+				return err
+			}
 		}
-		manager = &goModules{}
+		manager = gm
 	default:
 		return fmt.Errorf("unknown mode type %s", mode)
 	}
