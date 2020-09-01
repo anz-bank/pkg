@@ -83,12 +83,12 @@ func TestGoModulesFind(t *testing.T) {
 	assert.Nil(t, gomod.Find("remote/filename", "v1.0.0", &testMods))
 }
 
-func RemoveGomodFile(t *testing.T, fs afero.Fs) {
+func removeGomodFile(t *testing.T, fs afero.Fs) {
 	removeFile(t, fs, "go.mod")
 	removeFile(t, fs, "go.sum")
 }
 
-func CreateGomodFile(t *testing.T, fs afero.Fs) {
+func createGomodFile(t *testing.T, fs afero.Fs) {
 	gomod, err := fs.Create("go.mod")
 	assert.NoError(t, err)
 	defer gomod.Close()

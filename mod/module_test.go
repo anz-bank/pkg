@@ -1,6 +1,7 @@
 package mod
 
 import (
+	"os"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -15,23 +16,35 @@ const (
 )
 
 func TestConfigGitHubMode(t *testing.T) {
-	err := Config(GitHubMode, nil, nil)
-	assert.Error(t, err)
+	var accessToken *string
+	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if rawToken != "" {
+		accessToken = &rawToken
+	}
 
 	cacheDir := ".cache"
-	err = Config(GitHubMode, &cacheDir, nil)
+	err := Config(GitHubMode, nil, &cacheDir, accessToken)
 	assert.NoError(t, err)
+
+	err = Config(GitHubMode, nil, nil, accessToken)
+	assert.Error(t, err)
 }
 
 func TestConfigGoModulesMode(t *testing.T) {
 	fs := afero.NewOsFs()
-	CreateGomodFile(t, fs)
-	defer RemoveGomodFile(t, fs)
-	err := Config(GoModulesMode, nil, nil)
+	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
+
+	err := Config(GoModulesMode, nil, nil, nil)
+	assert.NoError(t, err)
+
+	gomodName := "mod"
+	err = Config(GoModulesMode, &gomodName, nil, nil)
 	assert.NoError(t, err)
 }
+
 func TestConfigWrongMode(t *testing.T) {
-	err := Config("wrong", nil, nil)
+	err := Config("wrong", nil, nil, nil)
 	assert.Error(t, err)
 }
 
@@ -51,8 +64,8 @@ func TestLen(t *testing.T) {
 
 func TestRetrieveGoModules(t *testing.T) {
 	fs := afero.NewOsFs()
-	CreateGomodFile(t, fs)
-	defer RemoveGomodFile(t, fs)
+	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
@@ -72,8 +85,8 @@ func TestRetrieveGoModules(t *testing.T) {
 
 func TestRetrieveWithWrongPath(t *testing.T) {
 	fs := afero.NewOsFs()
-	CreateGomodFile(t, fs)
-	defer RemoveGomodFile(t, fs)
+	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	wrongpath := "wrong_file_path/deps.sysl"
 	mod, err := Retrieve(wrongpath, "")
