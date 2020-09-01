@@ -1,6 +1,7 @@
 package mod
 
 import (
+	"os"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -15,11 +16,17 @@ const (
 )
 
 func TestConfigGitHubMode(t *testing.T) {
+	var accessToken *string
+	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if rawToken != "" {
+		accessToken = &rawToken
+	}
+
 	cacheDir := ".cache"
-	err := Config(GitHubMode, nil, &cacheDir, nil)
+	err := Config(GitHubMode, nil, &cacheDir, accessToken)
 	assert.NoError(t, err)
 
-	err = Config(GitHubMode, nil, nil, nil)
+	err = Config(GitHubMode, nil, nil, accessToken)
 	assert.Error(t, err)
 }
 
