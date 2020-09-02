@@ -12,14 +12,12 @@ func TestModInit(t *testing.T) {
 	gomod := &goModules{}
 
 	// assumes the test folder (cwd) is not a go module folder
-	removeFile(t, fs, "go.sum")
-	removeFile(t, fs, "go.mod")
+	removeGomodFile(t, fs)
 
 	err := gomod.Init("test")
 	assert.NoError(t, err)
 
-	removeFile(t, fs, "go.sum")
-	removeFile(t, fs, "go.mod")
+	removeGomodFile(t, fs)
 }
 
 func TestModInitAlreadyExists(t *testing.T) {
@@ -27,8 +25,7 @@ func TestModInitAlreadyExists(t *testing.T) {
 	gomod := &goModules{}
 
 	// assumes the test folder (cwd) is not a go module folder
-	removeFile(t, fs, "go.sum")
-	removeFile(t, fs, "go.mod")
+	removeGomodFile(t, fs)
 
 	err := gomod.Init("test")
 	assert.NoError(t, err)
@@ -36,8 +33,7 @@ func TestModInitAlreadyExists(t *testing.T) {
 	err = gomod.Init("test")
 	assert.Error(t, err)
 
-	removeFile(t, fs, "go.sum")
-	removeFile(t, fs, "go.mod")
+	removeGomodFile(t, fs)
 }
 
 func TestGoModulesGet(t *testing.T) {
