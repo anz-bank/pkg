@@ -33,7 +33,6 @@ func TestConfigGitHubMode(t *testing.T) {
 func TestConfigGoModulesMode(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
-	defer removeGomodFile(t, fs)
 
 	gomodName := "mod"
 	err := Config(GoModulesMode, &gomodName, nil, nil)
@@ -62,7 +61,6 @@ func TestLen(t *testing.T) {
 func TestRetrieveGoModules(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
-	defer removeGomodFile(t, fs)
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
@@ -83,7 +81,6 @@ func TestRetrieveGoModules(t *testing.T) {
 func TestRetrieveWithWrongPath(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
-	defer removeGomodFile(t, fs)
 
 	wrongpath := "wrong_file_path/deps.sysl"
 	mod, err := Retrieve(wrongpath, "")

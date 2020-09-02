@@ -101,7 +101,7 @@ func TestGitHubMgrFind(t *testing.T) {
 		return false
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "CacheRef", func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef", func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
 		switch ref {
 		case tagRef:
 			return tagRef, nil
@@ -151,7 +151,7 @@ func TestGetGitHubRepoPath(t *testing.T) {
 	}
 }
 
-func TestCacheRef(t *testing.T) {
+func TestGetCacheRef(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
 	err := githubmod.Init(&dir, nil)
@@ -160,11 +160,11 @@ func TestCacheRef(t *testing.T) {
 		owner: "anz-bank",
 		repo:  "pkg",
 	}
-	ref, err := githubmod.CacheRef(repoPath, "v0.0.7")
+	ref, err := githubmod.GetCacheRef(repoPath, "v0.0.7")
 	assert.NoError(t, err)
 	assert.Equal(t, "v0.0.7", ref)
 
-	ref, err = githubmod.CacheRef(repoPath, MasterBranch)
+	ref, err = githubmod.GetCacheRef(repoPath, MasterBranch)
 	assert.NoError(t, err)
 	assert.Equal(t, "v0.0.0-", ref[:7])
 }

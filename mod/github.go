@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-github/v32/github"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -39,6 +40,14 @@ func (d *githubMgr) Init(cacheDir, accessToken *string) error {
 	return nil
 }
 
+type NotFoundError struct {
+	Message string
+}
+
+func (e *NotFoundError) Error() string {
+	return e.Message
+}
+
 func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	repoPath, err := getGitHubRepoPath(filename)
 	if err != nil {
@@ -54,12 +63,10 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	fileContent, _, _, err := d.client.Repositories.GetContents(ctx, repoPath.owner, repoPath.repo, repoPath.path, refOps)
 	if err != nil {
 		if _, ok := err.(*github.RateLimitError); ok {
-			return nil, errors.Wrap(err,
-				"\033[1;36mplease setup your GitHub access token\033[0m")
+			return nil, err
 		}
 		if err, ok := err.(*github.ErrorResponse); ok && err.Response.StatusCode == http.StatusNotFound {
-			return nil, errors.Wrap(err,
-				"\033[1;36mplease check whether your GitHub access token is set if it is a private repository\033[0m")
+			return nil, &NotFoundError{Message: err.Error()}
 		}
 		return nil, err
 	}
@@ -69,7 +76,7 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 		return nil, err
 	}
 
-	ref, err := d.CacheRef(repoPath, ver)
+	ref, err := d.GetCacheRef(repoPath, ver)
 	if err != nil {
 		return nil, err
 	}
@@ -102,11 +109,13 @@ func (d *githubMgr) Find(filename, ver string, m *Modules) *Module {
 
 	repoPath, err := getGitHubRepoPath(filename)
 	if err != nil {
+		logrus.Debug("get github repository path error:", err)
 		return nil
 	}
 
-	ref, err := d.CacheRef(repoPath, ver)
+	ref, err := d.GetCacheRef(repoPath, ver)
 	if err != nil {
+		logrus.Debug("get github repository ref error:", err)
 		return nil
 	}
 
@@ -210,7 +219,7 @@ func writeFile(filename string, content []byte) error {
 
 const SHA_LENGTH = 12
 
-func (d *githubMgr) CacheRef(repoPath *githubRepoPath, ref string) (string, error) {
+func (d *githubMgr) GetCacheRef(repoPath *githubRepoPath, ref string) (string, error) {
 	ctx := context.Background()
 	_, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "tags/"+ref)
 	if err == nil { // `ver` is a tag
