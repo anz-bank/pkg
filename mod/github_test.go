@@ -18,29 +18,19 @@ func TestGitHubMgrInit(t *testing.T) {
 	err := githubmod.Init(&dir, nil)
 	assert.NoError(t, err)
 
-	var accessToken *string
-	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if rawToken != "" {
-		accessToken = &rawToken
-	}
-	err = githubmod.Init(&dir, accessToken)
+	err = githubmod.Init(&dir, accessTokenForTest())
 	assert.NoError(t, err)
 
 	err = githubmod.Init(nil, nil)
 	assert.Error(t, err)
-	err = githubmod.Init(nil, accessToken)
+	err = githubmod.Init(nil, accessTokenForTest())
 	assert.Error(t, err)
 }
 
 func TestGitHubMgrGet(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	var accessToken *string
-	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if rawToken != "" {
-		accessToken = &rawToken
-	}
-	err := githubmod.Init(&dir, accessToken)
+	err := githubmod.Init(&dir, accessTokenForTest())
 	assert.NoError(t, err)
 	testMods := Modules{}
 
@@ -154,7 +144,7 @@ func TestGetGitHubRepoPath(t *testing.T) {
 func TestGetCacheRef(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(&dir, nil)
+	err := githubmod.Init(&dir, accessTokenForTest())
 	assert.NoError(t, err)
 	repoPath := &githubRepoPath{
 		owner: "anz-bank",
@@ -167,4 +157,13 @@ func TestGetCacheRef(t *testing.T) {
 	ref, err = githubmod.GetCacheRef(repoPath, MasterBranch)
 	assert.NoError(t, err)
 	assert.Equal(t, "v0.0.0-", ref[:7])
+}
+
+func accessTokenForTest() *string {
+	var accessToken *string
+	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if rawToken != "" {
+		accessToken = &rawToken
+	}
+	return accessToken
 }
