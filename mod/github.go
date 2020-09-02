@@ -48,6 +48,8 @@ func (e *NotFoundError) Error() string {
 	return e.Message
 }
 
+type RateLimitError = github.RateLimitError
+
 func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	repoPath, err := getGitHubRepoPath(filename)
 	if err != nil {
@@ -62,8 +64,9 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 
 	fileContent, _, _, err := d.client.Repositories.GetContents(ctx, repoPath.owner, repoPath.repo, repoPath.path, refOps)
 	if err != nil {
-		if _, ok := err.(*github.RateLimitError); ok {
-			return nil, err
+		if err, ok := err.(*github.RateLimitError); ok {
+			e := RateLimitError(*err)
+			return nil, &e
 		}
 		if err, ok := err.(*github.ErrorResponse); ok && err.Response.StatusCode == http.StatusNotFound {
 			return nil, &NotFoundError{Message: err.Error()}
