@@ -3,11 +3,11 @@ module github.com/anz-bank/pkg
 go 1.13
 
 require (
+	bou.ke/monkey v1.0.2
 	contrib.go.opencensus.io/exporter/prometheus v0.2.0
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
-	github.com/anz-bank/sysl-examples v0.0.1 // indirect
 	github.com/arr-ai/frozen v0.11.1
 	github.com/golang/protobuf v1.4.0
 	github.com/google/go-github/v32 v32.1.0

@@ -59,7 +59,7 @@ func Config(m ModeType, gomodName, cacheDir, accessToken *string) error {
 		manager = gh
 	case GoModulesMode:
 		gm := &goModules{}
-		if !fileExists("go.mod", false) {
+		if !FileExists("go.mod", false) {
 			var modName string
 			if gomodName != nil {
 				modName = *gomodName
@@ -103,7 +103,7 @@ func hasPathPrefix(prefix, s string) bool {
 	return s == prefix
 }
 
-func fileExists(filename string, isDir bool) bool {
+func FileExists(filename string, isDir bool) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false

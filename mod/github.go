@@ -45,10 +45,11 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	var refOps *github.RepositoryContentGetOptions
-	if ver != "" {
-		refOps = &github.RepositoryContentGetOptions{Ref: ver}
+
+	if ver == "" {
+		ver = MasterBranch
 	}
+	refOps := &github.RepositoryContentGetOptions{Ref: ver}
 
 	fileContent, _, _, err := d.client.Repositories.GetContents(ctx, repoPath.owner, repoPath.repo, repoPath.path, refOps)
 	if err != nil {
@@ -67,25 +68,23 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	if err != nil {
 		return nil, err
 	}
-	if ver == "" || ver == MasterBranch {
-		ref, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "heads/"+MasterBranch)
-		if err != nil {
-			return nil, err
-		}
-		ver = "v0.0.0-" + ref.GetObject().GetSHA()[:12]
+
+	ref, err := d.CacheRef(repoPath, ver)
+	if err != nil {
+		return nil, err
 	}
 
 	name := strings.Join([]string{"github.com", repoPath.owner, repoPath.repo}, "/")
 	dir := filepath.Join(d.cacheDir, "github.com", repoPath.owner, repoPath.repo)
-	dir = AppendVersion(dir, ver)
+	dir = AppendVersion(dir, ref)
 	new := &Module{
 		Name:    name,
 		Dir:     dir,
-		Version: ver,
+		Version: ref,
 	}
 
 	fname := filepath.Join(dir, repoPath.path)
-	if !fileExists(fname, false) {
+	if !FileExists(fname, false) {
 		err = writeFile(fname, []byte(content))
 		if err != nil {
 			return nil, err
@@ -96,16 +95,26 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	return new, nil
 }
 
-func (*githubMgr) Find(filename, ver string, m *Modules) *Module {
-	if ver == "" || ver == MasterBranch {
+func (d *githubMgr) Find(filename, ver string, m *Modules) *Module {
+	if ver == "" {
+		ver = MasterBranch
+	}
+
+	repoPath, err := getGitHubRepoPath(filename)
+	if err != nil {
+		return nil
+	}
+
+	ref, err := d.CacheRef(repoPath, ver)
+	if err != nil {
 		return nil
 	}
 
 	for _, mod := range *m {
 		if hasPathPrefix(mod.Name, filename) {
-			if mod.Version == ver {
+			if mod.Version == ref {
 				relpath, err := filepath.Rel(mod.Name, filename)
-				if err == nil && fileExists(filepath.Join(mod.Dir, relpath), false) {
+				if err == nil && FileExists(filepath.Join(d.cacheDir, mod.Dir, relpath), false) {
 					return mod
 				}
 			}
@@ -117,7 +126,7 @@ func (*githubMgr) Find(filename, ver string, m *Modules) *Module {
 
 func (d *githubMgr) Load(m *Modules) error {
 	githubPath := filepath.Join(d.cacheDir, "github.com")
-	if !fileExists(githubPath, true) {
+	if !FileExists(githubPath, true) {
 		if err := os.MkdirAll(githubPath, 0770); err != nil {
 			return err
 		}
@@ -197,4 +206,20 @@ func writeFile(filename string, content []byte) error {
 		return err
 	}
 	return nil
+}
+
+const SHA_LENGTH = 12
+
+func (d *githubMgr) CacheRef(repoPath *githubRepoPath, ref string) (string, error) {
+	ctx := context.Background()
+	_, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "tags/"+ref)
+	if err == nil { // `ver` is a tag
+		return ref, nil
+	}
+
+	branch, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "heads/"+ref)
+	if err == nil { // `ver` is a branch
+		return "v0.0.0-" + branch.GetObject().GetSHA()[:SHA_LENGTH], nil
+	}
+	return "", err
 }
