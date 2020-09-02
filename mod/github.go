@@ -3,6 +3,7 @@ package mod
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,6 +55,10 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 		if _, ok := err.(*github.RateLimitError); ok {
 			return nil, errors.Wrap(err,
 				"\033[1;36mplease setup your GitHub access token\033[0m")
+		}
+		if err, ok := err.(*github.ErrorResponse); ok && err.Response.StatusCode == http.StatusNotFound {
+			return nil, errors.Wrap(err,
+				"\033[1;36mplease check whether your GitHub access token is set if it is a private repository\033[0m")
 		}
 		return nil, err
 	}
