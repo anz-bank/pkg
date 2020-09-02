@@ -99,7 +99,10 @@ func (*githubMgr) Find(filename, ver string, m *Modules) *Module {
 	for _, mod := range *m {
 		if hasPathPrefix(mod.Name, filename) {
 			if mod.Version == ver {
-				return mod
+				relpath, err := filepath.Rel(mod.Name, filename)
+				if err == nil && fileExists(filepath.Join(mod.Dir, relpath), false) {
+					return mod
+				}
 			}
 		}
 	}
