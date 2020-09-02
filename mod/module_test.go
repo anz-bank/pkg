@@ -35,11 +35,8 @@ func TestConfigGoModulesMode(t *testing.T) {
 	createGomodFile(t, fs)
 	defer removeGomodFile(t, fs)
 
-	err := Config(GoModulesMode, nil, nil, nil)
-	assert.NoError(t, err)
-
 	gomodName := "mod"
-	err = Config(GoModulesMode, &gomodName, nil, nil)
+	err := Config(GoModulesMode, &gomodName, nil, nil)
 	assert.NoError(t, err)
 }
 
