@@ -24,11 +24,11 @@ func TestNewServer(t *testing.T) {
 
 func TestSetReady(t *testing.T) {
 	s, _ := NewServer()
-	require.False(t, s.State.Ready)
+	require.False(t, s.State.IsReady())
 	s.SetReady(true)
-	require.True(t, s.State.Ready)
+	require.True(t, s.State.IsReady())
 	s.SetReady(false)
-	require.False(t, s.State.Ready)
+	require.False(t, s.State.IsReady())
 }
 
 func TestAlive(t *testing.T) {

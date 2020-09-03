@@ -15,40 +15,40 @@ func TestDefaultHTTPSetReady(t *testing.T) {
 	resetDefaults()
 	defer resetDefaults()
 
-	require.False(t, defaultState.Ready)
+	require.False(t, defaultState.IsReady())
 	require.Nil(t, DefaultServer)
 
 	SetReady(true)
-	require.True(t, defaultState.Ready)
+	require.True(t, defaultState.IsReady())
 	require.Nil(t, DefaultServer)
 
 	mux := http.NewServeMux()
 
 	err := RegisterWithHTTP(mux)
 	require.NoError(t, err)
-	require.True(t, defaultState.Ready)
+	require.True(t, defaultState.IsReady())
 	require.NotNil(t, DefaultServer)
-	require.True(t, DefaultServer.State.Ready)
+	require.True(t, DefaultServer.State.IsReady())
 }
 
 func TestDefaultGRPCSetReady(t *testing.T) {
 	resetDefaults()
 	defer resetDefaults()
 
-	require.False(t, defaultState.Ready)
+	require.False(t, defaultState.IsReady())
 	require.Nil(t, DefaultServer)
 
 	SetReady(true)
-	require.True(t, defaultState.Ready)
+	require.True(t, defaultState.IsReady())
 	require.Nil(t, DefaultServer)
 
 	grpcServer := grpc.NewServer()
 
 	err := RegisterWithGRPC(grpcServer)
 	require.NoError(t, err)
-	require.True(t, defaultState.Ready)
+	require.True(t, defaultState.IsReady())
 	require.NotNil(t, DefaultServer)
-	require.True(t, DefaultServer.State.Ready)
+	require.True(t, DefaultServer.State.IsReady())
 }
 
 func TestDefaultHTTPSetReadyErr(t *testing.T) {
@@ -77,7 +77,7 @@ func TestDefaultGRPCSetReadyErr(t *testing.T) {
 
 func resetDefaults() {
 	DefaultServer = nil
-	defaultState = State{}
+	defaultState = State{ReadyProvider: new(readiness)}
 	serverInit = sync.Once{}
 
 	resetGlobals()

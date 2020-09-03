@@ -11,7 +11,7 @@ var (
 	// operate. Most servers need only a single health server so this provides
 	// a convenient definition of it that is available everywhere.
 	DefaultServer *Server
-	defaultState  State
+	defaultState  = State{ReadyProvider: new(readiness)}
 
 	serverInit sync.Once
 )

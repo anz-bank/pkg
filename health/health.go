@@ -64,10 +64,39 @@ var (
 	ErrInvalidSemver = fmt.Errorf("invalid semver")
 )
 
+// The ReadyProvider interface allows for the ready state to be provided
+// from the outside in a pull fashion. Typically there is not need to
+// make use of this interface and just update the Ready state with
+//
+//    State.SetReady(true|false)
+//
+// However, if required, ReadyProvider can be specified as
+//
+//    State.ReadyProvider = localReadyProvider
+//
+// this turns State.SetReady into a no-op unless localReadyProvider is
+// also a ReadySetter.
+type ReadyProvider interface {
+	IsReady() bool
+}
+
+// The ReadySetter interface is used in State.SetReady: If the
+// State.ReadyProvider can be type asserted to be a ReadySetter it will
+// be set. The default case wraps a boolean variable for setting and
+// accessing.
+type ReadySetter interface {
+	SetReady(bool)
+}
+
+type readiness bool
+
+func (r *readiness) IsReady() bool   { return bool(*r) }
+func (r *readiness) SetReady(b bool) { *r = readiness(b) }
+
 // State holds the state published by the health servers. Typically a
 // single instance is shared amongst all servers.
 type State struct {
-	Ready   bool
+	ReadyProvider
 	Version *pb.VersionResponse
 }
 
@@ -79,14 +108,15 @@ func NewState() (*State, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &State{Version: v}, nil
+	return &State{Version: v, ReadyProvider: new(readiness)}, nil
 }
 
 // SetReady sets the ready status served. The value can be changed as
 // many times as is necessary over the lifetime of the application.
-func (d *State) SetReady(ready bool) {
-	d.Ready = ready
+func (s *State) SetReady(ready bool) {
+	if r, ok := s.ReadyProvider.(ReadySetter); ok {
+		r.SetReady(ready)
+	}
 }
 
 // Server is a server that can serve health data via gRPC and HTTP.
@@ -146,7 +176,7 @@ func (g *GRPCServer) Alive(_ context.Context, _ *pb.AliveRequest) (*pb.AliveResp
 // value indicating whether the application is ready to receive traffic. An
 // application may become ready or not ready any number of times.
 func (g *GRPCServer) Ready(_ context.Context, _ *pb.ReadyRequest) (*pb.ReadyResponse, error) {
-	return &pb.ReadyResponse{Ready: g.State.Ready}, nil
+	return &pb.ReadyResponse{Ready: g.State.IsReady()}, nil
 }
 
 // Version implements the anz.health.v1.Health.Version method, returning
@@ -245,7 +275,7 @@ func (h *HTTPServer) HandleAlive(w http.ResponseWriter, r *http.Request) {
 // receive traffic. An application may become ready or not ready any number of
 // times.
 func (h *HTTPServer) HandleReady(w http.ResponseWriter, r *http.Request) {
-	if !h.State.Ready {
+	if !h.State.IsReady() {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintf(w, "%d service unavailable\n", http.StatusServiceUnavailable)
 		return
