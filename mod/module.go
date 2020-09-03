@@ -48,25 +48,19 @@ func (m *Modules) Len() int {
 	return len(*m)
 }
 
-func Config(m ModeType, gomodName, cacheDir, accessToken *string) error {
+func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) error {
 	mode = m
 	switch mode {
 	case GitHubMode:
 		gh := &githubMgr{}
-		if err := gh.Init(cacheDir, accessToken); err != nil {
+		if err := gh.Init(githubOpt); err != nil {
 			return err
 		}
 		manager = gh
 	case GoModulesMode:
 		gm := &goModules{}
-		if !FileExists("go.mod", false) {
-			var modName string
-			if gomodName != nil {
-				modName = *gomodName
-			}
-			if err := gm.Init(modName); err != nil {
-				return err
-			}
+		if err := gm.Init(goModopt); err != nil {
+			return err
 		}
 		manager = gm
 	default:

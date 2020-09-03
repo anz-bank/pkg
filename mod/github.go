@@ -20,23 +20,28 @@ type githubMgr struct {
 	cacheDir string
 }
 
-func (d *githubMgr) Init(cacheDir, accessToken *string) error {
-	if accessToken == nil {
+type GitHubOptions struct {
+	CacheDir    string
+	AccessToken string
+}
+
+func (d *githubMgr) Init(opt GitHubOptions) error {
+	if opt.AccessToken == "" {
 		d.client = github.NewClient(nil)
 	} else {
 		// Authenticated clients can make up to 5,000 requests per hour.
 		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: *accessToken},
+			&oauth2.Token{AccessToken: opt.AccessToken},
 		)
 		tc := oauth2.NewClient(context.Background(), ts)
 
 		d.client = github.NewClient(tc)
 	}
 
-	if cacheDir == nil {
+	if opt.CacheDir == "" {
 		return errors.New("cache directory cannot be empty")
 	}
-	d.cacheDir = *cacheDir
+	d.cacheDir = opt.CacheDir
 	return nil
 }
 
