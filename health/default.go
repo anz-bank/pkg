@@ -55,6 +55,11 @@ func SetReady(ready bool) {
 	defaultState.SetReady(ready)
 }
 
+// SetReadyProvider sets the ReadyProvider for the DefaultServer.
+func SetReadyProvider(r ReadyProvider) {
+	defaultState.SetReadyProvider(r)
+}
+
 func newDefaultServer() error {
 	v, err := newVersion()
 	if err != nil {
