@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -24,10 +25,17 @@ type goModule struct {
 
 type goModules struct{}
 
-func (d *goModules) Init(modName string) error {
-	err := runGo(context.Background(), ioutil.Discard, "mod", "init", modName)
-	if err != nil {
-		return errors.New(fmt.Sprintf("go mod init failed: %s", err.Error()))
+type GoModulesOptions struct {
+	Root    string
+	ModName string
+}
+
+func (d *goModules) Init(opt GoModulesOptions) error {
+	if !FileExists(filepath.Join(opt.Root, "go.mod"), false) {
+		err := runGo(context.Background(), ioutil.Discard, "mod", "init", opt.ModName)
+		if err != nil {
+			return errors.New(fmt.Sprintf("go mod init failed: %s", err.Error()))
+		}
 	}
 
 	return nil

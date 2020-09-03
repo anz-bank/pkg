@@ -15,22 +15,23 @@ import (
 func TestGitHubMgrInit(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(&dir, nil)
+
+	err := githubmod.Init(GitHubOptions{CacheDir: dir})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(&dir, accessTokenForTest())
+	err = githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(nil, nil)
+	err = githubmod.Init(GitHubOptions{})
 	assert.Error(t, err)
-	err = githubmod.Init(nil, accessTokenForTest())
+	err = githubmod.Init(GitHubOptions{AccessToken: accessTokenForTest()})
 	assert.Error(t, err)
 }
 
 func TestGitHubMgrGet(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(&dir, accessTokenForTest())
+	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
 	assert.NoError(t, err)
 	testMods := Modules{}
 
@@ -55,10 +56,8 @@ func TestGitHubMgrGet(t *testing.T) {
 func TestGitHubMgrFind(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
-	filea := "filea"
-	fileb := "fileb"
-	tagRef := "v0.2.0"
-	masterRef := "v0.0.0-41f04d3bba15"
+	filea, fileb := "filea", "fileb"
+	tagRef, masterRef := "v0.2.0", "v0.0.0-41f04d3bba15"
 	tagRepoDir := "github.com/foo/bar@v0.2.0"
 	masterRepoDir := "github.com/foo/bar@v0.0.0-41f04d3bba15"
 
@@ -91,15 +90,16 @@ func TestGitHubMgrFind(t *testing.T) {
 		return false
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef", func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
-		switch ref {
-		case tagRef:
-			return tagRef, nil
-		case MasterBranch:
-			return masterRef, nil
-		}
-		return "", fmt.Errorf("ref not found")
-	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef",
+		func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
+			switch ref {
+			case tagRef:
+				return tagRef, nil
+			case MasterBranch:
+				return masterRef, nil
+			}
+			return "", fmt.Errorf("ref not found")
+		})
 	defer monkey.UnpatchAll()
 
 	assert.Equal(t, tagMod, githubmod.Find(path.Join(repo, filea), tagRef, &testMods))
@@ -144,7 +144,7 @@ func TestGetGitHubRepoPath(t *testing.T) {
 func TestGetCacheRef(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(&dir, accessTokenForTest())
+	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
 	assert.NoError(t, err)
 	repoPath := &githubRepoPath{
 		owner: "anz-bank",
@@ -159,11 +159,6 @@ func TestGetCacheRef(t *testing.T) {
 	assert.Equal(t, "v0.0.0-", ref[:7])
 }
 
-func accessTokenForTest() *string {
-	var accessToken *string
-	rawToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if rawToken != "" {
-		accessToken = &rawToken
-	}
-	return accessToken
+func accessTokenForTest() string {
+	return os.Getenv("GITHUB_ACCESS_TOKEN")
 }
