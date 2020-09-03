@@ -56,10 +56,8 @@ func TestGitHubMgrGet(t *testing.T) {
 func TestGitHubMgrFind(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
-	filea := "filea"
-	fileb := "fileb"
-	tagRef := "v0.2.0"
-	masterRef := "v0.0.0-41f04d3bba15"
+	filea, fileb := "filea", "fileb"
+	tagRef, masterRef := "v0.2.0", "v0.0.0-41f04d3bba15"
 	tagRepoDir := "github.com/foo/bar@v0.2.0"
 	masterRepoDir := "github.com/foo/bar@v0.0.0-41f04d3bba15"
 
@@ -92,15 +90,16 @@ func TestGitHubMgrFind(t *testing.T) {
 		return false
 	})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef", func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
-		switch ref {
-		case tagRef:
-			return tagRef, nil
-		case MasterBranch:
-			return masterRef, nil
-		}
-		return "", fmt.Errorf("ref not found")
-	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef",
+		func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
+			switch ref {
+			case tagRef:
+				return tagRef, nil
+			case MasterBranch:
+				return masterRef, nil
+			}
+			return "", fmt.Errorf("ref not found")
+		})
 	defer monkey.UnpatchAll()
 
 	assert.Equal(t, tagMod, githubmod.Find(path.Join(repo, filea), tagRef, &testMods))

@@ -16,10 +16,12 @@ const (
 
 func TestConfigGitHubMode(t *testing.T) {
 	dir := ".pkgcache"
-	err := Config(GitHubMode, GoModulesOptions{}, GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+	err := Config(GitHubMode, GoModulesOptions{},
+		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
 	assert.NoError(t, err)
 
-	err = Config(GitHubMode, GoModulesOptions{}, GitHubOptions{AccessToken: accessTokenForTest()})
+	err = Config(GitHubMode, GoModulesOptions{},
+		GitHubOptions{AccessToken: accessTokenForTest()})
 	assert.Error(t, err)
 }
 
@@ -27,12 +29,18 @@ func TestConfigGoModulesMode(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
 
-	err := Config(GitHubMode, GoModulesOptions{ModName: "mod"}, GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()})
+	err := Config(GitHubMode,
+		GoModulesOptions{ModName: "mod"},
+		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()},
+	)
 	assert.NoError(t, err)
 }
 
 func TestConfigWrongMode(t *testing.T) {
-	err := Config("wrong", GoModulesOptions{ModName: "mod"}, GitHubOptions{AccessToken: accessTokenForTest()})
+	err := Config("wrong",
+		GoModulesOptions{ModName: "mod"},
+		GitHubOptions{AccessToken: accessTokenForTest()},
+	)
 	assert.Error(t, err)
 }
 
