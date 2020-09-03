@@ -75,6 +75,19 @@ func TestDefaultGRPCSetReadyErr(t *testing.T) {
 	require.True(t, errors.As(err, &target))
 }
 
+func TestSetReadyProvider(t *testing.T) {
+	resetDefaults()
+	defer resetDefaults()
+
+	r := readiness(true)
+	SetReadyProvider(&r)
+	require.Nil(t, DefaultServer)
+	mux := http.NewServeMux()
+	err := RegisterWithHTTP(mux)
+	require.NoError(t, err)
+	require.True(t, DefaultServer.State.IsReady())
+}
+
 func resetDefaults() {
 	DefaultServer = nil
 	defaultState = State{ReadyProvider: new(readiness)}

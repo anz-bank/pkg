@@ -119,6 +119,12 @@ func (s *State) SetReady(ready bool) {
 	}
 }
 
+// SetReadyProvider sets the embedded ReadyProvider for state such that
+// the ready value returned by state.IsReady() is ready from it.
+func (s *State) SetReadyProvider(r ReadyProvider) {
+	s.ReadyProvider = r
+}
+
 // Server is a server that can serve health data via gRPC and HTTP.
 type Server struct {
 	*State
