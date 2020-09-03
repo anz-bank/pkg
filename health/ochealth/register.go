@@ -123,7 +123,7 @@ func addReadyMetric(r *metric.Registry, ro *registerOptions, s *health.State) er
 		return err
 	}
 	return g.UpsertEntry(func() int64 {
-		if s.Ready {
+		if s.IsReady() {
 			return 1
 		}
 		return 0
