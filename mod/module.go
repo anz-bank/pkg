@@ -87,7 +87,7 @@ func Retrieve(name string, ver string) (*Module, error) {
 		}
 	}
 
-	if ver != MasterBranch || (mode == GitHubMode && ver != "") {
+	if ver != MasterBranch || (mode.modeType == GitHubMode && ver != "") {
 		mod := manager.Find(name, ver, &modules)
 		if mod != nil {
 			return mod, nil

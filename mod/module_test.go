@@ -95,9 +95,9 @@ func TestRetrieveWithWrongPath(t *testing.T) {
 }
 
 func TestRetrieveGitHubMode(t *testing.T) {
-	mode = GitHubMode
+	mode.modeType = GitHubMode
 	defer func() {
-		mode = GoModulesMode
+		mode.modeType = GoModulesMode
 	}()
 
 	filename := SyslDepsFile
@@ -117,9 +117,9 @@ func TestRetrieveGitHubMode(t *testing.T) {
 }
 
 func TestRetrieveWithWrongPathGitHubMode(t *testing.T) {
-	mode = GitHubMode
+	mode.modeType = GitHubMode
 	defer func() {
-		mode = GoModulesMode
+		mode.modeType = GoModulesMode
 	}()
 
 	wrongpath := "wrong_file_path/deps.sysl"
