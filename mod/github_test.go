@@ -33,7 +33,8 @@ func TestGitHubMgrInit(t *testing.T) {
 func TestGitHubMgrGet(t *testing.T) {
 	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+	fs := afero.NewMemMapFs()
+	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(), Fs: fs})
 	assert.NoError(t, err)
 	testMods := Modules{}
 

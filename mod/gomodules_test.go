@@ -79,8 +79,8 @@ func TestGoModulesFind(t *testing.T) {
 }
 
 func removeGomodFile(t *testing.T, fs afero.Fs) {
-	removeFile(t, fs, "go.mod")
-	removeFile(t, fs, "go.sum")
+	removeFile(t, fs, "go.mod", false)
+	removeFile(t, fs, "go.sum", false)
 }
 
 func createGomodFile(t *testing.T, fs afero.Fs) {
@@ -91,13 +91,4 @@ func createGomodFile(t *testing.T, fs afero.Fs) {
 	assert.NoError(t, err)
 	err = gomod.Sync()
 	assert.NoError(t, err)
-}
-
-func removeFile(t *testing.T, fs afero.Fs, file string) {
-	exists, err := afero.Exists(fs, file)
-	assert.NoError(t, err)
-	if exists {
-		err = fs.Remove(file)
-		assert.NoError(t, err)
-	}
 }

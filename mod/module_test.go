@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -26,8 +27,9 @@ func TestConfigGitHubMode(t *testing.T) {
 }
 
 func TestConfigGoModulesMode(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	err := Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
@@ -65,28 +67,30 @@ func TestLen(t *testing.T) {
 }
 
 func TestRetrieveGoModules(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, SyslRepo, mod.Name)
 
 	filename = RemoteDepsFile
 	mod, err = Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 
 	mod, err = Retrieve(filename, "v0.0.1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
 
 func TestRetrieveWithWrongPath(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	wrongpath := "wrong_file_path/deps.sysl"
 	mod, err := Retrieve(wrongpath, "")
@@ -102,16 +106,16 @@ func TestRetrieveGitHubMode(t *testing.T) {
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, SyslRepo, mod.Name)
 
 	filename = RemoteDepsFile
 	mod, err = Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 
 	mod, err = Retrieve(filename, "v0.0.1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
@@ -146,4 +150,23 @@ func TestHasPathPrefix(t *testing.T) {
 	}
 
 	assert.False(t, hasPathPrefix("github.com/anz-bank/sysl2", "github.com/anz-bank/sysl/deps.sysl"))
+}
+
+func removeFile(t *testing.T, fs afero.Fs, file string, isDir bool) {
+	if isDir {
+		exists, err := afero.DirExists(fs, file)
+		require.NoError(t, err)
+		if exists {
+			err = fs.RemoveAll(file)
+			require.NoError(t, err)
+		}
+		return
+	}
+
+	exists, err := afero.Exists(fs, file)
+	require.NoError(t, err)
+	if exists {
+		err = fs.Remove(file)
+		require.NoError(t, err)
+	}
 }
