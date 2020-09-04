@@ -24,7 +24,12 @@ type Modules []*Module
 
 var modules Modules
 var manager DependencyManager = &goModules{}
-var mode ModeType = GoModulesMode
+var mode Mode = Mode{modeType: GoModulesMode, mutex: &sync.RWMutex{}}
+
+type Mode struct {
+	modeType ModeType
+	mutex    *sync.RWMutex
+}
 
 type ModeType string
 
@@ -51,14 +56,12 @@ func (m *Modules) Len() int {
 	return len(*m)
 }
 
-var configMutex = &sync.RWMutex{}
-
 func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) error {
-	configMutex.Lock()
-	defer configMutex.Unlock()
+	mode.mutex.Lock()
+	defer mode.mutex.Unlock()
 
-	mode = m
-	switch mode {
+	mode.modeType = m
+	switch m {
 	case GitHubMode:
 		gh := &githubMgr{}
 		if err := gh.Init(githubOpt); err != nil {
@@ -72,7 +75,7 @@ func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) erro
 		}
 		manager = gm
 	default:
-		return fmt.Errorf("unknown mode type %s", mode)
+		return fmt.Errorf("unknown mode type %s", m)
 	}
 	return nil
 }
