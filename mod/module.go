@@ -24,11 +24,11 @@ type Modules []*Module
 
 var modules Modules
 var manager DependencyManager = &goModules{}
-var mode Mode = Mode{modeType: GoModulesMode, mutex: &sync.RWMutex{}}
+var mode Mode = Mode{sync.RWMutex{}, GoModulesMode}
 
 type Mode struct {
+	sync.RWMutex
 	modeType ModeType
-	mutex    *sync.RWMutex
 }
 
 type ModeType string
@@ -57,8 +57,8 @@ func (m *Modules) Len() int {
 }
 
 func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) error {
-	mode.mutex.Lock()
-	defer mode.mutex.Unlock()
+	mode.Lock()
+	defer mode.Unlock()
 
 	mode.modeType = m
 	switch m {
