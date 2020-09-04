@@ -29,7 +29,13 @@ func TestConfigGoModulesMode(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
 
-	err := Config(GitHubMode,
+	err := Config(GoModulesMode,
+		GoModulesOptions{ModName: "mod"},
+		GitHubOptions{},
+	)
+	assert.NoError(t, err)
+
+	err = Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
 		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()},
 	)

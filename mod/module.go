@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/spf13/afero"
 )
 
 type Module struct {
@@ -103,8 +105,8 @@ func hasPathPrefix(prefix, s string) bool {
 	return s == prefix
 }
 
-func FileExists(filename string, isDir bool) bool {
-	info, err := os.Stat(filename)
+func FileExists(fs afero.Fs, filename string, isDir bool) bool {
+	info, err := fs.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}

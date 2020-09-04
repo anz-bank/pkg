@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -12,17 +11,20 @@ import (
 	"github.com/google/go-github/v32/github"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"golang.org/x/oauth2"
 )
 
 type githubMgr struct {
 	client   *github.Client
 	cacheDir string
+	fs       afero.Fs
 }
 
 type GitHubOptions struct {
 	CacheDir    string
 	AccessToken string
+	Fs          afero.Fs
 }
 
 func (d *githubMgr) Init(opt GitHubOptions) error {
@@ -42,6 +44,12 @@ func (d *githubMgr) Init(opt GitHubOptions) error {
 		return errors.New("cache directory cannot be empty")
 	}
 	d.cacheDir = opt.CacheDir
+
+	if opt.Fs != nil {
+		d.fs = opt.Fs
+	} else {
+		d.fs = afero.NewOsFs()
+	}
 	return nil
 }
 
@@ -98,8 +106,8 @@ func (d *githubMgr) Get(filename, ver string, m *Modules) (*Module, error) {
 	}
 
 	fname := filepath.Join(dir, repoPath.path)
-	if !FileExists(fname, false) {
-		err = writeFile(fname, []byte(content))
+	if !FileExists(d.fs, fname, false) {
+		err = writeFile(d.fs, fname, []byte(content))
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +138,7 @@ func (d *githubMgr) Find(filename, ver string, m *Modules) *Module {
 		if hasPathPrefix(mod.Name, filename) {
 			if mod.Version == ref {
 				relpath, err := filepath.Rel(mod.Name, filename)
-				if err == nil && FileExists(filepath.Join(d.cacheDir, mod.Dir, relpath), false) {
+				if err == nil && FileExists(d.fs, filepath.Join(d.cacheDir, mod.Dir, relpath), false) {
 					return mod
 				}
 			}
@@ -142,13 +150,14 @@ func (d *githubMgr) Find(filename, ver string, m *Modules) *Module {
 
 func (d *githubMgr) Load(m *Modules) error {
 	githubPath := filepath.Join(d.cacheDir, "github.com")
-	if !FileExists(githubPath, true) {
-		if err := os.MkdirAll(githubPath, 0770); err != nil {
+	if !FileExists(d.fs, githubPath, true) {
+		if err := d.fs.MkdirAll(githubPath, 0770); err != nil {
 			return err
 		}
+		return nil
 	}
 
-	githubDir, err := os.Open(githubPath)
+	githubDir, err := d.fs.Open(githubPath)
 	if err != nil {
 		return err
 	}
@@ -159,7 +168,7 @@ func (d *githubMgr) Load(m *Modules) error {
 	}
 
 	for _, owner := range owners {
-		ownerDir, err := os.Open(filepath.Join(githubPath, owner))
+		ownerDir, err := d.fs.Open(filepath.Join(githubPath, owner))
 		if err != nil {
 			return err
 		}
@@ -209,11 +218,11 @@ func getGitHubRepoPath(filename string) (*githubRepoPath, error) {
 	}, nil
 }
 
-func writeFile(filename string, content []byte) error {
-	if err := os.MkdirAll(filepath.Dir(filename), 0770); err != nil {
+func writeFile(fs afero.Fs, filename string, content []byte) error {
+	if err := fs.MkdirAll(filepath.Dir(filename), 0770); err != nil {
 		return err
 	}
-	file, err := os.Create(filename)
+	file, err := fs.Create(filename)
 	if err != nil {
 		return err
 	}

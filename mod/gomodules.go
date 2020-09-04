@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 )
 
 type goModule struct {
@@ -31,7 +32,7 @@ type GoModulesOptions struct {
 }
 
 func (d *goModules) Init(opt GoModulesOptions) error {
-	if !FileExists(filepath.Join(opt.Root, "go.mod"), false) {
+	if !FileExists(afero.NewOsFs(), filepath.Join(opt.Root, "go.mod"), false) {
 		err := runGo(context.Background(), ioutil.Discard, "mod", "init", opt.ModName)
 		if err != nil {
 			return errors.New(fmt.Sprintf("go mod init failed: %s", err.Error()))
