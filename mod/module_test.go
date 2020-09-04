@@ -26,8 +26,9 @@ func TestConfigGitHubMode(t *testing.T) {
 }
 
 func TestConfigGoModulesMode(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	err := Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
@@ -65,8 +66,9 @@ func TestLen(t *testing.T) {
 }
 
 func TestRetrieveGoModules(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
@@ -85,8 +87,9 @@ func TestRetrieveGoModules(t *testing.T) {
 }
 
 func TestRetrieveWithWrongPath(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
+	defer removeGomodFile(t, fs)
 
 	wrongpath := "wrong_file_path/deps.sysl"
 	mod, err := Retrieve(wrongpath, "")
@@ -146,4 +149,23 @@ func TestHasPathPrefix(t *testing.T) {
 	}
 
 	assert.False(t, hasPathPrefix("github.com/anz-bank/sysl2", "github.com/anz-bank/sysl/deps.sysl"))
+}
+
+func removeFile(t *testing.T, fs afero.Fs, file string, isDir bool) {
+	if isDir {
+		exists, err := afero.DirExists(fs, file)
+		assert.NoError(t, err)
+		if exists {
+			err = fs.RemoveAll(file)
+			assert.NoError(t, err)
+		}
+		return
+	}
+
+	exists, err := afero.Exists(fs, file)
+	assert.NoError(t, err)
+	if exists {
+		err = fs.Remove(file)
+		assert.NoError(t, err)
+	}
 }
