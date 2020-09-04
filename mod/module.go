@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 type Module struct {
@@ -48,7 +49,12 @@ func (m *Modules) Len() int {
 	return len(*m)
 }
 
+var configMutex = &sync.RWMutex{}
+
 func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) error {
+	configMutex.Lock()
+	defer configMutex.Unlock()
+
 	mode = m
 	switch mode {
 	case GitHubMode:
