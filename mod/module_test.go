@@ -29,7 +29,13 @@ func TestConfigGoModulesMode(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	createGomodFile(t, fs)
 
-	err := Config(GitHubMode,
+	err := Config(GoModulesMode,
+		GoModulesOptions{ModName: "mod"},
+		GitHubOptions{},
+	)
+	assert.NoError(t, err)
+
+	err = Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
 		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()},
 	)
@@ -89,9 +95,9 @@ func TestRetrieveWithWrongPath(t *testing.T) {
 }
 
 func TestRetrieveGitHubMode(t *testing.T) {
-	mode = GitHubMode
+	mode.modeType = GitHubMode
 	defer func() {
-		mode = GoModulesMode
+		mode.modeType = GoModulesMode
 	}()
 
 	filename := SyslDepsFile
@@ -111,9 +117,9 @@ func TestRetrieveGitHubMode(t *testing.T) {
 }
 
 func TestRetrieveWithWrongPathGitHubMode(t *testing.T) {
-	mode = GitHubMode
+	mode.modeType = GitHubMode
 	defer func() {
-		mode = GoModulesMode
+		mode.modeType = GoModulesMode
 	}()
 
 	wrongpath := "wrong_file_path/deps.sysl"

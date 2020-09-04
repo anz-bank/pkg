@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
+
+	"github.com/spf13/afero"
 )
 
 type Module struct {
@@ -21,7 +24,12 @@ type Modules []*Module
 
 var modules Modules
 var manager DependencyManager = &goModules{}
-var mode ModeType = GoModulesMode
+var mode Mode = Mode{sync.RWMutex{}, GoModulesMode}
+
+type Mode struct {
+	sync.RWMutex
+	modeType ModeType
+}
 
 type ModeType string
 
@@ -49,8 +57,11 @@ func (m *Modules) Len() int {
 }
 
 func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) error {
-	mode = m
-	switch mode {
+	mode.Lock()
+	defer mode.Unlock()
+
+	mode.modeType = m
+	switch m {
 	case GitHubMode:
 		gh := &githubMgr{}
 		if err := gh.Init(githubOpt); err != nil {
@@ -64,7 +75,7 @@ func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) erro
 		}
 		manager = gm
 	default:
-		return fmt.Errorf("unknown mode type %s", mode)
+		return fmt.Errorf("unknown mode type %s", m)
 	}
 	return nil
 }
@@ -76,7 +87,7 @@ func Retrieve(name string, ver string) (*Module, error) {
 		}
 	}
 
-	if ver != MasterBranch || (mode == GitHubMode && ver != "") {
+	if ver != MasterBranch || (mode.modeType == GitHubMode && ver != "") {
 		mod := manager.Find(name, ver, &modules)
 		if mod != nil {
 			return mod, nil
@@ -97,8 +108,8 @@ func hasPathPrefix(prefix, s string) bool {
 	return s == prefix
 }
 
-func FileExists(filename string, isDir bool) bool {
-	info, err := os.Stat(filename)
+func FileExists(fs afero.Fs, filename string, isDir bool) bool {
+	info, err := fs.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
