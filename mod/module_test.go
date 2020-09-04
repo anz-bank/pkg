@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -72,16 +73,16 @@ func TestRetrieveGoModules(t *testing.T) {
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, SyslRepo, mod.Name)
 
 	filename = RemoteDepsFile
 	mod, err = Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 
 	mod, err = Retrieve(filename, "v0.0.1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
@@ -105,16 +106,16 @@ func TestRetrieveGitHubMode(t *testing.T) {
 
 	filename := SyslDepsFile
 	mod, err := Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, SyslRepo, mod.Name)
 
 	filename = RemoteDepsFile
 	mod, err = Retrieve(filename, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 
 	mod, err = Retrieve(filename, "v0.0.1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, RemoteRepo, mod.Name)
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
@@ -154,18 +155,18 @@ func TestHasPathPrefix(t *testing.T) {
 func removeFile(t *testing.T, fs afero.Fs, file string, isDir bool) {
 	if isDir {
 		exists, err := afero.DirExists(fs, file)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		if exists {
 			err = fs.RemoveAll(file)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		}
 		return
 	}
 
 	exists, err := afero.Exists(fs, file)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	if exists {
 		err = fs.Remove(file)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
