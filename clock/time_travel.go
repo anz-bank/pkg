@@ -11,20 +11,25 @@ type TimeTravel struct {
 
 var _ Clock = &TimeTravel{}
 
+// NewTimeTravel creates a TimeTravel Clock.
 func NewTimeTravel(initialOffset time.Duration) *TimeTravel {
 	return &TimeTravel{offset: initialOffset}
 }
 
+// Travel through time by the duration. Backwards time travel is allowed.
 func (t *TimeTravel) Jump(d time.Duration) {
 	t.offset += d
 }
 
+// Travel to a point in time. Backwards time travel is allowed.
 func (t *TimeTravel) JumpTo(target time.Time) {
 	t.offset = time.Until(target)
 }
 
+// Wait returns a channel that time-travels by the duration and immediately
+// sends the new time on the returned channel immediately. This function won't
+// time-travel backwards. Negative durations will be treated as 0.
 func (t *TimeTravel) After(d time.Duration) <-chan time.Time {
-	// Waiting never travels backwards in time.
 	if d < 0 {
 		d = 0
 	}
@@ -46,6 +51,7 @@ func (*TimeTravel) NewTimer(d time.Duration) Timer {
 	panic("not implemented")
 }
 
+// Now returns the current time adjusted by the time-travel offset.
 func (t *TimeTravel) Now() time.Time {
 	return time.Now().Add(t.offset)
 }
