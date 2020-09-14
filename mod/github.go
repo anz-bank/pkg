@@ -27,7 +27,8 @@ type GitHubOptions struct {
 	Fs          afero.Fs
 }
 
-func (d *githubMgr) Init(opt GitHubOptions) error {
+func newGitHubMgr(opt GitHubOptions) (*githubMgr, error) {
+	d := &githubMgr{}
 	if opt.AccessToken == "" {
 		d.client = github.NewClient(nil)
 	} else {
@@ -41,7 +42,7 @@ func (d *githubMgr) Init(opt GitHubOptions) error {
 	}
 
 	if opt.CacheDir == "" {
-		return errors.New("cache directory cannot be empty")
+		return nil, errors.New("cache directory cannot be empty")
 	}
 	d.cacheDir = opt.CacheDir
 
@@ -50,7 +51,7 @@ func (d *githubMgr) Init(opt GitHubOptions) error {
 	} else {
 		d.fs = afero.NewOsFs()
 	}
-	return nil
+	return d, nil
 }
 
 type NotFoundError struct {

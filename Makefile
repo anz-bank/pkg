@@ -12,7 +12,7 @@ COVERFILE = coverage.out
 COVERAGE = 85.0
 
 test:  ## Run tests and generate a coverage file
-	go test -v -covermode=atomic -coverprofile=$(COVERFILE) -race ./...
+	go test -covermode=atomic -coverprofile=$(COVERFILE) -race ./...
 	go mod tidy
 
 check-coverage: test  ## Check that test coverage meets the required level

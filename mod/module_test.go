@@ -18,11 +18,11 @@ const (
 func TestConfigGitHubMode(t *testing.T) {
 	dir := ".pkgcache"
 	err := Config(GitHubMode, GoModulesOptions{},
-		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t)})
 	assert.NoError(t, err)
 
 	err = Config(GitHubMode, GoModulesOptions{},
-		GitHubOptions{AccessToken: accessTokenForTest()})
+		GitHubOptions{AccessToken: accessTokenForTest(t)})
 	assert.Error(t, err)
 }
 
@@ -39,7 +39,7 @@ func TestConfigGoModulesMode(t *testing.T) {
 
 	err = Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
-		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()},
+		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest(t)},
 	)
 	assert.NoError(t, err)
 }
@@ -47,7 +47,7 @@ func TestConfigGoModulesMode(t *testing.T) {
 func TestConfigWrongMode(t *testing.T) {
 	err := Config("wrong",
 		GoModulesOptions{ModName: "mod"},
-		GitHubOptions{AccessToken: accessTokenForTest()},
+		GitHubOptions{AccessToken: accessTokenForTest(t)},
 	)
 	assert.Error(t, err)
 }
