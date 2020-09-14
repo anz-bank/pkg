@@ -15,26 +15,24 @@ import (
 )
 
 func TestGitHubMgrInit(t *testing.T) {
-	githubmod := &githubMgr{}
 	dir := ".pkgcache"
 
-	err := githubmod.Init(GitHubOptions{CacheDir: dir})
+	_, err := newGitHubMgr(GitHubOptions{CacheDir: dir})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+	_, err = newGitHubMgr(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t)})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(GitHubOptions{})
+	_, err = newGitHubMgr(GitHubOptions{})
 	assert.Error(t, err)
-	err = githubmod.Init(GitHubOptions{AccessToken: accessTokenForTest()})
+	_, err = newGitHubMgr(GitHubOptions{AccessToken: accessTokenForTest(t)})
 	assert.Error(t, err)
 }
 
 func TestGitHubMgrGet(t *testing.T) {
-	githubmod := &githubMgr{}
 	dir := ".pkgcache"
 	fs := afero.NewMemMapFs()
-	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(), Fs: fs})
+	githubmod, err := newGitHubMgr(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t), Fs: fs})
 	assert.NoError(t, err)
 	testMods := Modules{}
 
@@ -180,9 +178,8 @@ func TestGetGitHubRepoPath(t *testing.T) {
 }
 
 func TestGetCacheRef(t *testing.T) {
-	githubmod := &githubMgr{}
 	dir := ".pkgcache"
-	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+	githubmod, err := newGitHubMgr(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t)})
 	assert.NoError(t, err)
 	repoPath := &githubRepoPath{
 		owner: "anz-bank",
@@ -212,6 +209,13 @@ func TestWriteFile(t *testing.T) {
 	assert.Equal(t, content, b)
 }
 
-func accessTokenForTest() string {
-	return os.Getenv("GITHUB_ACCESS_TOKEN")
+func accessTokenForTest(t *testing.T) string {
+	const tokenName = "GITHUB_ACCESS_TOKEN"
+	token := os.Getenv(tokenName)
+	if token == "" {
+		t.Logf("%s empty", tokenName)
+	} else {
+		t.Logf("%s not empty", tokenName)
+	}
+	return token
 }
