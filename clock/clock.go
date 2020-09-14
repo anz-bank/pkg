@@ -18,11 +18,13 @@ type Clock interface {
 	Now() time.Time
 }
 
+// Ticker models the semantics of time.Ticker.
 type Ticker interface {
 	C() <-chan time.Time
 	Stop()
 }
 
+// Ticker models the semantics of time.Timer.
 type Timer interface {
 	C() <-chan time.Time
 	Reset(d time.Duration) bool
@@ -31,17 +33,21 @@ type Timer interface {
 
 type clockKey struct{}
 
-// NewClock sets the context clock. Pass nil to revert to the default system clock.
+// Onto sets the context clock. Pass nil to revert to the default system clock.
 func Onto(ctx context.Context, clock Clock) context.Context {
 	return context.WithValue(ctx, clockKey{}, clock)
 }
 
+// From gets the Clock from the Context.
 func From(ctx context.Context) Clock {
 	if clock := ctx.Value(clockKey{}); clock != nil {
 		return clock.(Clock)
 	}
 	return defaultClock{}
 }
+
+// The following functions implement the equivalent of their counterparts in the
+// time package.
 
 func After(ctx context.Context, d time.Duration) <-chan time.Time {
 	return From(ctx).After(d)

@@ -2,12 +2,15 @@ package clock
 
 import "time"
 
+// Mock implements a mock Clock that reports a fixed sequence of times each time
+// it is queried.
 type Mock struct {
 	pending []time.Time
 }
 
 var _ Clock = &Mock{}
 
+// NewMock creates a Mock Clock.
 func NewMock() *Mock {
 	return &Mock{}
 }
