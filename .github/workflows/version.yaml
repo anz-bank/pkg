@@ -3,7 +3,8 @@ on:
   push:
     branches: [ master ]
 jobs:
-  build:
+  version:
+    name: Bump version tag
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
