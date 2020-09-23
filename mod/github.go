@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/google/go-github/v32/github"
 	"github.com/pkg/errors"
@@ -139,7 +140,7 @@ func (d *githubMgr) Find(filename, ver string, m *Modules) *Module {
 		if hasPathPrefix(mod.Name, filename) {
 			if mod.Version == ref {
 				relpath, err := filepath.Rel(mod.Name, filename)
-				if err == nil && FileExists(d.fs, filepath.Join(d.cacheDir, mod.Dir, relpath), false) {
+				if err == nil && FileExists(d.fs, filepath.Join(mod.Dir, relpath), false) {
 					return mod
 				}
 			}
@@ -238,14 +239,37 @@ const SHALength = 12
 
 func (d *githubMgr) GetCacheRef(repoPath *githubRepoPath, ref string) (string, error) {
 	ctx := context.Background()
-	_, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "tags/"+ref)
-	if err == nil { // `ver` is a tag
-		return ref, nil
-	}
+	wg := sync.WaitGroup{}
+	resolvedRef := make(chan string, 2)
+	errors := make(chan error, 2)
 
-	branch, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "heads/"+ref)
-	if err == nil { // `ver` is a branch
-		return "v0.0.0-" + branch.GetObject().GetSHA()[:SHALength], nil
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		branch, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "heads/"+ref)
+		if err != nil {
+			errors <- err
+		} else {
+			resolvedRef <- "v0.0.0-" + branch.GetObject().GetSHA()[:SHALength]
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, _, err := d.client.Git.GetRef(ctx, repoPath.owner, repoPath.repo, "tags/"+ref)
+		if err != nil {
+			errors <- err
+		} else {
+			resolvedRef <- ref
+		}
+	}()
+
+	wg.Wait()
+	if len(errors) >= 2 {
+		return "", fmt.Errorf("failed to find cache ref %w", <-errors)
+	} else if len(resolvedRef) == 2 {
+		return "", fmt.Errorf("ref is both tag and branch")
 	}
-	return "", err
+	return <-resolvedRef, nil
 }
