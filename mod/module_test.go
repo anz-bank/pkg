@@ -120,6 +120,28 @@ func TestRetrieveGitHubMode(t *testing.T) {
 	assert.Equal(t, "v0.0.1", mod.Version)
 }
 
+func BenchmarkRetrieveGitHubModeCached(b *testing.B) {
+	mode.modeType = GitHubMode
+	defer func() {
+		mode.modeType = GoModulesMode
+	}()
+	dir := ".pkgcache"
+	_ = Config(GitHubMode, GoModulesOptions{},
+		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(b), Fs: afero.NewMemMapFs()})
+
+	// Fetch files once to cache
+	_, _ = Retrieve(SyslDepsFile, "")
+	_, _ = Retrieve(RemoteDepsFile, "")
+	_, _ = Retrieve(RemoteDepsFile, "v0.0.1")
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = Retrieve(SyslDepsFile, "")
+		_, _ = Retrieve(RemoteDepsFile, "")
+		_, _ = Retrieve(RemoteDepsFile, "v0.0.1")
+	}
+}
+
 func TestRetrieveWithWrongPathGitHubMode(t *testing.T) {
 	mode.modeType = GitHubMode
 	defer func() {

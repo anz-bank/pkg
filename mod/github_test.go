@@ -58,8 +58,8 @@ func TestGitHubMgrFind(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
 	tagRef, masterRef := "v0.2.0", "v0.0.0-41f04d3bba15"
-	tagRepoDir := strings.Join([]string{repo, tagRef}, "@")
-	masterRepoDir := strings.Join([]string{repo, masterRef}, "@")
+	tagRepoDir := strings.Join([]string{cacheDir, repo, tagRef}, "@")
+	masterRepoDir := strings.Join([]string{cacheDir, repo, masterRef}, "@")
 	filea, fileb := "filea", "fileb"
 
 	githubmod := &githubMgr{cacheDir: cacheDir}
@@ -79,9 +79,9 @@ func TestGitHubMgrFind(t *testing.T) {
 
 	monkey.Patch(FileExists, func(_ afero.Fs, filename string, _ bool) bool {
 		files := []string{
-			filepath.Join(cacheDir, tagRepoDir, filea),
-			filepath.Join(cacheDir, tagRepoDir, fileb),
-			filepath.Join(cacheDir, masterRepoDir, filea),
+			filepath.Join(tagRepoDir, filea),
+			filepath.Join(tagRepoDir, fileb),
+			filepath.Join(masterRepoDir, filea),
 		}
 		for _, f := range files {
 			if filename == f {
@@ -194,6 +194,18 @@ func TestGetCacheRef(t *testing.T) {
 	assert.Equal(t, "v0.0.0-", ref[:7])
 }
 
+func BenchmarkGetCacheRef(b *testing.B) {
+	dir := ".pkgcache"
+	githubmod, _ := newGitHubMgr(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(b)})
+	repoPath := &githubRepoPath{
+		owner: "anz-bank",
+		repo:  "pkg",
+	}
+	for i := 0; i < b.N; i++ {
+		_, _ = githubmod.GetCacheRef(repoPath, "v0.0.7")
+	}
+}
+
 func TestWriteFile(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
@@ -209,7 +221,7 @@ func TestWriteFile(t *testing.T) {
 	assert.Equal(t, content, b)
 }
 
-func accessTokenForTest(t *testing.T) string {
+func accessTokenForTest(t testing.TB) string {
 	const tokenName = "GITHUB_ACCESS_TOKEN"
 	token := os.Getenv(tokenName)
 	if token == "" {

@@ -15,6 +15,9 @@ test:  ## Run tests and generate a coverage file
 	go test -covermode=atomic -coverprofile=$(COVERFILE) -race ./...
 	go mod tidy
 
+bench: ## Run benchmarks only
+	go test -run=NONE -bench=. ./...
+
 check-coverage: test  ## Check that test coverage meets the required level
 	@go tool cover -func=$(COVERFILE) | $(CHECK_COVERAGE) || $(FAIL_COVERAGE)
 
