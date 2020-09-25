@@ -63,8 +63,8 @@ func Config(m ModeType, goModopt GoModulesOptions, githubOpt GitHubOptions) erro
 	mode.modeType = m
 	switch m {
 	case GitHubMode:
-		gh := &githubMgr{}
-		if err := gh.Init(githubOpt); err != nil {
+		gh, err := newGitHubMgr(githubOpt)
+		if err != nil {
 			return err
 		}
 		manager = gh

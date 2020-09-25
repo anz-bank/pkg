@@ -9,11 +9,17 @@ clean::  ## Remove generated files
 # -- Test --------------------------------------------------------------
 
 COVERFILE = coverage.out
-COVERAGE = 85.0
+COVERAGE = 82.0
 
 test:  ## Run tests and generate a coverage file
-	go test -v -covermode=atomic -coverprofile=$(COVERFILE) -race ./...
+	go test -covermode=atomic -coverprofile=$(COVERFILE) -race ./...
 	go mod tidy
+
+integration: ## Run integration tests which interact over the network
+	go test -covermode=atomic -tags integration -race ./...
+
+bench: ## Run benchmarks only
+	go test -run=NONE -bench=. ./...
 
 check-coverage: test  ## Check that test coverage meets the required level
 	@go tool cover -func=$(COVERFILE) | $(CHECK_COVERAGE) || $(FAIL_COVERAGE)

@@ -8,21 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	SyslDepsFile   = "github.com/anz-bank/sysl/tests/deps.sysl"
-	SyslRepo       = "github.com/anz-bank/sysl"
-	RemoteDepsFile = "github.com/anz-bank/sysl-examples/demos/simple/simple.sysl"
-	RemoteRepo     = "github.com/anz-bank/sysl-examples"
-)
-
 func TestConfigGitHubMode(t *testing.T) {
 	dir := ".pkgcache"
 	err := Config(GitHubMode, GoModulesOptions{},
-		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+		GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t)})
 	assert.NoError(t, err)
 
 	err = Config(GitHubMode, GoModulesOptions{},
-		GitHubOptions{AccessToken: accessTokenForTest()})
+		GitHubOptions{AccessToken: accessTokenForTest(t)})
 	assert.Error(t, err)
 }
 
@@ -39,7 +32,7 @@ func TestConfigGoModulesMode(t *testing.T) {
 
 	err = Config(GoModulesMode,
 		GoModulesOptions{ModName: "mod"},
-		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest()},
+		GitHubOptions{CacheDir: ".pkgcache", AccessToken: accessTokenForTest(t)},
 	)
 	assert.NoError(t, err)
 }
@@ -47,7 +40,7 @@ func TestConfigGoModulesMode(t *testing.T) {
 func TestConfigWrongMode(t *testing.T) {
 	err := Config("wrong",
 		GoModulesOptions{ModName: "mod"},
-		GitHubOptions{AccessToken: accessTokenForTest()},
+		GitHubOptions{AccessToken: accessTokenForTest(t)},
 	)
 	assert.Error(t, err)
 }
@@ -66,27 +59,6 @@ func TestLen(t *testing.T) {
 	assert.Equal(t, 1, testMods.Len())
 }
 
-func TestRetrieveGoModules(t *testing.T) {
-	fs := afero.NewOsFs()
-	createGomodFile(t, fs)
-	defer removeGomodFile(t, fs)
-
-	filename := SyslDepsFile
-	mod, err := Retrieve(filename, "")
-	require.NoError(t, err)
-	assert.Equal(t, SyslRepo, mod.Name)
-
-	filename = RemoteDepsFile
-	mod, err = Retrieve(filename, "")
-	require.NoError(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-
-	mod, err = Retrieve(filename, "v0.0.1")
-	require.NoError(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-	assert.Equal(t, "v0.0.1", mod.Version)
-}
-
 func TestRetrieveWithWrongPath(t *testing.T) {
 	fs := afero.NewOsFs()
 	createGomodFile(t, fs)
@@ -96,28 +68,6 @@ func TestRetrieveWithWrongPath(t *testing.T) {
 	mod, err := Retrieve(wrongpath, "")
 	assert.Error(t, err)
 	assert.Nil(t, mod)
-}
-
-func TestRetrieveGitHubMode(t *testing.T) {
-	mode.modeType = GitHubMode
-	defer func() {
-		mode.modeType = GoModulesMode
-	}()
-
-	filename := SyslDepsFile
-	mod, err := Retrieve(filename, "")
-	require.NoError(t, err)
-	assert.Equal(t, SyslRepo, mod.Name)
-
-	filename = RemoteDepsFile
-	mod, err = Retrieve(filename, "")
-	require.NoError(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-
-	mod, err = Retrieve(filename, "v0.0.1")
-	require.NoError(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-	assert.Equal(t, "v0.0.1", mod.Version)
 }
 
 func TestRetrieveWithWrongPathGitHubMode(t *testing.T) {

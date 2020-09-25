@@ -15,53 +15,26 @@ import (
 )
 
 func TestGitHubMgrInit(t *testing.T) {
-	githubmod := &githubMgr{}
 	dir := ".pkgcache"
 
-	err := githubmod.Init(GitHubOptions{CacheDir: dir})
+	_, err := newGitHubMgr(GitHubOptions{CacheDir: dir})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
+	_, err = newGitHubMgr(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(t)})
 	assert.NoError(t, err)
 
-	err = githubmod.Init(GitHubOptions{})
+	_, err = newGitHubMgr(GitHubOptions{})
 	assert.Error(t, err)
-	err = githubmod.Init(GitHubOptions{AccessToken: accessTokenForTest()})
+	_, err = newGitHubMgr(GitHubOptions{AccessToken: accessTokenForTest(t)})
 	assert.Error(t, err)
-}
-
-func TestGitHubMgrGet(t *testing.T) {
-	githubmod := &githubMgr{}
-	dir := ".pkgcache"
-	fs := afero.NewMemMapFs()
-	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest(), Fs: fs})
-	assert.NoError(t, err)
-	testMods := Modules{}
-
-	mod, err := githubmod.Get(RemoteDepsFile, "", &testMods)
-	assert.Nil(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-
-	mod, err = githubmod.Get(RemoteDepsFile, MasterBranch, &testMods)
-	assert.Nil(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-
-	mod, err = githubmod.Get(RemoteDepsFile, "v0.0.1", &testMods)
-	assert.Nil(t, err)
-	assert.Equal(t, RemoteRepo, mod.Name)
-	assert.Equal(t, "v0.0.1", mod.Version)
-
-	mod, err = githubmod.Get("github.com/anz-bank/wrong/path", "", &testMods)
-	assert.Error(t, err)
-	assert.Nil(t, mod)
 }
 
 func TestGitHubMgrFind(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
 	tagRef, masterRef := "v0.2.0", "v0.0.0-41f04d3bba15"
-	tagRepoDir := strings.Join([]string{repo, tagRef}, "@")
-	masterRepoDir := strings.Join([]string{repo, masterRef}, "@")
+	tagRepoDir := strings.Join([]string{cacheDir, repo, tagRef}, "@")
+	masterRepoDir := strings.Join([]string{cacheDir, repo, masterRef}, "@")
 	filea, fileb := "filea", "fileb"
 
 	githubmod := &githubMgr{cacheDir: cacheDir}
@@ -81,9 +54,9 @@ func TestGitHubMgrFind(t *testing.T) {
 
 	monkey.Patch(FileExists, func(_ afero.Fs, filename string, _ bool) bool {
 		files := []string{
-			filepath.Join(cacheDir, tagRepoDir, filea),
-			filepath.Join(cacheDir, tagRepoDir, fileb),
-			filepath.Join(cacheDir, masterRepoDir, filea),
+			filepath.Join(tagRepoDir, filea),
+			filepath.Join(tagRepoDir, fileb),
+			filepath.Join(masterRepoDir, filea),
 		}
 		for _, f := range files {
 			if filename == f {
@@ -179,24 +152,6 @@ func TestGetGitHubRepoPath(t *testing.T) {
 	}
 }
 
-func TestGetCacheRef(t *testing.T) {
-	githubmod := &githubMgr{}
-	dir := ".pkgcache"
-	err := githubmod.Init(GitHubOptions{CacheDir: dir, AccessToken: accessTokenForTest()})
-	assert.NoError(t, err)
-	repoPath := &githubRepoPath{
-		owner: "anz-bank",
-		repo:  "pkg",
-	}
-	ref, err := githubmod.GetCacheRef(repoPath, "v0.0.7")
-	assert.NoError(t, err)
-	assert.Equal(t, "v0.0.7", ref)
-
-	ref, err = githubmod.GetCacheRef(repoPath, MasterBranch)
-	assert.NoError(t, err)
-	assert.Equal(t, "v0.0.0-", ref[:7])
-}
-
 func TestWriteFile(t *testing.T) {
 	cacheDir := ".pkgcache"
 	repo := "github.com/foo/bar"
@@ -212,6 +167,13 @@ func TestWriteFile(t *testing.T) {
 	assert.Equal(t, content, b)
 }
 
-func accessTokenForTest() string {
-	return os.Getenv("GITHUB_ACCESS_TOKEN")
+func accessTokenForTest(t testing.TB) string {
+	const tokenName = "GITHUB_ACCESS_TOKEN"
+	token := os.Getenv(tokenName)
+	if token == "" {
+		t.Logf("%s empty", tokenName)
+	} else {
+		t.Logf("%s not empty", tokenName)
+	}
+	return token
 }
