@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sync/atomic"
 
 	"github.com/anz-bank/pkg/health/pb"
 	"google.golang.org/grpc"
@@ -88,10 +89,18 @@ type ReadySetter interface {
 	SetReady(bool)
 }
 
-type readiness bool
+type readiness uint32
 
-func (r *readiness) IsReady() bool   { return bool(*r) }
-func (r *readiness) SetReady(b bool) { *r = readiness(b) }
+func (r *readiness) IsReady() bool {
+	return atomic.LoadUint32((*uint32)(r)) == 1
+}
+func (r *readiness) SetReady(b bool) {
+	var v uint32
+	if b {
+		v = 1
+	}
+	atomic.StoreUint32((*uint32)(r), v)
+}
 
 // State holds the state published by the health servers. Typically a
 // single instance is shared amongst all servers.
