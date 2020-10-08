@@ -79,7 +79,8 @@ func TestSetReadyProvider(t *testing.T) {
 	resetDefaults()
 	defer resetDefaults()
 
-	r := readiness(true)
+	var r readiness
+	r.SetReady(true)
 	SetReadyProvider(&r)
 	require.Nil(t, DefaultServer)
 	mux := http.NewServeMux()
