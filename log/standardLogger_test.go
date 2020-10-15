@@ -328,15 +328,15 @@ func TestStandardLogger(t *testing.T) {
 	require.NoError(t, logger.SetVerbose(true))
 	logger.Info("info")
 	require.True(t, strings.Contains(buffer.String(), "info"))
-	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //don't log caller
+	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) // Don't log caller
 
-	//set log caller
+	// Set log caller
 	buffer.Reset()
 	require.NoError(t, logger.SetLogCaller(true))
 	logger.Info("info")
 
 	require.True(t, strings.Contains(buffer.String(), "info"))
-	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //log caller
+	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) // Log caller
 }
 
 func TestStandardLoggerWithFields(t *testing.T) {
@@ -348,14 +348,14 @@ func TestStandardLoggerWithFields(t *testing.T) {
 	logger.Info("info")
 	require.True(t, strings.Contains(buffer.String(), "info"))
 	require.True(t, strings.Contains(buffer.String(), "string=this is an unnecessarily long sentence"))
-	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //don't log caller
+	require.False(t, strings.Contains(buffer.String(), "standardLogger_test.go")) // Don't log caller
 
-	//set log caller
+	// Set log caller
 	buffer.Reset()
 	require.NoError(t, logger.SetLogCaller(true))
 	logger.Info("info")
 
 	require.True(t, strings.Contains(buffer.String(), "info"))
 	require.True(t, strings.Contains(buffer.String(), "string=this is an unnecessarily long sentence"))
-	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) //log caller
+	require.True(t, strings.Contains(buffer.String(), "standardLogger_test.go")) // Log caller
 }
