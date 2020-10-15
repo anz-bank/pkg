@@ -180,8 +180,8 @@ func (sl *standardLogger) logf(verbose bool, format string, args ...interface{})
 	})
 }
 
-//Avoiding underscores so you don’t match the test case.
-//Negative lookbehind like (?<!test) could make this regex cleaner but it’s not supported by go regular expressions
+// Avoiding underscores so you don’t match the test case.
+// Negative lookbehind like (?<!test) could make this regex cleaner but it’s not supported by go regular expressions
 var pkgCallerFilePattern = regexp.MustCompile(`^.*anz-bank/pkg[^/]*/log/[a-zA-Z]+.go$`)
 
 func (sl *standardLogger) getLogEntryCaller() CodeReference {
