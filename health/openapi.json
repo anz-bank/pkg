@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Health API",
+    "description": "Health HTTP endpoints: readyz, healthz, version on their default paths (see [docs](https://pkg.go.dev/github.com/anz-bank/pkg/health#example-package)).",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "200 ok"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "200 ok"
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "503 unavailable"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current version information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "repo_url": { "type": "string" },
+                    "commit_hash": { "type": "string" },
+                    "build_log_url": { "type": "string" },
+                    "container_tag": { "type": "string" },
+                    "semver": { "type": "string" },
+                    "scanner_urls": { "type": "object" }
+                  }
+                },
+                "example": {
+                  "repo_url": "https://github.com/anz-bank/pkg",
+                  "commit_hash": "0619d70d9e515369f92948194beff1a286e4ee49",
+                  "build_log_url": "https://github.com/anz-bank/pkg/actions/runs/238995384",
+                  "container_tag": "undefined",
+                  "semver": "v0.0.22",
+                  "scanner_urls": {
+                    "example-code-scan": "https://scanner.example.com/324234asd"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

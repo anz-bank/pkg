@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/anz-bank/pkg/health/pb"
@@ -29,6 +30,28 @@ func TestSetReady(t *testing.T) {
 	require.True(t, s.State.IsReady())
 	s.SetReady(false)
 	require.False(t, s.State.IsReady())
+}
+
+// TestSetReadyConcurrent introduces a data race if `readiness` is not
+// concurrency-safe.
+func TestSetReadyConcurrent(t *testing.T) {
+	var ready readiness
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_ = ready.IsReady()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ready.SetReady(true)
+	}()
+
+	wg.Wait()
+	require.True(t, ready.IsReady())
 }
 
 func TestAlive(t *testing.T) {
