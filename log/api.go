@@ -171,3 +171,8 @@ func (f Fields) String(ctx context.Context) string {
 func (f Fields) MergedString(ctx context.Context) string {
 	return getFields(ctx).Chain(f).String(ctx)
 }
+
+// FieldsFrom retrieves the fields from the context.
+func FieldsFrom(ctx context.Context) Fields {
+	return getFields(ctx)
+}
