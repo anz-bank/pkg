@@ -336,6 +336,15 @@ func TestWithLogger(t *testing.T) {
 	logger.AssertExpectations(t)
 }
 
+func TestFieldsFrom(t *testing.T) {
+	t.Parallel()
+
+	fields := Fields{}.With("key", "value")
+	ctx := fields.Onto(context.Background())
+	retrieved := FieldsFrom(ctx)
+	assert.Equal(t, fields, retrieved)
+}
+
 func setLogMockAssertion(logger *mockLogger, fields frozen.Map) {
 	setMockCopyAssertion(logger)
 	setPutFieldsAssertion(logger, fields)
