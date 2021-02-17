@@ -1,3 +1,18 @@
+<h1>ochealth</h1>
+
+# Purpose
+
+`ochealth` exports health.State data via OpenCensus.
+
+`ochealth` allows you to take the state from a health server and export the data in it via OpenCensus metrics. 
+For example, to track the readiness of your server over time you can use OpenCensus to export via Prometheus metrics where you can graph and alert on your service not being ready. 
+It also allows you to export version information so you can easily correlate version changes with changes in other metrics making it easier to identify regressions.
+
+For more information see [register.go](./register.go).
+
+## Example Usage
+
+```go
 package ochealth_test
 
 import (
@@ -35,3 +50,4 @@ func Example() {
 	// # TYPE myapp_version gauge
 	// myapp_version{build_log_url="undefined",commit_hash="0123456789abcdef0123456789abcdef01234567",container_tag="undefined",repo_url="undefined",semver="v1.2.3"} 1
 }
+```
