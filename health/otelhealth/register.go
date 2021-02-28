@@ -34,9 +34,9 @@ package otelhealth
 import (
 	"context"
 
-	"go.opentelemetry.io/otel"
 	otelLabel "go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/global"
 
 	"github.com/anz-bank/pkg/health"
 )
@@ -69,7 +69,7 @@ var mHandler *metricHandler
 
 func newMetricHandler() {
 	mHandler = &metricHandler{
-		meter:               otel.Meter(""),
+		meter:               global.Meter(""),
 		metricCounters:      make(map[string]Int64Counter),
 		metricValueObserver: make(map[string]metric.Int64ValueObserver),
 	}

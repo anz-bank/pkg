@@ -10,10 +10,10 @@ import (
 	"github.com/anz-bank/pkg/health"
 	"github.com/anz-bank/pkg/health/otelhealth/testdata/mocks"
 	otelLabel "go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/metric/global"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -25,7 +25,7 @@ func TestRegisterWithValidValues(t *testing.T) {
 	versionCounter := mocks.NewMockInt64Counter(ctrl)
 
 	mHandler = &metricHandler{
-		meter:               otel.Meter(""),
+		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
 		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
 	}
@@ -60,7 +60,7 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	versionCounter := mocks.NewMockInt64Counter(ctrl)
 
 	mHandler = &metricHandler{
-		meter:               otel.Meter(""),
+		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
 		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
 	}
@@ -106,7 +106,7 @@ func TestRegisterWithUndefinedValues(t *testing.T) {
 	versionCounter := mocks.NewMockInt64Counter(ctrl)
 
 	mHandler = &metricHandler{
-		meter:               otel.Meter(""),
+		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
 		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
 	}
