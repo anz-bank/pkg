@@ -7,8 +7,7 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
-	github.com/arr-ai/frozen v0.15.0
-	github.com/arr-ai/hash v0.5.0 // indirect
+	github.com/arr-ai/frozen v0.16.0
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-github/v32 v32.1.0
