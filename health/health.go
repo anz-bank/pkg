@@ -54,7 +54,6 @@ var (
 
 	// ScannerURLs is a JSON object containing URLs for additional code
 	// scanner links.
-	// e.g. { "codecov.io" : "https://codecov.io/..." }
 	ScannerURLs string
 )
 
