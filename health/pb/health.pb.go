@@ -245,7 +245,7 @@ type VersionResponse struct {
 	ContainerTag string `protobuf:"bytes,4,opt,name=container_tag,json=containerTag,proto3" json:"container_tag,omitempty"`
 	// Semantic versioning compliant version
 	Semver string `protobuf:"bytes,5,opt,name=semver,proto3" json:"semver,omitempty"`
-	// Additional code scan links, e.g. { "codecov.io" : "https://codecov.io/..." }
+	// Additional code scan links, e.g. { "example-code-scan": "https://scanner.example.com/324234asd" }
 	ScannerUrls map[string]string `protobuf:"bytes,6,rep,name=scanner_urls,json=scannerUrls,proto3" json:"scanner_urls,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 

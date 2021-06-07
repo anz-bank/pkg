@@ -46,6 +46,6 @@ message VersionResponse {
   string container_tag = 4;
   // Semantic versioning compliant version
   string semver = 5;
-  // Additional code scan links, e.g. { "codecov.io" : "https://codecov.io/..." }
+  // Additional code scan links, e.g. { "example-code-scan": "https://scanner.example.com/324234asd" }
   map<string, string> scanner_urls = 6;
 }
