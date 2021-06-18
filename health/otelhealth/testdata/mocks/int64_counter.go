@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	label "go.opentelemetry.io/otel/label"
+	attribute "go.opentelemetry.io/otel/attribute"
 	reflect "reflect"
 )
 
@@ -35,7 +35,7 @@ func (m *MockInt64Counter) EXPECT() *MockInt64CounterMockRecorder {
 }
 
 // Add mocks base method
-func (m *MockInt64Counter) Add(arg0 context.Context, arg1 int64, arg2 ...label.KeyValue) {
+func (m *MockInt64Counter) Add(arg0 context.Context, arg1 int64, arg2 ...attribute.KeyValue) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/anz-bank/pkg/health"
 	"github.com/anz-bank/pkg/health/otelhealth/testdata/mocks"
-	otelLabel "go.opentelemetry.io/otel/label"
+	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric/global"
 
 	"github.com/golang/mock/gomock"
@@ -65,9 +65,9 @@ func TestRegisterWithNewLabels(t *testing.T) {
 		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
 	}
 
-	labels := map[otelLabel.Key]otelLabel.Value{
-		otelLabel.Key("foo"):  otelLabel.Key("foo").String("bar").Value,
-		otelLabel.Key("test"): otelLabel.Key("test").String("result").Value,
+	labels := map[otelAttribute.Key]otelAttribute.Value{
+		otelAttribute.Key("foo"):  otelAttribute.Key("foo").String("bar").Value,
+		otelAttribute.Key("test"): otelAttribute.Key("test").String("result").Value,
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
@@ -79,10 +79,10 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	)
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		otelLabel.Key("foo").String("bar"))
+		otelAttribute.Key("foo").String("bar"))
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		otelLabel.Key("test").String("result"))
+		otelAttribute.Key("test").String("result"))
 
 	health.RepoURL = "http://github.com/anz-bank/pkg"
 	health.CommitHash = "1ee4e1f233caea38d6e331299f57dd86efb47361"

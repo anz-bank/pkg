@@ -34,7 +34,7 @@ package otelhealth
 import (
 	"context"
 
-	otelLabel "go.opentelemetry.io/otel/label"
+	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 
@@ -43,20 +43,20 @@ import (
 
 const (
 	// CommitHash is the git hash.
-	CommitHash = otelLabel.Key("commit_hash")
+	CommitHash = otelAttribute.Key("commit_hash")
 	// BuildLogURL is the url for the build log.
-	BuildLogURL = otelLabel.Key("build_log_url")
+	BuildLogURL = otelAttribute.Key("build_log_url")
 	// ContainerTag is the tag of container.
-	ContainerTag = otelLabel.Key("container_tag")
+	ContainerTag = otelAttribute.Key("container_tag")
 	// RepoURL is the url of the github repository.
-	RepoURL = otelLabel.Key("repo_url")
+	RepoURL = otelAttribute.Key("repo_url")
 	// Semver is the version.
-	Semver = otelLabel.Key("semver")
+	Semver = otelAttribute.Key("semver")
 )
 
 type registerOptions struct {
 	metricPrefix string
-	constLabels  map[otelLabel.Key]otelLabel.Value
+	constLabels  map[otelAttribute.Key]otelAttribute.Value
 }
 
 type metricHandler struct {
@@ -92,7 +92,7 @@ func WithPrefix(metricPrefix string) Option {
 
 // WithConstLabels returns an Option that adds additional labels with constant
 // values to the metrics published by this package.
-func WithConstLabels(labels map[otelLabel.Key]otelLabel.Value) Option {
+func WithConstLabels(labels map[otelAttribute.Key]otelAttribute.Value) Option {
 	return func(ro *registerOptions) {
 		for k, v := range labels {
 			ro.constLabels[k] = v
@@ -122,7 +122,7 @@ func Register(s *health.State, options ...Option) error {
 func newRegisterOptions(options ...Option) *registerOptions {
 	ro := &registerOptions{
 		metricPrefix: "anz_health",
-		constLabels:  map[otelLabel.Key]otelLabel.Value{},
+		constLabels:  map[otelAttribute.Key]otelAttribute.Value{},
 	}
 	for _, option := range options {
 		option(ro)
