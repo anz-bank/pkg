@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/arr-ai/frozen"
+	"github.com/stretchr/testify/assert"
 )
 
 type key1 struct{}
@@ -75,7 +76,7 @@ func TestConfigureLogger(t *testing.T) {
 			for i := c.contextFields.Range(); i.Next(); {
 				ctx = context.WithValue(ctx, i.Key(), i.Value())
 			}
-			Fields{c.unresolveds}.configureLogger(ctx, Logger(logger).(fieldSetter))
+			logger = configureLogger(Logger(logger).(fieldSetter), c.expected, []Config{}).(*mockLogger)
 			logger.AssertExpectations(t)
 		})
 	}
@@ -86,7 +87,7 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 
 	//TODO: add more configs
 	testCase := getUnresolvedFieldsCases()[0]
-	unresolveds := Fields{testCase.unresolveds}.WithConfigs(NewJSONFormat())
+	unresolved := Fields{testCase.unresolveds}.WithConfigs(NewJSONFormat())
 	expected := testCase.expected
 
 	logger := newMockLogger()
@@ -97,7 +98,24 @@ func TestConfigureLoggerWithConfigs(t *testing.T) {
 	for i := testCase.contextFields.Range(); i.Next(); {
 		ctx = context.WithValue(ctx, i.Key(), i.Value())
 	}
-
-	unresolveds.configureLogger(ctx, Logger(logger).(fieldSetter))
+	resolved, configs := unresolved.getResolvedFields(ctx)
+	configureLogger(Logger(logger).(fieldSetter), resolved, configs)
 	logger.AssertExpectations(t)
+}
+
+func TestRegisterListener(t *testing.T) {
+	t.Parallel()
+
+	mockListener1 := OnLog
+
+	ctx := RegisterListener(context.Background(), mockListener1)
+	cbs, isCallbackList := ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	assert.True(t, isCallbackList)
+	assert.Equal(t, 1, len(cbs))
+
+	mockListener2 := func(context.Context, Fields){}
+	ctx = RegisterListener(ctx, mockListener2)
+	cbs, isCallbackList = ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	assert.True(t, isCallbackList)
+	assert.Equal(t, 2, len(cbs))
 }
