@@ -6,7 +6,6 @@ package otelhealth
 
 import (
 	"testing"
-	"time"
 
 	"github.com/anz-bank/pkg/health"
 	"github.com/anz-bank/pkg/health/otelhealth/testdata/mocks"
@@ -136,10 +135,7 @@ func resetGlobals() {
 }
 
 // TestMHandler must be run with the `-race` flag to effectively test anything.
-func TestMHandler(t *testing.T){
+func TestMHandler(t *testing.T) {
 	go newMetricHandler()
 	go newMetricHandler()
-	time.Sleep(time.Second)
-
 }
-
