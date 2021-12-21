@@ -33,6 +33,7 @@ package otelhealth
 
 import (
 	"context"
+	"sync"
 
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -66,8 +67,11 @@ type metricHandler struct {
 }
 
 var mHandler *metricHandler
+var mHandlerMutex sync.Mutex
 
 func newMetricHandler() {
+	mHandlerMutex.Lock()
+	defer mHandlerMutex.Unlock()
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      make(map[string]Int64Counter),
@@ -145,7 +149,8 @@ func addMetrics(ctx context.Context, ro *registerOptions, s *health.State) error
 
 func addReadyMetric(ctx context.Context, ro *registerOptions, s *health.State) error {
 	var err error
-
+	mHandlerMutex.Lock()
+	defer mHandlerMutex.Unlock()
 	readyPrefix := ro.metricPrefix + "ready"
 	int64Observer := mHandler.metricValueObserver[readyPrefix]
 	if int64Observer == (metric.Int64ValueObserver{}) {
@@ -172,7 +177,8 @@ func observer(s *health.State) func(ctx context.Context, result metric.Int64Obse
 
 func addVersionMetric(ctx context.Context, ro *registerOptions, s *health.State) error {
 	var err error
-
+	mHandlerMutex.Lock()
+	defer mHandlerMutex.Unlock()
 	versionPrefix := ro.metricPrefix + "version"
 	int64Counter := mHandler.metricCounters[versionPrefix]
 	if int64Counter == nil {
