@@ -33,6 +33,7 @@ package otelhealth
 
 import (
 	"context"
+	"sync"
 
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -66,6 +67,7 @@ type metricHandler struct {
 }
 
 var mHandler *metricHandler
+var mHandlerMut sync.Mutex
 
 func newMetricHandler() {
 	mHandler = &metricHandler{
@@ -104,6 +106,8 @@ func WithConstLabels(labels map[otelAttribute.Key]otelAttribute.Value) Option {
 // The metrics registry tracks changes to the non-constant values
 // in the health.State.
 func Register(s *health.State, options ...Option) error {
+	mHandlerMut.Lock()
+	defer mHandlerMut.Unlock()
 	ro := newRegisterOptions(options...)
 
 	if mHandler == nil {
