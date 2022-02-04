@@ -31,8 +31,7 @@ func Errorf(ctx context.Context, err error, format string, args ...interface{}) 
 
 // From returns a copied logger from the context that you can use to access logger API.
 func From(ctx context.Context) Logger {
-	f := getFields(ctx)
-	return f.configureLogger(ctx, f.getCopiedLogger().(fieldSetter))
+	return from(ctx, getFields(ctx))
 }
 
 // Info logs from context at the debug level.
@@ -43,6 +42,21 @@ func Info(ctx context.Context, args ...interface{}) {
 // Infof logs from context at the debug level.
 func Infof(ctx context.Context, format string, args ...interface{}) {
 	Fields{}.Infof(ctx, format, args...)
+}
+
+// RegisterListener registers callbacks that are called after a log.
+func RegisterListener(ctx context.Context, callback func(context.Context, Fields)) context.Context{
+	cbList, isList := ctx.Value(listenerKey{}).([]func(context.Context, Fields))
+	if !isList {
+		cbList = []func(context.Context, Fields){callback}
+	} else {
+		cbList = append(cbList, callback)
+	}
+	return context.WithValue(
+		context.WithValue(ctx, canonicalFieldsKey{}, frozen.NewMapBuilder(0)),
+		listenerKey{},
+		cbList,
+	)
 }
 
 // Suppress will ensure that suppressed keys are not logged.
@@ -162,9 +176,8 @@ func (f Fields) WithLogger(logger Logger) Fields {
 
 // String returns a string that represent the current fields
 func (f Fields) String(ctx context.Context) string {
-	fields := &fieldsCollector{}
-	f.configureLogger(ctx, fields)
-	return fields.fields.String()
+	m, _ := f.getResolvedFields(ctx)
+	return m.String()
 }
 
 // MergedString returns a string that represents the current fields merged by fields in context
