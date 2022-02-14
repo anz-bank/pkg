@@ -62,7 +62,7 @@ type registerOptions struct {
 type metricHandler struct {
 	meter               metric.Meter
 	metricCounters      map[string]Int64Counter
-	metricValueObserver map[string]metric.Int64ValueObserver
+	metricGaugeObserver map[string]metric.Int64GaugeObserver
 }
 
 var mHandler *metricHandler
@@ -71,7 +71,7 @@ func newMetricHandler() {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      make(map[string]Int64Counter),
-		metricValueObserver: make(map[string]metric.Int64ValueObserver),
+		metricGaugeObserver: make(map[string]metric.Int64GaugeObserver),
 	}
 }
 
@@ -147,14 +147,14 @@ func addReadyMetric(ctx context.Context, ro *registerOptions, s *health.State) e
 	var err error
 
 	readyPrefix := ro.metricPrefix + "ready"
-	int64Observer := mHandler.metricValueObserver[readyPrefix]
-	if int64Observer == (metric.Int64ValueObserver{}) {
-		int64Observer, err = mHandler.meter.NewInt64ValueObserver(readyPrefix, observer(s))
+	int64Observer := mHandler.metricGaugeObserver[readyPrefix]
+	if int64Observer == (metric.Int64GaugeObserver{}) {
+		int64Observer, err = mHandler.meter.NewInt64GaugeObserver(readyPrefix, observer(s))
 		if err != nil {
 			return err
 		}
 	}
-	mHandler.metricValueObserver[readyPrefix] = int64Observer
+	mHandler.metricGaugeObserver[readyPrefix] = int64Observer
 
 	return nil
 }

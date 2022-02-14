@@ -27,7 +27,7 @@ func TestRegisterWithValidValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
@@ -62,7 +62,7 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
 	}
 
 	labels := map[otelAttribute.Key]otelAttribute.Value{
@@ -108,7 +108,7 @@ func TestRegisterWithUndefinedValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricValueObserver: map[string]metric.Int64ValueObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
