@@ -8,8 +8,8 @@ Common ANZ Go Packages
 
 ### Development
 
--   Pre-requisites: [go](https://golang.org/doc/go1.14),
-    [golangci-lint](https://github.com/golangci/golangci-lint/releases/tag/v1.24.0),
+-   Pre-requisites: [go](https://golang.org/doc/go1.17),
+    [golangci-lint](https://github.com/golangci/golangci-lint/releases/tag/v1.44.0),
     GNU make
 -   Build with `make`
 -   View build options with `make help`
@@ -35,7 +35,7 @@ work with gRPC, install the following tools:
 On OSX run
 
     (cd /tmp; go get -u golang.org/x/tools/goimports)
-    brew grpcurl protoc-gen-go grpc prototool
+    brew install grpcurl protoc-gen-go grpc prototool
 
 After the initial installation run
 

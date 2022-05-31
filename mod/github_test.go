@@ -1,15 +1,11 @@
 package mod
 
 import (
-	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,68 +23,6 @@ func TestGitHubMgrInit(t *testing.T) {
 	assert.Error(t, err)
 	_, err = newGitHubMgr(GitHubOptions{AccessToken: accessTokenForTest(t)})
 	assert.Error(t, err)
-}
-
-func TestGitHubMgrFind(t *testing.T) {
-	cacheDir := ".pkgcache"
-	repo := "github.com/foo/bar"
-	tagRef, masterRef := "v0.2.0", "v0.0.0-41f04d3bba15"
-	tagRepoDir := strings.Join([]string{cacheDir, repo, tagRef}, "@")
-	masterRepoDir := strings.Join([]string{cacheDir, repo, masterRef}, "@")
-	filea, fileb := "filea", "fileb"
-
-	githubmod := &githubMgr{cacheDir: cacheDir}
-	testMods := Modules{}
-	tagMod := &Module{
-		Name:    repo,
-		Version: tagRef,
-		Dir:     tagRepoDir,
-	}
-	masterMod := &Module{
-		Name:    repo,
-		Version: masterRef,
-		Dir:     masterRepoDir,
-	}
-	testMods.Add(tagMod)
-	testMods.Add(masterMod)
-
-	monkey.Patch(FileExists, func(_ afero.Fs, filename string, _ bool) bool {
-		files := []string{
-			filepath.Join(tagRepoDir, filea),
-			filepath.Join(tagRepoDir, fileb),
-			filepath.Join(masterRepoDir, filea),
-		}
-		for _, f := range files {
-			if filename == f {
-				return true
-			}
-		}
-		return false
-	})
-
-	monkey.PatchInstanceMethod(reflect.TypeOf(githubmod), "GetCacheRef",
-		func(_ *githubMgr, _ *githubRepoPath, ref string) (string, error) {
-			switch ref {
-			case tagRef:
-				return tagRef, nil
-			case MasterBranch:
-				return masterRef, nil
-			}
-			return "", fmt.Errorf("ref not found")
-		})
-	defer monkey.UnpatchAll()
-
-	assert.Equal(t, tagMod, githubmod.Find(path.Join(repo, filea), tagRef, &testMods))
-	assert.Equal(t, tagMod, githubmod.Find(path.Join(repo, fileb), tagRef, &testMods))
-	assert.Nil(t, githubmod.Find(repo, tagRef, &testMods))
-	assert.Nil(t, githubmod.Find(path.Join(repo, "wrong"), tagRef, &testMods))
-
-	assert.Equal(t, masterMod, githubmod.Find(path.Join(repo, filea), MasterBranch, &testMods))
-	assert.Equal(t, masterMod, githubmod.Find(path.Join(repo, filea), "", &testMods))
-	assert.Nil(t, githubmod.Find(repo, MasterBranch, &testMods))
-	assert.Nil(t, githubmod.Find(path.Join(repo, fileb), MasterBranch, &testMods))
-
-	assert.Nil(t, githubmod.Find("github.com/foo/wrongrepo/files", tagRef, &testMods))
 }
 
 func TestGitHubMgrLoad(t *testing.T) {

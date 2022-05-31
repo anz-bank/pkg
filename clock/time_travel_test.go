@@ -112,8 +112,7 @@ func TestTimeTravelMultipleAfters(t *testing.T) {
 func TestTimeTravelNotImplemented(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
-	ctx = Onto(context.Background(), NewTimeTravel(0))
+	ctx := Onto(context.Background(), NewTimeTravel(0))
 
 	assert.Panics(t, func() { AfterFunc(ctx, time.Millisecond, func() {}) })
 	assert.Panics(t, func() { NewTicker(ctx, time.Millisecond) })

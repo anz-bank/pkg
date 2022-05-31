@@ -37,6 +37,8 @@ import (
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
 
 	"github.com/anz-bank/pkg/health"
 )
@@ -62,7 +64,7 @@ type registerOptions struct {
 type metricHandler struct {
 	meter               metric.Meter
 	metricCounters      map[string]Int64Counter
-	metricGaugeObserver map[string]metric.Int64GaugeObserver
+	metricGaugeObserver map[string]asyncint64.Gauge
 }
 
 var mHandler *metricHandler
@@ -71,7 +73,7 @@ func newMetricHandler() {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      make(map[string]Int64Counter),
-		metricGaugeObserver: make(map[string]metric.Int64GaugeObserver),
+		metricGaugeObserver: make(map[string]asyncint64.Gauge),
 	}
 }
 
@@ -147,27 +149,30 @@ func addReadyMetric(ctx context.Context, ro *registerOptions, s *health.State) e
 	var err error
 
 	readyPrefix := ro.metricPrefix + "ready"
-	int64Observer := mHandler.metricGaugeObserver[readyPrefix]
-	if int64Observer == (metric.Int64GaugeObserver{}) {
-		int64Observer, err = mHandler.meter.NewInt64GaugeObserver(readyPrefix, observer(s))
+	int64Observer, has := mHandler.metricGaugeObserver[readyPrefix]
+
+	if !has {
+		int64Observer, err = mHandler.meter.AsyncInt64().Gauge(readyPrefix)
+		if err != nil {
+			return err
+		}
+
+		err = mHandler.meter.RegisterCallback([]instrument.Asynchronous{int64Observer}, func(ctx context.Context) {
+			var isReady int64
+			if s.IsReady() {
+				isReady = 1
+			}
+
+			int64Observer.Observe(ctx, isReady)
+		})
 		if err != nil {
 			return err
 		}
 	}
+
 	mHandler.metricGaugeObserver[readyPrefix] = int64Observer
 
 	return nil
-}
-
-func observer(s *health.State) func(ctx context.Context, result metric.Int64ObserverResult) {
-	return func(ctx context.Context, result metric.Int64ObserverResult) {
-		var isReady int64
-		if s.IsReady() {
-			isReady = 1
-		}
-
-		result.Observe(isReady)
-	}
 }
 
 func addVersionMetric(ctx context.Context, ro *registerOptions, s *health.State) error {
@@ -176,7 +181,7 @@ func addVersionMetric(ctx context.Context, ro *registerOptions, s *health.State)
 	versionPrefix := ro.metricPrefix + "version"
 	int64Counter := mHandler.metricCounters[versionPrefix]
 	if int64Counter == nil {
-		int64Counter, err = mHandler.meter.NewInt64Counter(versionPrefix)
+		int64Counter, err = mHandler.meter.SyncInt64().Counter(versionPrefix)
 		if err != nil {
 			return err
 		}

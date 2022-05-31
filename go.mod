@@ -3,7 +3,6 @@ module github.com/anz-bank/pkg
 go 1.15
 
 require (
-	bou.ke/monkey v1.0.2
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
@@ -19,10 +18,10 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/afero v1.4.0
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	go.opencensus.io v0.22.4
-	go.opentelemetry.io/otel v1.4.0
-	go.opentelemetry.io/otel/metric v0.27.0
+	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/metric v0.30.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43

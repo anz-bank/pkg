@@ -11,14 +11,15 @@ import (
 	"github.com/anz-bank/pkg/health/otelhealth/testdata/mocks"
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/metric"
 )
 
 func TestRegisterWithValidValues(t *testing.T) {
 	defer resetGlobals()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -27,7 +28,7 @@ func TestRegisterWithValidValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]asyncint64.Gauge{},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
@@ -62,7 +63,7 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]asyncint64.Gauge{},
 	}
 
 	labels := map[otelAttribute.Key]otelAttribute.Value{
@@ -108,7 +109,7 @@ func TestRegisterWithUndefinedValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]metric.Int64GaugeObserver{"myapp_ready": {}},
+		metricGaugeObserver: map[string]asyncint64.Gauge{},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
