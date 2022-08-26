@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -33,7 +32,7 @@ type GoModulesOptions struct {
 
 func (d *goModules) Init(opt GoModulesOptions) error {
 	if !FileExists(afero.NewOsFs(), filepath.Join(opt.Root, "go.mod"), false) {
-		err := runGo(context.Background(), ioutil.Discard, "mod", "init", opt.ModName)
+		err := runGo(context.Background(), io.Discard, "mod", "init", opt.ModName)
 		if err != nil {
 			return errors.New(fmt.Sprintf("go mod init failed: %s", err.Error()))
 		}
@@ -83,12 +82,7 @@ func (*goModules) Find(filename, ver string, m *Modules) *Module {
 }
 
 func (*goModules) Load(m *Modules) error {
-	err := goDownload()
-	if err != nil {
-		return err
-	}
-
-	b, err := goList()
+	b, err := goDownload()
 	if err != nil {
 		return err
 	}
@@ -120,19 +114,11 @@ func goGet(args ...string) error {
 	return nil
 }
 
-func goDownload() error {
-	err := runGo(context.Background(), ioutil.Discard, "mod", "download")
-	if err != nil {
-		return errors.Wrap(err, "failed to download modules")
-	}
-	return nil
-}
-
-func goList() (io.Reader, error) {
+func goDownload() (io.Reader, error) {
 	b := &bytes.Buffer{}
-	err := runGo(context.Background(), b, "list", "-m", "-json", "all")
+	err := runGo(context.Background(), b, "mod", "download", "-json")
 	if err != nil {
-		return b, errors.Wrap(err, "failed to list modules")
+		return b, errors.Wrap(err, "failed to download modules")
 	}
 	return b, nil
 }

@@ -1,0 +1,43 @@
+name: Go
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: ["*"]
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        goVersion: [1.16, 1.19]
+    name: Build and test
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Go ${{ matrix.goVersion }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.goVersion }}
+        id: go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Make
+        # lint-with-docker doesn't work on mac/win github actions.
+        if: matrix.os == 'ubuntu-latest'
+        run: make
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Test
+        # lint-with-docker doesn't work on mac/win github actions. Just run test only.
+        if: matrix.os != 'ubuntu-latest'
+        run: make test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
