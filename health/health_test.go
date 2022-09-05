@@ -1,11 +1,11 @@
-//nolint: bodyclose
+// nolint: bodyclose
 package health
 
 import (
 	context "context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -201,7 +201,7 @@ func TestHTTPAlive(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.Equal(t, "200 ok\n", string(body))
@@ -215,7 +215,7 @@ func TestHTTPNotReady(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 	require.Equal(t, "503 service unavailable\n", string(body))
@@ -230,7 +230,7 @@ func TestHTTPReady(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.Equal(t, "200 ok\n", string(body))
@@ -245,7 +245,7 @@ func TestHTTPVersion(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	want, _ := json.Marshal(versionFixture())
@@ -261,7 +261,7 @@ func TestHTTPNotFound(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusNotFound, resp.StatusCode)
 	require.Equal(t, "404 page not found\n", string(body))
@@ -276,7 +276,7 @@ func TestHTTPMethodNotAllowed(t *testing.T) {
 
 	s.ServeHTTP(w, req)
 	resp := w.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	require.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
 	require.Equal(t, "405 method not allowed, use GET\n", string(body))

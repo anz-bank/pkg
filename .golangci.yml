@@ -1,5 +1,5 @@
 service:
-  golangci-lint-version: 1.44.0
+  golangci-lint-version: 1.48.0
 
 linters:
   disable-all: true
@@ -22,7 +22,7 @@ linters:
     - misspell
     - nakedret
     - staticcheck
-    - structcheck
+#    - structcheck
     - stylecheck
     - typecheck
     - unconvert

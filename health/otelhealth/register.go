@@ -13,8 +13,8 @@
 // provided as OpenTelemetry metrics.
 //
 // Two metrics are published by this package:
-//   anz_health_ready
-//   anz_health_version
+// - anz_health_ready
+// - anz_health_version
 //
 // The "ready" metric tracks the real-time value of the Ready field in the
 // State, exporting false as 0 and true as 1.
@@ -28,7 +28,6 @@
 // The prefix "anz_health" is configurable with the WithPrefix Option that can
 // be passed to Register. The prefix can be removed entirely by using the empty
 // string as a prefix.
-//
 package otelhealth
 
 import (

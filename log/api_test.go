@@ -20,9 +20,9 @@ var (
 
 type fieldsTest struct {
 	name          string
-	unresolveds   frozen.Map
-	contextFields frozen.Map
-	expected      frozen.Map
+	unresolveds   frozen.Map[any, any]
+	contextFields frozen.Map[any, any]
+	expected      frozen.Map[any, any]
 }
 
 type testHook struct{}
@@ -62,7 +62,7 @@ func TestMainError(t *testing.T) {
 		t,
 		"Error",
 		append([]interface{}{errMsg}, regularArgs...),
-		frozen.Map{}.With(errMsgKey, errMsg.Error()),
+		frozen.Map[any, any]{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
 			Error(WithLogger(m).Onto(context.Background()), errMsg, regularArgs...)
 		},
@@ -76,7 +76,7 @@ func TestMainErrorf(t *testing.T) {
 		t,
 		"Errorf",
 		append([]interface{}{errMsg}, formattedArgs...),
-		frozen.Map{}.With(errMsgKey, errMsg.Error()),
+		frozen.Map[any, any]{}.With(errMsgKey, errMsg.Error()),
 		func(m *mockLogger) {
 			Errorf(WithLogger(m).Onto(context.Background()), errMsg, formattedArgs[0].(string), formattedArgs[1:]...)
 		},
@@ -88,7 +88,7 @@ func testLog(
 	logFunc func(ctx context.Context, args ...interface{}),
 	funcName string,
 ) {
-	callLog(t, funcName, regularArgs, frozen.NewMap(),
+	callLog(t, funcName, regularArgs, frozen.NewMap[any, any](),
 		func(m *mockLogger) {
 			logFunc(WithLogger(m).Onto(context.Background()), regularArgs...)
 		},
@@ -100,14 +100,20 @@ func testLogWithFormat(
 	logFunc func(ctx context.Context, format string, args ...interface{}),
 	funcName string,
 ) {
-	callLog(t, funcName, formattedArgs, frozen.NewMap(),
+	callLog(t, funcName, formattedArgs, frozen.NewMap[any, any](),
 		func(m *mockLogger) {
 			logFunc(WithLogger(m).Onto(context.Background()), formattedArgs[0].(string), formattedArgs[1:]...)
 		},
 	)
 }
 
-func callLog(t *testing.T, funcName string, args []interface{}, fields frozen.Map, logFunc func(*mockLogger)) {
+func callLog(
+	t *testing.T,
+	funcName string,
+	args []interface{},
+	fields frozen.Map[any, any],
+	logFunc func(*mockLogger),
+) {
 	logger := newMockLogger()
 	setLogMockAssertion(logger, fields)
 	logger.On(funcName, args...)
@@ -119,15 +125,15 @@ func TestChain(t *testing.T) {
 	t.Parallel()
 
 	init := Fields{generateSimpleField(5)}
-	fields1 := Fields{frozen.Map{}.With("6", 6).With("7", suppress{})}
+	fields1 := Fields{frozen.Map[any, any]{}.With("6", 6).With("7", suppress{})}
 	fields2 := Fields{
-		frozen.Map{}.
+		frozen.Map[any, any]{}.
 			With("2", 10).
 			With("8", func(context.Context) interface{} {
 				return 8
 			}),
 	}
-	fields3 := Fields{frozen.Map{}.With("7", 7).With("8", suppress{})}
+	fields3 := Fields{frozen.Map[any, any]{}.With("7", 7).With("8", suppress{})}
 	expected := generateSimpleField(5).
 		With("2", 10).
 		With("6", 6).
@@ -140,7 +146,7 @@ func TestChain(t *testing.T) {
 func TestWithConfigsSameConfigType(t *testing.T) {
 	t.Parallel()
 
-	expectedConfig := frozen.Map{}.
+	expectedConfig := frozen.Map[any, any]{}.
 		With(standardFormat{}.TypeKey(), standardFormat{}).
 		With(verboseMode{}.TypeKey(), verboseMode{true})
 
@@ -156,7 +162,7 @@ func TestWithConfigLevel(t *testing.T) {
 	t.Parallel()
 
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, frozen.NewMap[any, any]())
 	logger.On("SetVerbose", true).Return(nil)
 	WithConfigs(SetVerboseMode(false), SetVerboseMode(true)).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
@@ -166,7 +172,7 @@ func TestWithConfigFormat(t *testing.T) {
 	t.Parallel()
 
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, frozen.NewMap[any, any]())
 	logger.On("SetFormatter", jsonFormat{}).Return(nil)
 	WithConfigs(NewStandardFormat(), NewJSONFormat()).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
@@ -176,7 +182,7 @@ func TestWithConfigOutput(t *testing.T) {
 	t.Parallel()
 
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, frozen.NewMap[any, any]())
 	logger.On("SetOutput", &bytes.Buffer{}).Return(nil)
 	WithConfigs(SetOutput(&bytes.Buffer{})).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
@@ -186,7 +192,7 @@ func TestWithHooks(t *testing.T) {
 	t.Parallel()
 
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, frozen.NewMap[any, any]())
 	logger.On("AddHooks", mock.Anything).Return(nil)
 	WithConfigs(AddHooks(&testHook{})).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
@@ -196,7 +202,7 @@ func TestWithConfigLogCaller(t *testing.T) {
 	t.Parallel()
 
 	logger := newMockLogger()
-	setLogMockAssertion(logger, frozen.NewMap())
+	setLogMockAssertion(logger, frozen.NewMap[any, any]())
 	logger.On("SetLogCaller", true).Return(nil)
 	WithConfigs(SetLogCaller(false), SetLogCaller(true)).WithLogger(logger).From(context.Background())
 	logger.AssertExpectations(t)
@@ -345,12 +351,12 @@ func TestFieldsFrom(t *testing.T) {
 	assert.Equal(t, fields, retrieved)
 }
 
-func setLogMockAssertion(logger *mockLogger, fields frozen.Map) {
+func setLogMockAssertion(logger *mockLogger, fields frozen.Map[any, any]) {
 	setMockCopyAssertion(logger)
 	setPutFieldsAssertion(logger, fields)
 }
 
-func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
+func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map[any, any]) {
 	logger.On(
 		"PutFields",
 		mock.MatchedBy(fields.Equal),
@@ -358,7 +364,7 @@ func setPutFieldsAssertion(logger *mockLogger, fields frozen.Map) {
 }
 
 func getLoggerFromContext(ctx context.Context, t *testing.T) *mockLogger {
-	m, exists := ctx.Value(fieldsContextKey{}).(frozen.Map)
+	m, exists := ctx.Value(fieldsContextKey{}).(frozen.Map[any, any])
 	if !exists {
 		t.Fatal("Fields not set yet")
 	}
@@ -377,13 +383,13 @@ func runFieldsMethod(t *testing.T, empty, nonEmpty func(*testing.T)) {
 	t.Run("non empty fields", nonEmpty)
 }
 
-func generateSimpleField(limit int) frozen.Map {
-	keys := make([]string, 0, limit)
+func generateSimpleField(limit int) frozen.Map[any, any] {
+	keys := make([]any, 0, limit)
 	for i := 0; i < limit; i++ {
 		keys = append(keys, strconv.Itoa(i))
 	}
 	return frozen.NewMapFromKeys(
-		frozen.NewSetFromStrings(keys...),
+		frozen.NewSet[any](keys...),
 		func(a interface{}) interface{} {
 			num, err := strconv.Atoi(a.(string))
 			if err != nil {

@@ -71,8 +71,8 @@ func ContextFromContext(ctx context.Context) *Context {
 // With adds context funcs to the log context
 func (c Context) With(funcs ...ContextFunc) *Context {
 	for _, fun := range funcs {
-		if c.logger.keys.Intersection(frozen.NewSetFromStrings(fun.Keys...)).Count() == 0 {
-			c.logger.keys = c.logger.keys.Union(frozen.NewSetFromStrings(fun.Keys...))
+		if c.logger.keys.Intersection(frozen.NewSet[string](fun.Keys...)).Count() == 0 {
+			c.logger.keys = c.logger.keys.Union(frozen.NewSet[string](fun.Keys...))
 			c.funcs = append(c.funcs, fun)
 		} else {
 			// warn of duplicate keys

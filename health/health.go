@@ -30,7 +30,8 @@ const Undefined = "undefined"
 
 // Variables served by the Version endpoint/method. These should be set at
 // build time using the `-X` ldflag. e.g.
-//     go build -ldflags='-X github.com/anz-bank/pkg/health.RepoURL="..."`
+//
+//	go build -ldflags='-X github.com/anz-bank/pkg/health.RepoURL="..."`
 var (
 	// RepoURL is the canonical repository source code URL.
 	// e.g. https://github.com/anz-bank/pkg
@@ -68,11 +69,11 @@ var (
 // from the outside in a pull fashion. Typically there is not need to
 // make use of this interface and just update the Ready state with
 //
-//    State.SetReady(true|false)
+//	State.SetReady(true|false)
 //
 // However, if required, ReadyProvider can be specified as
 //
-//    State.ReadyProvider = localReadyProvider
+//	State.ReadyProvider = localReadyProvider
 //
 // this turns State.SetReady into a no-op unless localReadyProvider is
 // also a ReadySetter.
@@ -211,9 +212,9 @@ type HTTPServer struct {
 // HTTPServer implements http.Handler and serves HTTP responses on the
 // following paths:
 //
-//   /healthz
-//   /readyz
-//   /version
+//	/healthz
+//	/readyz
+//	/version
 //
 // Use a custom http.Handler or http.ServerMux with HandleAlive,
 // HandleReady and HandleVersion to serve on different URL paths.
@@ -265,7 +266,7 @@ func requireGet(next http.HandlerFunc) http.Handler {
 //
 // Use it in the ochttp.Handler:
 //
-//     ochttp.Handler{IsHealthEndpoint: health.IsHealthEndpoint, ...}
+//	ochttp.Handler{IsHealthEndpoint: health.IsHealthEndpoint, ...}
 func IsHealthEndpoint(r *http.Request) bool {
 	return r.URL.Path == "/healthz" || r.URL.Path == "/readyz"
 }

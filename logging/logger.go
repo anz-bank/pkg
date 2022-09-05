@@ -35,7 +35,7 @@ type ContextFunc struct {
 // applied
 type Logger struct {
 	internal  zerolog.Logger
-	keys      frozen.Set
+	keys      frozen.Set[string]
 	codeLinks bool
 	linker    codelinks.CodeLinker
 	timeDiffs []*timeDiff
@@ -47,7 +47,7 @@ func New(out io.Writer) *Logger {
 	logger := zerolog.New(out).Level(zerolog.InfoLevel)
 	return &Logger{
 		internal:  logger,
-		keys:      frozen.NewSetFromStrings("level", "message"), // prevents these fields from being duplicated
+		keys:      frozen.NewSet[string]("level", "message"), // prevents these fields from being duplicated
 		codeLinks: false,
 	}
 }
@@ -195,7 +195,7 @@ func (l Logger) WithCodeLinks(links bool, linker codelinks.CodeLinker) *Logger {
 // This is useful for creating a logger that shhould not log depending on some
 // criteria
 //
-//  if cond { logger = logger.Discard() }
+//	if cond { logger = logger.Discard() }
 func (l Logger) Discard() *Logger {
 	l.discard = true
 	return &l

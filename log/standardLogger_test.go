@@ -39,9 +39,9 @@ func TestCopyStandardLogger(t *testing.T) {
 
 	logger := getNewStandardLogger().PutFields(
 		frozen.NewMap(
-			frozen.KV("numberVal", 1),
-			frozen.KV("byteVal", 'k'),
-			frozen.KV("stringVal", "this is a sentence"),
+			frozen.KV[any, any]("numberVal", 1),
+			frozen.KV[any, any]("byteVal", 'k'),
+			frozen.KV[any, any]("stringVal", "this is a sentence"),
 		),
 	).(*standardLogger)
 	copiedLogger := logger.Copy().(*standardLogger)
@@ -51,11 +51,11 @@ func TestCopyStandardLogger(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap[any, any](), func() {
 		getNewStandardLogger().Debug(testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap[any, any](), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Debug(testMessage)
@@ -73,11 +73,11 @@ func TestDebug(t *testing.T) {
 }
 
 func TestDebugf(t *testing.T) {
-	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.DebugLevel, frozen.NewMap[any, any](), func() {
 		getNewStandardLogger().Debugf(simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.DebugLevel, frozen.NewMap[any, any](), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Debugf(simpleFormat, testMessage)
@@ -95,11 +95,11 @@ func TestDebugf(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any]().With(errMsgKey, errTest.Error()), func() {
 		NewStandardLogger().Error(errTest, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any]().With(errMsgKey, errTest.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Error(errTest, testMessage)
@@ -117,11 +117,11 @@ func TestError(t *testing.T) {
 }
 
 func TestErrorf(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any]().With(errMsgKey, errTest.Error()), func() {
 		NewStandardLogger().Errorf(errTest, simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap().With(errMsgKey, errTest.Error()), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any]().With(errMsgKey, errTest.Error()), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Errorf(errTest, simpleFormat, testMessage)
@@ -139,11 +139,11 @@ func TestErrorf(t *testing.T) {
 }
 
 func TestInfo(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any](), func() {
 		getNewStandardLogger().Info(testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any](), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Info(testMessage)
@@ -161,11 +161,11 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInfof(t *testing.T) {
-	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testStandardLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any](), func() {
 		getNewStandardLogger().Infof(simpleFormat, testMessage)
 	})
 
-	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap(), func() {
+	testJSONLogOutput(t, logrus.InfoLevel, frozen.NewMap[any, any](), func() {
 		logger := getNewStandardLogger()
 		require.NoError(t, logger.SetFormatter(NewJSONFormat()))
 		logger.Infof(simpleFormat, testMessage)
@@ -182,7 +182,7 @@ func TestInfof(t *testing.T) {
 	})
 }
 
-func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
+func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map[any, any], logFunc func()) {
 	expectedOutput := strings.Join([]string{strings.ToUpper(level.String()), testMessage}, " ")
 	actualOutput := redirectOutput(t, logFunc)
 
@@ -193,7 +193,7 @@ func testStandardLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, 
 	}
 }
 
-func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map, logFunc func()) {
+func testJSONLogOutput(t *testing.T, level logrus.Level, fields frozen.Map[any, any], logFunc func()) {
 	out := make(map[string]interface{})
 	require.NoError(t, json.Unmarshal([]byte(redirectOutput(t, logFunc)), &out))
 	assert.Equal(t, out["message"], testMessage)
@@ -230,9 +230,9 @@ func TestGetFormattedFieldWithFields(t *testing.T) {
 
 	logger := getNewStandardLogger().PutFields(
 		frozen.NewMap(
-			frozen.KV("numberVal", 1),
-			frozen.KV("byteVal", 'k'),
-			frozen.KV("stringVal", "this is a sentence"),
+			frozen.KV[any, any]("numberVal", 1),
+			frozen.KV[any, any]("byteVal", 'k'),
+			frozen.KV[any, any]("stringVal", "this is a sentence"),
 		),
 	).(*standardLogger)
 	// fields are in a random order

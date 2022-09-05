@@ -59,7 +59,7 @@ func logrusEntryToPkgLogEntry(entry *logrus.Entry) *LogEntry {
 	return &LogEntry{
 		Time:    entry.Time,
 		Message: entry.Message,
-		Data:    entry.Data[dataFieldKey].(frozen.Map),
+		Data:    entry.Data[dataFieldKey].(frozen.Map[any, any]),
 		Caller:  entry.Data[dataFieldCaller].(CodeReference),
 		Verbose: logrusLevelToVerbose(entry.Level),
 	}

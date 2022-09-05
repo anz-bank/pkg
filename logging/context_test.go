@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -14,14 +14,14 @@ import (
 )
 
 func TestAddLoggerToContext(t *testing.T) {
-	ctx := logging.New(ioutil.Discard).With().ToContext(context.Background())
+	ctx := logging.New(io.Discard).With().ToContext(context.Background())
 	require.NotPanics(t, func() {
 		logging.Info(ctx).Msg("Hello World")
 	})
 }
 
 func TestGetLoggerFromContext(t *testing.T) {
-	logger := logging.New(ioutil.Discard)
+	logger := logging.New(io.Discard)
 	ctx := logger.ToContext(context.Background())
 	assert.NotPanics(t, func() { _ = logging.FromContext(ctx) })
 	// assert.Equal(t, logger, loggerFromCtx)

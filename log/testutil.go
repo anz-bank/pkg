@@ -12,7 +12,7 @@ import (
 
 type multipleFields struct {
 	Name                 string
-	Fields, GlobalFields frozen.Map
+	Fields, GlobalFields frozen.Map[any, any]
 }
 
 func generateMultipleFieldsCases() []multipleFields {
@@ -20,18 +20,18 @@ func generateMultipleFieldsCases() []multipleFields {
 		{
 			Name: "Multiple types of Values",
 			Fields: frozen.NewMap(
-				frozen.KV("byte", '1'),
-				frozen.KV("int", 123),
-				frozen.KV("string", "this is an unnecessarily long sentence"),
+				frozen.KV[any, any]("byte", '1'),
+				frozen.KV[any, any]("int", 123),
+				frozen.KV[any, any]("string", "this is an unnecessarily long sentence"),
 			),
 		},
 		{
 			Name:   "Empty Key",
-			Fields: frozen.NewMap(frozen.KV("", "stuff")),
+			Fields: frozen.NewMap(frozen.KV[any, any]("", "stuff")),
 		},
 		{
 			Name:   "Nil Value",
-			Fields: frozen.NewMap(frozen.KV("Nil", nil)),
+			Fields: frozen.NewMap(frozen.KV[any, any]("Nil", nil)),
 		},
 	}
 }
@@ -58,7 +58,7 @@ func redirectOutput(t *testing.T, print func()) string {
 	return <-outC
 }
 
-func convertToGoMap(fields frozen.Map) map[string]interface{} {
+func convertToGoMap(fields frozen.Map[any, any]) map[string]interface{} {
 	goMap := make(map[string]interface{})
 	for i := fields.Range(); i.Next(); {
 		goMap[i.Key().(string)] = i.Value()

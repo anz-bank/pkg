@@ -16,7 +16,7 @@ func TestLogrusPkgFormatters(t *testing.T) {
 	entry := &LogEntry{
 		Time:    time.Now(),
 		Message: "message",
-		Data:    frozen.NewMap(frozen.KV("cat", "dog")),
+		Data:    frozen.NewMap(frozen.KV[any, any]("cat", "dog")),
 		Verbose: true,
 	}
 
@@ -36,7 +36,7 @@ func TestLogrusPkgEntry(t *testing.T) {
 	entry := &LogEntry{
 		Time:    time.Now(),
 		Message: "message",
-		Data:    frozen.NewMap(frozen.KV("cat", "dog")),
+		Data:    frozen.NewMap(frozen.KV[any, any]("cat", "dog")),
 		Caller:  CodeReference{"example.go", 123},
 		Verbose: true,
 	}

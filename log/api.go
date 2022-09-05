@@ -7,7 +7,7 @@ import (
 )
 
 // Fields is a struct that contains all the fields data to log.
-type Fields struct{ m frozen.Map }
+type Fields struct{ m frozen.Map[any, any] }
 
 // Debug logs from context at the debug level.
 func Debug(ctx context.Context, args ...interface{}) {
@@ -126,12 +126,16 @@ func (f Fields) Onto(ctx context.Context) context.Context {
 	return context.WithValue(ctx, fieldsContextKey{}, getFields(ctx).Chain(f).m)
 }
 
-// Suppress ensures that the keys will not be logger.
+// Suppress ensures that the keys will not be logged.
 func (f Fields) Suppress(keys ...string) Fields {
+	ks := make([]any, len(keys))
+	for i, v := range keys {
+		ks[i] = v
+	}
 	return f.Chain(Fields{
 		frozen.NewMapFromKeys(
-			frozen.NewSetFromStrings(keys...),
-			func(_ interface{}) interface{} {
+			frozen.NewSet[any](ks...),
+			func(_ any) any {
 				return suppress{}
 			},
 		),

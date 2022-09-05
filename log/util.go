@@ -14,10 +14,10 @@ type suppress struct{}
 type ctxRef struct{ ctxKey interface{} }
 
 type fieldsCollector struct {
-	fields frozen.Map
+	fields frozen.Map[any, any]
 }
 
-func (f *fieldsCollector) PutFields(fields frozen.Map) Logger {
+func (f *fieldsCollector) PutFields(fields frozen.Map[any, any]) Logger {
 	f.fields = fields
 	return NewNullLogger()
 }
@@ -31,27 +31,25 @@ func (f Fields) getCopiedLogger() Logger {
 }
 
 func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger {
-	fields := f.m
-	var toSuppress frozen.SetBuilder
-	toSuppress.Add(loggerKey{})
+	fields := f.m.Without(loggerKey{})
 	for i := fields.Range(); i.Next(); {
 		switch k := i.Value().(type) {
 		case ctxRef:
 			if val := ctx.Value(k.ctxKey); val != nil {
 				fields = fields.With(i.Key(), val)
 			} else {
-				toSuppress.Add(i.Key())
+				fields = fields.Without(i.Key())
 			}
 		case func(context.Context) interface{}:
 			if val := k(ctx); val != nil {
 				fields = fields.With(i.Key(), val)
 			} else {
-				toSuppress.Add(i.Key())
+				fields = fields.Without(i.Key())
 			}
 		case suppress:
-			toSuppress.Add(i.Key())
+			fields = fields.Without(i.Key())
 		case Config:
-			toSuppress.Add(i.Key())
+			fields = fields.Without(i.Key())
 			err := k.Apply(logger.(Logger))
 			if err != nil {
 				//TODO: should decide whether it should panic or not
@@ -59,7 +57,7 @@ func (f Fields) configureLogger(ctx context.Context, logger fieldSetter) Logger 
 			}
 		}
 	}
-	return logger.PutFields(fields.Without(toSuppress.Finish()))
+	return logger.PutFields(fields)
 }
 
 func (f Fields) with(key, val interface{}) Fields {
@@ -67,15 +65,15 @@ func (f Fields) with(key, val interface{}) Fields {
 }
 
 func getFields(ctx context.Context) Fields {
-	fields, exists := ctx.Value(fieldsContextKey{}).(frozen.Map)
+	fields, exists := ctx.Value(fieldsContextKey{}).(frozen.Map[any, any])
 	if !exists {
 		return Fields{}
 	}
 	return Fields{fields}
 }
 
-func createConfigMap(configs ...Config) frozen.Map {
-	var mb frozen.MapBuilder
+func createConfigMap(configs ...Config) frozen.Map[any, any] {
+	var mb frozen.MapBuilder[any, any]
 	for _, c := range configs {
 		mb.Put(c.TypeKey(), c)
 	}

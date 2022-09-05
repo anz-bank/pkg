@@ -13,8 +13,8 @@
 // provided as OpenCensus metrics.
 //
 // Two metrics are published by this package:
-//   anz_health_ready
-//   anz_health_version
+// - anz_health_ready
+// - anz_health_version
 //
 // The "ready" metric tracks the real-time value of the Ready field in the
 // State, exporting false as 0 and true as 1.
