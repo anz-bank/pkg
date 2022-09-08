@@ -87,6 +87,21 @@ func (*goModules) Load(m *Modules) error {
 		return err
 	}
 
+	err = loadResInto(b, m)
+	if err != nil {
+		return err
+	}
+
+	// `go mod download -json` doesn't include the current module so call `go list...` to get the details
+	b, err = goList()
+	if err != nil {
+		return err
+	}
+
+	return loadResInto(b, m)
+}
+
+func loadResInto(b io.Reader, m *Modules) error {
 	dec := json.NewDecoder(b)
 	for {
 		module := &goModule{}
@@ -117,6 +132,15 @@ func goGet(args ...string) error {
 func goDownload() (io.Reader, error) {
 	b := &bytes.Buffer{}
 	err := runGo(context.Background(), b, "mod", "download", "-json")
+	if err != nil {
+		return b, errors.Wrap(err, "failed to download modules")
+	}
+	return b, nil
+}
+
+func goList() (io.Reader, error) {
+	b := &bytes.Buffer{}
+	err := runGo(context.Background(), b, "list", "-m", "-json")
 	if err != nil {
 		return b, errors.Wrap(err, "failed to download modules")
 	}
