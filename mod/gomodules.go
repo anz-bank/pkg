@@ -92,7 +92,7 @@ func (*goModules) Load(m *Modules) error {
 		return err
 	}
 
-	// `go mod download -json` doesn't include the current module so call `go list...` to get the details
+	// `go mod download -json` doesn't include the current module so call `go list -m -json` to get the details
 	b, err = goList()
 	if err != nil {
 		return err
