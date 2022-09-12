@@ -21,7 +21,7 @@ func (n *nullLogger) Info(args ...interface{})                                {}
 func (n *nullLogger) Infof(format string, args ...interface{})                {}
 func (n *nullLogger) Log(entry *LogEntry)                                     {}
 
-func (n *nullLogger) PutFields(fields frozen.Map[any, any]) Logger {
+func (n *nullLogger) PutFields(fields frozen.Map) Logger {
 	return n
 }
 

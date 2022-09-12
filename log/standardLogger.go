@@ -16,7 +16,7 @@ import (
 
 type standardLogger struct {
 	internal  *logrus.Logger
-	fields    frozen.Map[any, any]
+	fields    frozen.Map
 	logCaller bool
 }
 
@@ -112,7 +112,7 @@ func (sl *standardLogger) Log(entry *LogEntry) {
 	logWithLogrus(sl.internal, entry)
 }
 
-func (sl *standardLogger) PutFields(fields frozen.Map[any, any]) Logger {
+func (sl *standardLogger) PutFields(fields frozen.Map) Logger {
 	sl.fields = fields
 	return sl
 }
@@ -203,7 +203,7 @@ func (sl *standardLogger) getLogEntryCaller() CodeReference {
 	return CodeReference{}
 }
 
-func getFormattedField(fields frozen.Map[any, any]) string {
+func getFormattedField(fields frozen.Map) string {
 	if fields.Count() == 0 {
 		return ""
 	}

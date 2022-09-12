@@ -33,7 +33,7 @@ type LogEntry struct { // nolint:golint // log.LogEntry stutters but is public A
 	Message string
 
 	// Data set by the user.
-	Data frozen.Map[any, any]
+	Data frozen.Map
 
 	// Source code reference of the calling function.
 	// Initialised if SetLogCaller is true.
@@ -65,7 +65,7 @@ type copyable interface {
 
 type fieldSetter interface {
 	// PutFields returns the Logger with the new fields added.
-	PutFields(fields frozen.Map[any, any]) Logger
+	PutFields(fields frozen.Map) Logger
 }
 
 type entryLogger interface {
