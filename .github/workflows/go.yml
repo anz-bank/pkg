@@ -1,7 +1,7 @@
 name: Go
 on:
   push:
-    branches: [master]
+    branches: [master, pre-generics]
   pull_request:
     branches: ["*"]
 jobs:
