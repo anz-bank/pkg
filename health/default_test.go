@@ -89,6 +89,25 @@ func TestSetReadyProvider(t *testing.T) {
 	require.True(t, DefaultServer.State.IsReady())
 }
 
+func TestRaceConditionWhenRegisteringServices(t *testing.T) {
+	resetDefaults()
+	defer resetDefaults()
+	var r readiness
+	r.SetReady(true)
+	SetReadyProvider(&r)
+	require.Nil(t, DefaultServer)
+
+	mux := http.NewServeMux()
+	err := RegisterWithHTTP(mux)
+	require.NoError(t, err)
+
+	DefaultServer = nil // simulate the first call to newDefaultServer taking too long or failing entirely
+
+	grpcServer := grpc.NewServer()
+	err = RegisterWithGRPC(grpcServer)
+	require.Error(t, err)
+}
+
 func resetDefaults() {
 	DefaultServer = nil
 	defaultState = State{ReadyProvider: new(readiness)}

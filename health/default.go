@@ -1,6 +1,7 @@
 package health
 
 import (
+	"fmt"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -27,6 +28,9 @@ func RegisterWithGRPC(s *grpc.Server) error {
 	if err != nil {
 		return err
 	}
+	if DefaultServer == nil {
+		return fmt.Errorf("default server failed to start")
+	}
 	DefaultServer.GRPC.RegisterWith(s)
 	return nil
 }
@@ -41,6 +45,9 @@ func RegisterWithHTTP(r Router) error {
 	serverInit.Do(func() { err = newDefaultServer() })
 	if err != nil {
 		return err
+	}
+	if DefaultServer == nil {
+		return fmt.Errorf("default server failed to start")
 	}
 	DefaultServer.HTTP.RegisterWith(r)
 	return nil
