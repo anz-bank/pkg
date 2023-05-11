@@ -7,13 +7,14 @@ package otelhealth
 import (
 	"testing"
 
+	"go.opentelemetry.io/otel/metric"
+
 	"github.com/anz-bank/pkg/health"
 	"github.com/anz-bank/pkg/health/otelhealth/testdata/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/instrument"
 )
 
 func TestRegisterWithValidValues(t *testing.T) {
@@ -27,15 +28,17 @@ func TestRegisterWithValidValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]instrument.Int64ObservableGauge{},
+		metricGaugeObserver: map[string]metric.Int64ObservableGauge{},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		CommitHash.String("1ee4e1f233caea38d6e331299f57dd86efb47361"),
-		BuildLogURL.String("https://github.com/anz-bank/pkg/actions/runs/818181"),
-		ContainerTag.String("gcr.io/google-containers/v1.0.0"),
-		RepoURL.String("http://github.com/anz-bank/pkg"),
-		Semver.String("v0.0.0"),
+		metric.WithAttributes(
+			CommitHash.String("1ee4e1f233caea38d6e331299f57dd86efb47361"),
+			BuildLogURL.String("https://github.com/anz-bank/pkg/actions/runs/818181"),
+			ContainerTag.String("gcr.io/google-containers/v1.0.0"),
+			RepoURL.String("http://github.com/anz-bank/pkg"),
+			Semver.String("v0.0.0"),
+		),
 	)
 
 	health.RepoURL = "http://github.com/anz-bank/pkg"
@@ -62,7 +65,7 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]instrument.Int64ObservableGauge{},
+		metricGaugeObserver: map[string]metric.Int64ObservableGauge{},
 	}
 
 	labels := map[otelAttribute.Key]otelAttribute.Value{
@@ -71,18 +74,20 @@ func TestRegisterWithNewLabels(t *testing.T) {
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		CommitHash.String("1ee4e1f233caea38d6e331299f57dd86efb47361"),
-		BuildLogURL.String("https://github.com/anz-bank/pkg/actions/runs/818181"),
-		ContainerTag.String("gcr.io/google-containers/v1.0.0"),
-		RepoURL.String("http://github.com/anz-bank/pkg"),
-		Semver.String("v0.0.0"),
+		metric.WithAttributes(
+			CommitHash.String("1ee4e1f233caea38d6e331299f57dd86efb47361"),
+			BuildLogURL.String("https://github.com/anz-bank/pkg/actions/runs/818181"),
+			ContainerTag.String("gcr.io/google-containers/v1.0.0"),
+			RepoURL.String("http://github.com/anz-bank/pkg"),
+			Semver.String("v0.0.0"),
+		),
 	)
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		otelAttribute.Key("foo").String("bar"))
+		metric.WithAttributes(otelAttribute.Key("foo").String("bar")))
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		otelAttribute.Key("test").String("result"))
+		metric.WithAttributes(otelAttribute.Key("test").String("result")))
 
 	health.RepoURL = "http://github.com/anz-bank/pkg"
 	health.CommitHash = "1ee4e1f233caea38d6e331299f57dd86efb47361"
@@ -108,15 +113,17 @@ func TestRegisterWithUndefinedValues(t *testing.T) {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      map[string]Int64Counter{"myapp_version": versionCounter},
-		metricGaugeObserver: map[string]instrument.Int64ObservableGauge{},
+		metricGaugeObserver: map[string]metric.Int64ObservableGauge{},
 	}
 
 	versionCounter.EXPECT().Add(gomock.Any(), gomock.Any(),
-		CommitHash.String("undefined"),
-		BuildLogURL.String("undefined"),
-		ContainerTag.String("undefined"),
-		RepoURL.String("undefined"),
-		Semver.String("undefined"),
+		metric.WithAttributes(
+			CommitHash.String("undefined"),
+			BuildLogURL.String("undefined"),
+			ContainerTag.String("undefined"),
+			RepoURL.String("undefined"),
+			Semver.String("undefined"),
+		),
 	)
 
 	s, err := health.NewState()

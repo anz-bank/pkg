@@ -37,7 +37,6 @@ import (
 	otelAttribute "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/instrument"
 )
 
 const (
@@ -61,7 +60,7 @@ type registerOptions struct {
 type metricHandler struct {
 	meter               metric.Meter
 	metricCounters      map[string]Int64Counter
-	metricGaugeObserver map[string]instrument.Int64ObservableGauge
+	metricGaugeObserver map[string]metric.Int64ObservableGauge
 }
 
 var mHandler *metricHandler
@@ -70,7 +69,7 @@ func newMetricHandler() {
 	mHandler = &metricHandler{
 		meter:               global.Meter(""),
 		metricCounters:      make(map[string]Int64Counter),
-		metricGaugeObserver: make(map[string]instrument.Int64ObservableGauge),
+		metricGaugeObserver: make(map[string]metric.Int64ObservableGauge),
 	}
 }
 
@@ -150,7 +149,7 @@ func addReadyMetric(ctx context.Context, ro *registerOptions, s *health.State) e
 
 	if !has {
 		int64Observer, err = mHandler.meter.Int64ObservableGauge(readyName,
-			instrument.WithInt64Callback(func(ctx context.Context, int64Obs instrument.Int64Observer) error {
+			metric.WithInt64Callback(func(ctx context.Context, int64Obs metric.Int64Observer) error {
 				var isReady int64
 				if s.IsReady() {
 					isReady = 1
@@ -183,15 +182,17 @@ func addVersionMetric(ctx context.Context, ro *registerOptions, s *health.State)
 	}
 
 	int64Counter.Add(ctx, int64(1),
-		CommitHash.String(s.Version.CommitHash),
-		BuildLogURL.String(s.Version.BuildLogUrl),
-		ContainerTag.String(s.Version.ContainerTag),
-		RepoURL.String(s.Version.RepoUrl),
-		Semver.String(s.Version.Semver),
+		metric.WithAttributes(
+			CommitHash.String(s.Version.CommitHash),
+			BuildLogURL.String(s.Version.BuildLogUrl),
+			ContainerTag.String(s.Version.ContainerTag),
+			RepoURL.String(s.Version.RepoUrl),
+			Semver.String(s.Version.Semver),
+		),
 	)
 
 	for k, v := range ro.constLabels {
-		int64Counter.Add(ctx, int64(1), k.String(v.AsString()))
+		int64Counter.Add(ctx, int64(1), metric.WithAttributes(k.String(v.AsString())))
 	}
 
 	mHandler.metricCounters[versionName] = int64Counter
