@@ -162,11 +162,18 @@ func NewServer() (*Server, error) {
 // anz.health.v1.Health service.
 type GRPCServer struct {
 	*State
-	pb.UnimplementedHealthServer // embedded for forward compatible implementations
+	pb.UnimplementedHealthServer
 }
 
 // NewGRPCServer returns a GRPCServer. If any of the package-level version
 // variables are invalid, an error is returned.
+//
+// GRPCServer implements handlers to serve responses on the
+// following paths:
+//
+//	/anz.health.v1.Health/Alive
+//	/anz.health.v1.Health/Ready
+//	/anz.health.v1.Health/Version
 func NewGRPCServer() (*GRPCServer, error) {
 	state, err := NewState()
 	if err != nil {

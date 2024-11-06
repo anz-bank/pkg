@@ -88,21 +88,28 @@ func ExampleNewHTTPServer() {
 }
 
 func ExampleNewGRPCServer() {
-	server, err := health.NewGRPCServer()
+	// normally set with go build linker option
+	server := grpc.NewServer()
+	healthService, err := health.NewGRPCServer() // health service
 	if err != nil {
 		log.Fatal(err)
 	}
-	// go grpcListenAndServe(":8082", server)
+	healthService.RegisterWith(server)
+	// l, err := net.Listen("tcp", "localhost:8080")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// go server.Serve(l)
 
 	ctx := context.Background()
-	resp, err := server.Ready(ctx, &pb.ReadyRequest{})
+	resp, err := healthService.Ready(ctx, &pb.ReadyRequest{})
 	fmt.Println("err:", err, "ready:", resp.Ready)
 
 	// [run expensive initialisation]
 
-	server.SetReady(true)
+	healthService.SetReady(true)
 
-	resp, err = server.Ready(ctx, &pb.ReadyRequest{})
+	resp, err = healthService.Ready(ctx, &pb.ReadyRequest{})
 	fmt.Println("err:", err, "ready:", resp.Ready)
 	// output: err: <nil> ready: false
 	// err: <nil> ready: true
