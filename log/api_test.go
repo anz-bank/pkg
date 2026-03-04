@@ -399,3 +399,8 @@ func generateSimpleField(limit int) frozen.Map[any, any] {
 		},
 	)
 }
+
+func TestIsEmpty(t *testing.T) {
+	assert.False(t, Fields{m: frozen.NewMap[any, any]().With("key", "value")}.IsEmpty())
+	assert.True(t, Fields{m: frozen.NewMap[any, any]()}.IsEmpty())
+}

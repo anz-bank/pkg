@@ -9,6 +9,10 @@ import (
 // Fields is a struct that contains all the fields data to log.
 type Fields struct{ m frozen.Map[any, any] }
 
+func (f Fields) IsEmpty() bool {
+	return f.m.IsEmpty()
+}
+
 // Debug logs from context at the debug level.
 func Debug(ctx context.Context, args ...interface{}) {
 	Fields{}.Debug(ctx, args...)
